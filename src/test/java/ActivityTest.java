@@ -156,21 +156,25 @@ public class ActivityTest {
             System.exit(1);
         }
         
-//        System.out.println("promo size = " + model.getPromoList().size());
-//        for(int lnctr = 0; lnctr < model.getPromoList().size(); lnctr++){
-//            model.setPromo(lnctr, "sTransNox", "");
-//            model.setPromo(lnctr, "sPromoIDx", "");
-//            model.setPromo(lnctr, "sActTitle", "");
-//            model.setPromo(lnctr, "dDateFrom", "2024-03-29");
-//            model.setPromo(lnctr, "dDateThru", "2024-03-29");
-//        }
-//        
-//        for(int lnctr = 0; lnctr < model.getVehiclePriorityList().size(); lnctr++){
-//            model.setVehiclePriority(lnctr, "sTransNox", "");
-//            model.setVehiclePriority(lnctr, "nPriority", "1");
-//            model.setVehiclePriority(lnctr, "sVhclIDxx", "");
-//           
-//        }
+        model.addActTown();
+        System.out.println("town size = " + model.getActTownList().size());
+        for(int lnctr = 0; lnctr < model.getActTownList().size(); lnctr++){
+            model.setActTown(lnctr, "sTownIDxx", "0335");
+            model.setActTown(lnctr, "sAddressx", "MALASIQUI");
+        }
+        
+        model.addActMember();
+        System.out.println("member size = " + model.getActMemberList().size());
+        for(int lnctr = 0; lnctr < model.getActMemberList().size(); lnctr++){
+            model.setActMember(lnctr, "sEmployID", "M001000001");
+            model.setActMember(lnctr, "cOriginal", "1");
+        }
+        
+        model.addActVehicle();
+        System.out.println("vehicle size = " + model.getActVehicleList().size());
+        for(int lnctr = 0; lnctr < model.getActVehicleList().size(); lnctr++){
+            model.setActVehicle(lnctr, "sSerialID", "M001VS240001");
+        }
 
         System.out.println("--------------------------------------------------------------------");
         System.out.println("------------------------------NEW RECORD SAVING--------------------------------------");

@@ -6,6 +6,8 @@
 package org.guanzon.auto.controller.sales;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import org.guanzon.appdriver.agent.ShowDialogFX;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
@@ -76,6 +78,17 @@ public class Activity_Master implements GTransaction {
         return setMaster(poMaster.getColumn(fsCol), foData);
     }
     
+    public Object getMaster(int fnCol) {
+        if(pnEditMode == EditMode.UNKNOWN)
+            return null;
+        else 
+            return poMaster.getValue(fnCol);
+    }
+
+    public Object getMaster(String fsCol) {
+        return getMaster(poMaster.getColumn(fsCol));
+    }
+    
     @Override
     public JSONObject newTransaction() {
         poJSON = new JSONObject();
@@ -86,8 +99,8 @@ public class Activity_Master implements GTransaction {
             poMaster = new Model_Activity_Master(poGRider);
             Connection loConn = null;
             loConn = setConnection();
-            poMaster.setActvtyID(MiscUtil.getNextCode(poMaster.getTable(), "sActvtyID", true, poGRider.getConnection(), poGRider.getBranchCode()+"ACT"));
-            poMaster.setActNo(MiscUtil.getNextCode(poMaster.getTable(), "sActNoxxx", true, poGRider.getConnection(), poGRider.getBranchCode()));
+            poMaster.setActvtyID(MiscUtil.getNextCode(poMaster.getTable(), "sActvtyID", true, poGRider.getConnection(), poGRider.getBranchCode()));
+            poMaster.setActNo(MiscUtil.getNextCode(poMaster.getTable(), "sActNoxxx", true, poGRider.getConnection(), poGRider.getBranchCode()+"ACT"));
             poMaster.newRecord();
             
             if (poMaster == null){
@@ -267,7 +280,11 @@ public class Activity_Master implements GTransaction {
     }
 
     @Override
-    public Model_Activity_Master getMasterModel() {
+    public Object getMasterModel() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    public Model_Activity_Master getModel() {
         return poMaster;
     }
     
@@ -281,5 +298,216 @@ public class Activity_Master implements GTransaction {
             }
         }
         return joValue;
+    }
+    
+    public JSONObject searchDepartment(String fsValue) {
+        poJSON = new JSONObject();
+         
+        String lsSQL =    " SELECT "
+                        + " sDeptIDxx"
+                        + " , sDeptName "
+                        + " , cRecdStat "
+                        + "FROM ggc_isysdbf.department ";
+        
+        lsSQL = MiscUtil.addCondition(lsSQL, " sDeptName LIKE " + SQLUtil.toSQL(fsValue + "%")
+                                               + " AND cRecdStat = '1'");
+
+        System.out.println("SEARCH DEPARTMENT: " + lsSQL);
+        poJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                "ID»Department",
+                "sDeptIDxx»sDeptName",
+                "sDeptIDxx»sDeptName",
+                1);
+
+        if (poJSON != null) {
+            if(!"error".equals((String) poJSON.get("result"))){
+                poMaster.setDeptID((String) poJSON.get("sDeptIDxx"));
+                poMaster.setDeptName((String) poJSON.get("sDeptName"));
+            }
+        } else {
+            poMaster.setDeptID("");
+            poMaster.setDeptName("");
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No record loaded.");
+            return poJSON;
+        }
+        
+        return poJSON;
+    }
+    
+    private String getSQ_Employee() {
+        return " SELECT "
+                + " c.sCompnyNm  "
+                + " ,a.sEmployID "
+                + " ,b.sDeptName "
+                + " ,a.sDeptIDxx "
+                + " ,e.sBranchNm "
+                + " FROM GGC_ISysDBF.Employee_Master001 a	"
+                + " LEFT JOIN GGC_ISysDBF.Department b ON  b.sDeptIDxx = a.sDeptIDxx "
+                + " LEFT JOIN GGC_ISysDBF.Client_Master c on c.sClientID = a.sEmployID "
+                + " LEFT JOIN GGC_ISysDBF.Branch_Others d ON d.sBranchCD = a.sBranchCd "
+                + " LEFT JOIN GGC_ISysDBF.Branch e ON e.sBranchCd = a.sBranchCd "
+                + " WHERE a.cRecdStat = '1' AND ISNULL(a.dFiredxxx) " 
+                + " AND d.cDivision = (SELECT cDivision FROM GGC_ISysDBF.Branch_Others WHERE sBranchCd = " +  SQLUtil.toSQL(psBranchCd) + ")";
+    }
+    
+    public JSONObject searchEmployee(String fsValue) {
+        poJSON = new JSONObject();
+        
+        String lsSQL = getSQ_Employee() + " AND sDeptName LIKE " + SQLUtil.toSQL(fsValue + "%");
+
+        System.out.println("SEARCH EMPLOYEE: " + lsSQL);
+        poJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                    "Employee Name»Department Name»Branch",
+                    "sCompnyNm»sDeptName»sBranchNm",
+                    "sCompnyNm»sDeptName»sBranchNm",
+                1);
+
+        if (poJSON != null) {
+            if(!"error".equals((String) poJSON.get("result"))){
+                poMaster.setEmployID((String) poJSON.get("sEmployID"));
+                poMaster.setEmpInCharge((String) poJSON.get("sCompnyNm"));
+            }
+        } else {
+            poMaster.setEmployID("");
+            poMaster.setEmpInCharge("");
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No record loaded.");
+            return poJSON;
+        }
+        
+        return poJSON;
+    }
+    
+    /**
+     * Searches for a province based on the provided value.
+     *
+     * @param fsValue the value used to search for a province
+     * @return true if the province is found and set as the master record, false
+     * otherwise
+     */
+    public JSONObject searchProvince(String fsValue) {
+        poJSON = new JSONObject();
+        
+        String lsSQL =    " SELECT "
+                        + " sProvIDxx "
+                        + " ,sProvName "
+                        + " From province "
+                        + " WHERE cRecdStat = '1' AND sProvName LIKE " + SQLUtil.toSQL(fsValue + "%");
+
+        System.out.println("SEARCH PROVINCE: " + lsSQL);
+        poJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                    "Province",
+                    "sProvName",
+                    "sProvName",
+                0);
+
+        if (poJSON != null) {
+            if(!"error".equals((String) poJSON.get("result"))){
+                poMaster.setProvID((String) poJSON.get("sProvIDxx"));
+                poMaster.setProvName((String) poJSON.get("sProvName"));
+            }
+        } else {
+            poMaster.setProvID("");
+            poMaster.setProvName("");
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No record loaded.");
+            return poJSON;
+        }
+        
+        return poJSON;
+    }
+    
+    /**
+    * Searches for a branch by name and retrieves branch details.
+    *
+    * This method performs a search for a branch by name and retrieves branch details such as location and branch name. It allows both UI and non-UI search modes and provides feedback if no records are found.
+    *
+    * @param fsValue The branch name or a search query.
+    * @return True if the branch is successfully found and details are retrieved, otherwise false.
+    */
+    public JSONObject searchBranch(String fsValue) {
+        poJSON = new JSONObject();
+        
+        String lsSQL =   " SELECT "
+                + " IFNULL(a.sBranchCd, '') sBranchCd "
+                + " , IFNULL(a.sBranchNm, '') sBranchNm "
+                + " , IFNULL(b.cDivision, '') cDivision "
+                + " FROM branch a "
+                + " LEFT JOIN branch_others b ON a.sBranchCd = b.sBranchCd  "
+                + " WHERE a.cRecdStat = '1'  "
+                + " AND b.cDivision = (SELECT cDivision FROM branch_others WHERE sBranchCd = " + SQLUtil.toSQL(psBranchCd) + ")"
+                + " AND sProvName LIKE " + SQLUtil.toSQL(fsValue + "%");
+
+        System.out.println("SEARCH BRANCH: " + lsSQL);
+        poJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                    "Branch Code»Branch Name",
+                    "sBranchCd»sBranchNm",
+                    "sBranchCd»sBranchNm",
+                1);
+
+        if (poJSON != null) {
+            if(!"error".equals((String) poJSON.get("result"))){
+                poMaster.setLocation((String) poJSON.get("sBranchCd"));
+                poMaster.setBranchNm((String) poJSON.get("sBranchNm"));
+            }
+        } else {
+            poMaster.setLocation("");
+            poMaster.setBranchNm("");
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No record loaded.");
+            return poJSON;
+        }
+        
+        return poJSON;
+    }
+    
+    public JSONObject searchEventType(String fsValue) {
+        poJSON = new JSONObject();
+        
+        String lsSQL =    " SELECT"
+                        + " sActTypID "
+                        + " ,sActTypDs "
+                        + " ,sEventTyp "
+                        + " ,cRecdStat "
+                        + " FROM event_type "
+                        + " WHERE sEventTyp LIKE " + SQLUtil.toSQL(fsValue + "%");
+
+        System.out.println("SEARCH EVENT TYPE: " + lsSQL);
+        poJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                    "Event Type»Source",
+                    "sEventTyp»sActTypDs",
+                    "sEventTyp»sActTypDs",
+                1);
+
+        if (poJSON != null) {
+            if(!"error".equals((String) poJSON.get("result"))){
+                poMaster.setActTypID((String) poJSON.get("sActTypID"));
+                poMaster.setEventTyp((String) poJSON.get("sEventTyp"));
+            }
+        } else {
+            poMaster.setActTypID("");
+            poMaster.setEventTyp("");
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No record loaded.");
+            return poJSON;
+        }
+        
+        return poJSON;
     }
 }
