@@ -11,7 +11,7 @@ import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.controller.sales.Activity_Master;
 import org.guanzon.auto.controller.sales.Activity_Member;
-import org.guanzon.auto.controller.sales.Activity_Town;
+import org.guanzon.auto.controller.sales.Activity_Location;
 import org.guanzon.auto.controller.sales.Activity_Vehicle;
 import org.json.simple.JSONObject;
 
@@ -30,13 +30,13 @@ public class Activity implements GTransaction{
     public JSONObject poJSON;
     
     Activity_Master poController;
-    Activity_Town poActTown;
+    Activity_Location poActLocation;
     Activity_Member poActMember;
     Activity_Vehicle poActVehicle;
     
     public Activity(GRider foAppDrver, boolean fbWtParent, String fsBranchCd){
         poController = new Activity_Master(foAppDrver,fbWtParent,fsBranchCd);
-        poActTown = new Activity_Town(foAppDrver);
+        poActLocation = new Activity_Location(foAppDrver);
         poActMember = new Activity_Member(foAppDrver);
         poActVehicle = new Activity_Vehicle(foAppDrver);
         
@@ -108,7 +108,7 @@ public class Activity implements GTransaction{
             pnEditMode = EditMode.UNKNOWN;
         }
         
-        poJSON = poActTown.openDetail(fsValue);
+        poJSON = poActLocation.openDetail(fsValue);
         if(!"success".equals(poJSON.get("result"))){
             pnEditMode = EditMode.UNKNOWN;
         }
@@ -136,10 +136,13 @@ public class Activity implements GTransaction{
         
         poJSON = new JSONObject();  
         
-//        poJSON = validateEntry();
-//        if("error".equalsIgnoreCase((String)poJSON.get("result"))){
-//            return poJSON;
-//        }
+        poJSON = validateEntry();
+        if("error".equalsIgnoreCase((String)poJSON.get("result"))){
+            return poJSON;
+        }
+        
+        
+        if (!pbWtParent) poGRider.beginTrans();
         
         poJSON =  poController.saveTransaction();
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
@@ -147,9 +150,7 @@ public class Activity implements GTransaction{
             return checkData(poJSON);
         }
         
-        if (!pbWtParent) poGRider.beginTrans();
-        
-        poJSON =  poActTown.saveDetail((String) poController.getModel().getActvtyID());
+        poJSON =  poActLocation.saveDetail((String) poController.getModel().getActvtyID());
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
@@ -244,8 +245,8 @@ public class Activity implements GTransaction{
         return joValue;
     }
     
-    public ArrayList getActTownList(){return poActTown.getDetailList();}
-    public void setActTownList(ArrayList foObj){this.poActTown.setDetailList(foObj);}
+    public ArrayList getActLocationList(){return poActLocation.getDetailList();}
+    public void setActLocationList(ArrayList foObj){this.poActLocation.setDetailList(foObj);}
     
     public ArrayList getActMemberList(){return poActMember.getDetailList();}
     public void setActMemberList(ArrayList foObj){this.poActMember.setDetailList(foObj);}
@@ -253,13 +254,13 @@ public class Activity implements GTransaction{
     public ArrayList getActVehicleList(){return poActVehicle.getDetailList();}
     public void setActVehicleList(ArrayList foObj){this.poActVehicle.setDetailList(foObj);}
     
-    public void setActTown(int fnRow, int fnIndex, Object foValue){ poActTown.setDetail(fnRow, fnIndex, foValue);}
-    public void setActTown(int fnRow, String fsIndex, Object foValue){ poActTown.setDetail(fnRow, fsIndex, foValue);}
-    public Object getActTown(int fnRow, int fnIndex){return poActTown.getDetail(fnRow, fnIndex);}
-    public Object getActTown(int fnRow, String fsIndex){return poActTown.getDetail(fnRow, fsIndex);}
+    public void setActLocation(int fnRow, int fnIndex, Object foValue){ poActLocation.setDetail(fnRow, fnIndex, foValue);}
+    public void setActLocation(int fnRow, String fsIndex, Object foValue){ poActLocation.setDetail(fnRow, fsIndex, foValue);}
+    public Object getActLocation(int fnRow, int fnIndex){return poActLocation.getDetail(fnRow, fnIndex);}
+    public Object getActLocation(int fnRow, String fsIndex){return poActLocation.getDetail(fnRow, fsIndex);}
     
-    public Object addActTown(){ return poActTown.addDetail(poController.getModel().getActvtyID());}
-    public Object removeActTown(int fnRow){ return poActTown.removeDetail(fnRow);}
+    public Object addActLocation(){ return poActLocation.addDetail(poController.getModel().getActvtyID());}
+    public Object removeActLocation(int fnRow){ return poActLocation.removeDetail(fnRow);}
     
     public void setActMember(int fnRow, int fnIndex, Object foValue){ poActMember.setDetail(fnRow, fnIndex, foValue);}
     public void setActMember(int fnRow, String fsIndex, Object foValue){ poActMember.setDetail(fnRow, fsIndex, foValue);}
@@ -277,6 +278,40 @@ public class Activity implements GTransaction{
     public Object addActVehicle(){ return poActVehicle.addDetail(poController.getModel().getActvtyID());}
     public Object removeActVehicle(int fnRow){ return poActVehicle.removeDetail(fnRow);}
     
+    
+    public JSONObject validateEntry() {
+        JSONObject jObj = new JSONObject();
+        
+        //VALIDATE : Activity Location
+        if(poActLocation.getDetailList()== null){
+            jObj.put("result", "error");
+            jObj.put("message", "No activity location detected. Please encode activity location.");
+            return jObj;
+        }
+        
+        int lnSize = poActLocation.getDetailList().size() -1;
+        if (lnSize < 0){
+            jObj.put("result", "error");
+            jObj.put("message", "No activity location detected. Please encode activity location.");
+            return jObj;
+        }
+        
+        //VALIDATE : Activity Member
+        if(poActMember.getDetailList()== null){
+            jObj.put("result", "error");
+            jObj.put("message", "No activity member detected. Please encode activity member.");
+            return jObj;
+        }
+        lnSize = 0;
+        lnSize = poActMember.getDetailList().size() -1;
+        if (lnSize < 0){
+            jObj.put("result", "error");
+            jObj.put("message", "No activity member detected. Please encode activity member.");
+            return jObj;
+        }
+        
+        return jObj;
+    }
     
      /**
      *
@@ -301,16 +336,26 @@ public class Activity implements GTransaction{
     
     
     /**
-     * Searches for a province based on the provided value.
-     *
-     * @param fsValue the value used to search for a province
-     * @return true if the province is found and set as the master record, false
+     * Search Town
+     * @param fsValue searching for value
+     * @param fnRow current row to be set
+     * @param fbByCode set fbByCode into TRUE if you're searching Town by CODE, otherwise set FALSE.
+     * @return 
      */
-    public JSONObject searchProvince(String fsValue) {
-        return poController.searchProvince(fsValue);
-        
+    public JSONObject searchTown(String fsValue, int fnRow, boolean fbByCode){
+        return poActLocation.searchTown(fsValue, fnRow, fbByCode);
     }
     
+    /**
+     * Search Province
+     * @param fsValue searching for value
+     * @param fnRow current row to be set
+     * @param fbByCode set fbByCode into TRUE if you're searching Province by CODE, otherwise set FALSE.
+     * @return 
+     */
+    public JSONObject searchProvince(String fsValue, int fnRow, boolean fbByCode){
+        return poActLocation.searchProvince(fsValue, fnRow, fbByCode);
+    }
     
     /**
      * Searches for an event type based on the provided value.
@@ -322,5 +367,42 @@ public class Activity implements GTransaction{
         return poController.searchEventType(fsValue);
         
     }
+    
+    public JSONObject loadDepartment() {
+        return poActMember.loadDepartment(); 
+    }
+    
+    public ArrayList getDepartmentList(){return poActMember.getDepartmentList();}
+    
+    public Object getDepartmentID(int fnRow, int fnIndex){return poActMember.getDepartmentID(fnRow, fnIndex);}
+    public Object getDepartmentID(int fnRow, String fsIndex){return poActMember.getDepartmentID(fnRow, fsIndex);}
+    
+    public Object getDepartmentNm(int fnRow, int fnIndex){return poActMember.getDepartmentNm(fnRow, fnIndex);}
+    public Object getDepartmentNm(int fnRow, String fsIndex){return poActMember.getDepartmentNm(fnRow, fsIndex);}
+    
+    public JSONObject loadEmployee(String fsValue) {
+        return poActMember.loadEmployee(fsValue); 
+    }
+    
+    public ArrayList getEmployeeList(){return poActMember.getEmployeeList();}
+    
+    public Object getEmployeeID(int fnRow, int fnIndex){return poActMember.getEmployeeID(fnRow, fnIndex);}
+    public Object getEmployeeID(int fnRow, String fsIndex){return poActMember.getEmployeeID(fnRow, fsIndex);}
+    
+    public Object getEmployeeNm(int fnRow, int fnIndex){return poActMember.getEmployeeNm(fnRow, fnIndex);}
+    public Object getEmployeeNm(int fnRow, String fsIndex){return poActMember.getEmployeeNm(fnRow, fsIndex);}
+    
+    public JSONObject loadVehicle() {
+        return poActVehicle.loadVehicle(); 
+    }
+    
+    public ArrayList getVehicleList(){return poActVehicle.getVehicleList();}
+    
+    public Object getSerialID(int fnRow, int fnIndex){return poActVehicle.getSerialID(fnRow, fnIndex);}
+    public Object getSerialID(int fnRow, String fsIndex){return poActVehicle.getSerialID(fnRow, fsIndex);}
+    
+    public Object getVehicleDesc(int fnRow, int fnIndex){return poActVehicle.getVehicleDesc(fnRow, fnIndex);}
+    public Object getVehicleDesc(int fnRow, String fsIndex){return poActVehicle.getVehicleDesc(fnRow, fsIndex);}
+    
     
 }

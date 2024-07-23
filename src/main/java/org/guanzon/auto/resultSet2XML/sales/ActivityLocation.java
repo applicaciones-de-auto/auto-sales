@@ -12,9 +12,9 @@ import org.guanzon.appdriver.base.MiscUtil;
 
 /**
  *
- * @author MIS-PC
+ * @author Arsiela
  */
-public class ActivityTown {
+public class ActivityLocation {
     
     public static void main (String [] args){
         String path;
@@ -35,21 +35,26 @@ public class ActivityTown {
 
         System.out.println("Connected");
         
-        System.setProperty("sys.default.path.metadata", "D:/GGC_Maven_Systems/config/metadata/Model_Activity_Town.xml");
+        System.setProperty("sys.default.path.metadata", "D:/GGC_Maven_Systems/config/metadata/Model_Activity_Location.xml");
         
         String lsSQL =    " SELECT "                                              
                         + "    a.sTransNox "                                      
+                        + "  , a.nEntryNox "                                     
                         + "  , a.sTownIDxx "                                      
                         + "  , a.sAddressx "                                      
                         + "  , b.sTownName "                                      
-                        + " FROM activity_town a "                                
-                        + " LEFT JOIN towncity b ON b.sTownIDxx = a.sTownIDxx "
+                        + "  , b.sZippCode "                                      
+                        + "  , b.sProvIDxx "                                      
+                        + "  , c.sProvName "                                     
+                        + " FROM activity_location a "                                
+                        + " LEFT JOIN towncity b ON b.sTownIDxx = a.sTownIDxx "        
+                        + " LEFT JOIN province c ON c.sProvIDxx = b.sProvIDxx "
                         + " WHERE 0=1 ";
         
         //System.out.println(lsSQL);
         ResultSet loRS = instance.executeQuery(lsSQL);
         try {
-            if (MiscUtil.resultSet2XML(instance, loRS, System.getProperty("sys.default.path.metadata"), "activity_town", "")){
+            if (MiscUtil.resultSet2XML(instance, loRS, System.getProperty("sys.default.path.metadata"), "activity_location", "")){
                 System.out.println("ResultSet exported.");
             }
         } catch (SQLException e) {

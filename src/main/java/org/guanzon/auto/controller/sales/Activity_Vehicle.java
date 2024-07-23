@@ -32,6 +32,8 @@ public class Activity_Vehicle  {
     public JSONObject poJSON;
     
     ArrayList<Model_Activity_Vehicle> paDetail;
+    ArrayList<String> paSerialID;
+    ArrayList<String> paVehicleDesc;
     
     public Activity_Vehicle(GRider foAppDrver){
         poGRider = foAppDrver;
@@ -179,5 +181,60 @@ public class Activity_Vehicle  {
 //        }
         return loJSON;
     }
+    
+    /**
+     * Loads the department data.
+     * @return {@code true} if the department data is successfully loaded,
+     * {@code false} otherwise
+     */
+    public JSONObject loadVehicle() {
+        paSerialID = new ArrayList<>();
+        paVehicleDesc = new ArrayList<>();
+        JSONObject jObj = new JSONObject();
+        String lsSQL =    "  SELECT  " 
+                        + "  a.sSerialID " 
+                        + ", b.sDescript " 
+                        + "  FROM vehicle_serial a " 
+                        + "  LEFT JOIN vehicle_master b ON b.sVhclIDxx = a.sVhclIDxx ";
+        lsSQL = MiscUtil.addCondition(lsSQL, " (a.cSoldStat = '1' ) AND (ISNULL(a.sClientID) OR  TRIM(a.sClientID) = '' ) ")
+                + " ORDER BY sDescript DESC ";
+        
+        System.out.println(lsSQL);
+        ResultSet loRS = poGRider.executeQuery(lsSQL);
+        try {
+            int lnctr = 0;
+            if (MiscUtil.RecordCount(loRS) > 0) {
+                while(loRS.next()){
+                    paSerialID.add(lnctr, loRS.getString("sSerialID"));
+                    paVehicleDesc.add(lnctr, loRS.getString("sDescript"));
+                } 
+                     
+                if(paSerialID.size() == paVehicleDesc.size()){
+                    jObj.put("result", "success");
+                    jObj.put("message", "Vehicle loaded successfully.");
+                } else {
+                    jObj.put("result", "error");
+                    jObj.put("message", "Vehicle did not load properly.");
+                }
+                
+            }else{
+                jObj.put("result", "error");
+                jObj.put("message", "No Vehicle loaded.");
+            }
+            MiscUtil.close(loRS);
+        } catch (SQLException e) {
+            jObj.put("result", "error");
+            jObj.put("message", e.getMessage());
+        }
+       
+        return jObj;
+    }
+    
+    public ArrayList<String> getVehicleList(){return paSerialID;}
+    public Object getSerialID(int fnRow, int fnIndex){return paSerialID.get(fnRow);}
+    public Object getSerialID(int fnRow, String fsIndex){return paSerialID.get(fnRow);}
+    
+    public Object getVehicleDesc(int fnRow, int fnIndex){return paVehicleDesc.get(fnRow);}
+    public Object getVehicleDesc(int fnRow, String fsIndex){return paVehicleDesc.get(fnRow);}
     
 }

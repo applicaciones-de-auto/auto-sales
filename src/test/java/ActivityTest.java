@@ -156,11 +156,35 @@ public class ActivityTest {
             System.exit(1);
         }
         
-        model.addActTown();
-        System.out.println("town size = " + model.getActTownList().size());
-        for(int lnctr = 0; lnctr < model.getActTownList().size(); lnctr++){
-            model.setActTown(lnctr, "sTownIDxx", "0335");
-            model.setActTown(lnctr, "sAddressx", "MALASIQUI");
+        model.loadDepartment();
+        System.out.println("department size = " + model.getDepartmentList().size());
+        for(int lnctr = 0; lnctr < model.getDepartmentList().size(); lnctr++){
+            System.out.println("Department ID : " + model.getDepartmentID(lnctr, lnctr));
+            System.out.println("Department Nn : " + model.getDepartmentNm(lnctr, lnctr));
+        }
+        
+        model.loadEmployee("026");
+        System.out.println("employee size = " + model.getEmployeeList().size());
+        for(int lnctr = 0; lnctr < model.getEmployeeList().size(); lnctr++){
+            System.out.println("Employee ID : " + model.getEmployeeID(lnctr, lnctr));
+            System.out.println("Employee Nn : " + model.getEmployeeNm(lnctr, lnctr));
+        }
+        
+        model.loadVehicle();
+        System.out.println("vehicle size = " + model.getVehicleList().size());
+        for(int lnctr = 0; lnctr < model.getVehicleList().size(); lnctr++){
+            System.out.println("Vehicle Serial ID : " + model.getSerialID(lnctr, lnctr));
+            System.out.println("Vehicle Description  : " + model.getVehicleDesc(lnctr, lnctr));
+        }
+        
+        
+        
+        model.addActLocation();
+        System.out.println("town size = " + model.getActLocationList().size());
+        for(int lnctr = 0; lnctr < model.getActLocationList().size(); lnctr++){
+            model.setActLocation(lnctr, "sProvIDxx", "01");
+            model.setActLocation(lnctr, "sTownIDxx", "0335");
+            model.setActLocation(lnctr, "sAddressx", "MALASIQUI");
         }
         
         model.addActMember();

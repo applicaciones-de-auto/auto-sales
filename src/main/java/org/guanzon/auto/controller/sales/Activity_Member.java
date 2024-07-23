@@ -34,7 +34,10 @@ public class Activity_Member {
     public JSONObject poJSON;
     
     ArrayList<Model_Activity_Member> paDetail;
-    ArrayList<String> paDepartment;
+    ArrayList<String> paDepartmentID;
+    ArrayList<String> paDepartmentNm;
+    ArrayList<String> paEmployeeID;
+    ArrayList<String> paEmployeeNm;
     
     public Activity_Member(GRider foAppDrver){
         poGRider = foAppDrver;
@@ -89,7 +92,7 @@ public class Activity_Member {
                         + "   a.sTransNox "                                                            
                         + " , a.nEntryNox "                                                            
                         + " , a.cOriginal "                                                            
-                        + "FROM activity_member " ;
+                        + " FROM activity_member " ;
         lsSQL = MiscUtil.addCondition(lsSQL, "sTransNox = " + SQLUtil.toSQL(fsValue));
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
@@ -192,14 +195,16 @@ public class Activity_Member {
      * {@code false} otherwise
      */
     public JSONObject loadDepartment() {
-        paDepartment = new ArrayList<>();
+        paDepartmentID = new ArrayList<>();
+        paDepartmentNm = new ArrayList<>();
         JSONObject jObj = new JSONObject();
         String lsSQL =    " SELECT "
                         + " sDeptIDxx"
                         + " , sDeptName "
                         + " , cRecdStat "
-                        + "FROM ggc_isysdbf.department ";
-        lsSQL = MiscUtil.addCondition(lsSQL, "cRecdStat = " + SQLUtil.toSQL("1"));
+                        + "FROM GGC_ISysDBF.Department ";
+        lsSQL = MiscUtil.addCondition(lsSQL, " cRecdStat = " + SQLUtil.toSQL("1")) 
+                + " ORDER BY sDeptIDxx DESC ";
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
         System.out.println(lsSQL);
@@ -207,23 +212,97 @@ public class Activity_Member {
             int lnctr = 0;
             if (MiscUtil.RecordCount(loRS) > 0) {
                 while(loRS.next()){
-                        paDepartment.add(lnctr, loRS.getString("sDeptIDxx"));
-                        paDepartment.add(lnctr, loRS.getString("sDeptName"));
-                        
-                        poJSON.put("result", "success");
-                        poJSON.put("message", "Department loaded successfully.");
-                    } 
+                    paDepartmentID.add(lnctr, loRS.getString("sDeptIDxx"));
+                    paDepartmentNm.add(lnctr, loRS.getString("sDeptName"));
+                } 
+                     
+                if(paDepartmentID.size() == paDepartmentNm.size()){
+                    jObj.put("result", "success");
+                    jObj.put("message", "Department loaded successfully.");
+                } else {
+                    jObj.put("result", "error");
+                    jObj.put("message", "Department did not load properly.");
+                }
                 
             }else{
-                poJSON.put("result", "error");
-                poJSON.put("message", "No Department loaded.");
+                jObj.put("result", "error");
+                jObj.put("message", "No Department loaded.");
             }
             MiscUtil.close(loRS);
         } catch (SQLException e) {
-            poJSON.put("result", "error");
-            poJSON.put("message", e.getMessage());
+            jObj.put("result", "error");
+            jObj.put("message", e.getMessage());
         }
-        
-        return poJSON;
+       
+        return jObj;
     }
+    
+    public ArrayList<String> getDepartmentList(){return paDepartmentID;}
+    public Object getDepartmentID(int fnRow, int fnIndex){return paDepartmentID.get(fnRow);}
+    public Object getDepartmentID(int fnRow, String fsIndex){return paDepartmentID.get(fnRow);}
+    
+    public Object getDepartmentNm(int fnRow, int fnIndex){return paDepartmentNm.get(fnRow);}
+    public Object getDepartmentNm(int fnRow, String fsIndex){return paDepartmentNm.get(fnRow);}
+    
+    /**
+     * Loads employee data based on the specified value and load mode.
+     * @param fsValue Department ID
+     */
+    public JSONObject loadEmployee(String fsValue) {
+        paEmployeeID = new ArrayList<>();
+        paEmployeeNm = new ArrayList<>();
+        JSONObject jObj = new JSONObject();
+        
+        if(fsValue.trim().isEmpty()){
+            jObj.put("result", "error");
+            jObj.put("message", "Passed department cannot be empty.");
+        }
+        String lsSQL =    " SELECT "                                                             
+                        + "   a.sEmployID "                                                      
+                        + " , a.sDeptIDxx "                                                      
+                        + " , b.sCompnyNm "                                                      
+                        + " FROM GGC_ISysDBF.Employee_Master001 a "                              
+                        + " LEFT JOIN GGC_ISysDBF.Client_Master b ON b.sClientID = a.sEmployID " 
+                        + " WHERE a.cRecdStat = '1' AND ISNULL(a.dFiredxxx) "
+                        + " AND a.sDeptIDxx = " + SQLUtil.toSQL(fsValue)   
+                        + " ORDER BY b.sCompnyNm DESC ";
+        
+        System.out.println(lsSQL);
+        ResultSet loRS = poGRider.executeQuery(lsSQL);
+        
+        try {
+            int lnctr = 0;
+            if (MiscUtil.RecordCount(loRS) > 0) {
+                while(loRS.next()){
+                    paEmployeeID.add(lnctr, loRS.getString("sEmployID"));
+                    paEmployeeNm.add(lnctr, loRS.getString("sCompnyNm"));
+                } 
+                     
+                if(paEmployeeID.size() == paEmployeeNm.size()){
+                    jObj.put("result", "success");
+                    jObj.put("message", "Employee loaded successfully.");
+                } else {
+                    jObj.put("result", "error");
+                    jObj.put("message", "Employee did not load properly.");
+                }
+                
+            }else{
+                jObj.put("result", "error");
+                jObj.put("message", "No Department loaded.");
+            }
+            MiscUtil.close(loRS);
+        } catch (SQLException e) {
+            jObj.put("result", "error");
+            jObj.put("message", e.getMessage());
+        }
+       
+        return jObj;
+    }
+    
+    public ArrayList<String> getEmployeeList(){return paEmployeeID;}
+    public Object getEmployeeID(int fnRow, int fnIndex){return paEmployeeID.get(fnRow);}
+    public Object getEmployeeID(int fnRow, String fsIndex){return paEmployeeID.get(fnRow);}
+    
+    public Object getEmployeeNm(int fnRow, int fnIndex){return paEmployeeNm.get(fnRow);}
+    public Object getEmployeeNm(int fnRow, String fsIndex){return paEmployeeNm.get(fnRow);}
 }

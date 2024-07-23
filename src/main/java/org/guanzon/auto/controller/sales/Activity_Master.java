@@ -164,14 +164,11 @@ public class Activity_Master implements GTransaction {
 //            return poJSON;
 //        }
         
-        if (!pbWtParent) poGRider.beginTrans();
         poJSON =  poMaster.saveRecord();
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
         }
-        
-        if (!pbWtParent) poGRider.commitTrans();
         
         return poJSON;
     }
@@ -376,48 +373,6 @@ public class Activity_Master implements GTransaction {
         } else {
             poMaster.setEmployID("");
             poMaster.setEmpInCharge("");
-            poJSON = new JSONObject();
-            poJSON.put("result", "error");
-            poJSON.put("message", "No record loaded.");
-            return poJSON;
-        }
-        
-        return poJSON;
-    }
-    
-    /**
-     * Searches for a province based on the provided value.
-     *
-     * @param fsValue the value used to search for a province
-     * @return true if the province is found and set as the master record, false
-     * otherwise
-     */
-    public JSONObject searchProvince(String fsValue) {
-        poJSON = new JSONObject();
-        
-        String lsSQL =    " SELECT "
-                        + " sProvIDxx "
-                        + " ,sProvName "
-                        + " From province "
-                        + " WHERE cRecdStat = '1' AND sProvName LIKE " + SQLUtil.toSQL(fsValue + "%");
-
-        System.out.println("SEARCH PROVINCE: " + lsSQL);
-        poJSON = ShowDialogFX.Search(poGRider,
-                lsSQL,
-                fsValue,
-                    "Province",
-                    "sProvName",
-                    "sProvName",
-                0);
-
-        if (poJSON != null) {
-            if(!"error".equals((String) poJSON.get("result"))){
-                poMaster.setProvID((String) poJSON.get("sProvIDxx"));
-                poMaster.setProvName((String) poJSON.get("sProvName"));
-            }
-        } else {
-            poMaster.setProvID("");
-            poMaster.setProvName("");
             poJSON = new JSONObject();
             poJSON.put("result", "error");
             poJSON.put("message", "No record loaded.");
