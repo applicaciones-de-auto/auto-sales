@@ -404,5 +404,8 @@ public class Activity implements GTransaction{
     public Object getVehicleDesc(int fnRow, int fnIndex){return poActVehicle.getVehicleDesc(fnRow, fnIndex);}
     public Object getVehicleDesc(int fnRow, String fsIndex){return poActVehicle.getVehicleDesc(fnRow, fsIndex);}
     
+    public Object getVehicleCSNo(int fnRow, int fnIndex){return poActVehicle.getVehicleCSNo(fnRow, fnIndex);}
+    public Object getVehicleCSNo(int fnRow, String fsIndex){return poActVehicle.getVehicleCSNo(fnRow, fsIndex);}
+    
     
 }

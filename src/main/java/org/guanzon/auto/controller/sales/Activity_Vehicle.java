@@ -34,6 +34,7 @@ public class Activity_Vehicle  {
     ArrayList<Model_Activity_Vehicle> paDetail;
     ArrayList<String> paSerialID;
     ArrayList<String> paVehicleDesc;
+    ArrayList<String> paVehicleCSNo;
     
     public Activity_Vehicle(GRider foAppDrver){
         poGRider = foAppDrver;
@@ -193,6 +194,7 @@ public class Activity_Vehicle  {
         JSONObject jObj = new JSONObject();
         String lsSQL =    "  SELECT  " 
                         + "  a.sSerialID " 
+                        + "  a.sCSNoxxxx " 
                         + ", b.sDescript " 
                         + "  FROM vehicle_serial a " 
                         + "  LEFT JOIN vehicle_master b ON b.sVhclIDxx = a.sVhclIDxx ";
@@ -207,6 +209,7 @@ public class Activity_Vehicle  {
                 while(loRS.next()){
                     paSerialID.add(lnctr, loRS.getString("sSerialID"));
                     paVehicleDesc.add(lnctr, loRS.getString("sDescript"));
+                    paVehicleCSNo.add(lnctr, loRS.getString("sCSNoxxxx"));
                 } 
                      
                 if(paSerialID.size() == paVehicleDesc.size()){
@@ -236,5 +239,8 @@ public class Activity_Vehicle  {
     
     public Object getVehicleDesc(int fnRow, int fnIndex){return paVehicleDesc.get(fnRow);}
     public Object getVehicleDesc(int fnRow, String fsIndex){return paVehicleDesc.get(fnRow);}
+    
+    public Object getVehicleCSNo(int fnRow, int fnIndex){return paVehicleCSNo.get(fnRow);}
+    public Object getVehicleCSNo(int fnRow, String fsIndex){return paVehicleCSNo.get(fnRow);}
     
 }

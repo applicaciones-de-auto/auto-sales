@@ -39,9 +39,10 @@ public class ActivityLocation {
         
         String lsSQL =    " SELECT "                                              
                         + "    a.sTransNox "                                      
-                        + "  , a.nEntryNox "                                     
-                        + "  , a.sTownIDxx "                                      
-                        + "  , a.sAddressx "                                      
+                        + "  , a.nEntryNox "                                      
+                        + "  , a.sAddressx "                                     
+                        + "  , a.sTownIDxx "                                        
+                        + "  , a.sCompnynx "                                    
                         + "  , b.sTownName "                                      
                         + "  , b.sZippCode "                                      
                         + "  , b.sProvIDxx "                                      
