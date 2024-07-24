@@ -84,11 +84,11 @@ public class Activity_Location {
         paDetail = new ArrayList<>();
         poJSON = new JSONObject();
         String lsSQL =    "  SELECT "              
-                        + "    a.sTransNox "      
-                        + "  , a.sTownIDxx "      
-                        + "  , a.sAddressx "       
-                        + " FROM activity_town a " ;
-        lsSQL = MiscUtil.addCondition(lsSQL, "sTransNox = " + SQLUtil.toSQL(fsValue));
+                        + "    sTransNox "      
+                        + "  , sTownIDxx "      
+                        + "  , sAddressx "       
+                        + " FROM activity_town " ;
+        lsSQL = MiscUtil.addCondition(lsSQL, " sTransNox = " + SQLUtil.toSQL(fsValue));
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
         System.out.println(lsSQL);
@@ -331,20 +331,124 @@ public class Activity_Location {
                     paDetail.get(fnRow).setTownID("");
                     paDetail.get(fnRow).setTownName("");
                     paDetail.get(fnRow).setZippCode("");
+                    paDetail.get(fnRow).setBrgyID("");
+                    paDetail.get(fnRow).setBrgyName("");
                 } else {
                     paDetail.get(fnRow).setTownID((String) loJSON.get("sTownIDxx"));
                     paDetail.get(fnRow).setTownName((String) loJSON.get("sTownName"));
                     paDetail.get(fnRow).setZippCode((String) loJSON.get("sZippCode"));
+                    paDetail.get(fnRow).setBrgyID("");
+                    paDetail.get(fnRow).setBrgyName("");
                 }
             }else {
                 paDetail.get(fnRow).setTownID("");
                 paDetail.get(fnRow).setTownName("");
                 paDetail.get(fnRow).setZippCode("");
+                    paDetail.get(fnRow).setBrgyID("");
+                    paDetail.get(fnRow).setBrgyName("");
                 loJSON  = new JSONObject();  
                 loJSON.put("result", "error");
                 loJSON.put("message", "No record selected.");
                 return loJSON;
             }
+            
+        return loJSON;
+    }
+    
+    public JSONObject searchBarangay(String fsValue, int fnRow, boolean fbByCode) {
+        JSONObject loJSON = new JSONObject();
+        
+        if(paDetail.get(fnRow).getProvID()== null){
+            loJSON.put("result", "error");
+            loJSON.put("message", "Province cannot be empty.");
+            return loJSON;
+        } else {
+            if(paDetail.get(fnRow).getProvID().trim().isEmpty()){
+                loJSON.put("result", "error");
+                loJSON.put("message", "Province cannot be empty.");
+                return loJSON;
+            }
+        }
+        
+        if(paDetail.get(fnRow).getTownID()== null){
+            loJSON.put("result", "error");
+            loJSON.put("message", "Town cannot be empty.");
+            return loJSON;
+        } else {
+            if(paDetail.get(fnRow).getTownID().trim().isEmpty()){
+                loJSON.put("result", "error");
+                loJSON.put("message", "Town cannot be empty.");
+                return loJSON;
+            }
+        }
+        
+        if (fbByCode){
+            if (fsValue.equals((String) paDetail.get(fnRow).getBrgyID())) {
+                loJSON = new JSONObject();
+                loJSON.put("result", "success");
+                loJSON.put("message", "Search barangay success.");
+                return loJSON;
+            }
+        }else{
+            String lsbarangay = String.valueOf(paDetail.get(fnRow).getValue("sBrgyName"));
+            if(!lsbarangay.isEmpty()){
+                if (fsValue.equals(lsbarangay)){
+                    loJSON = new JSONObject();
+                    loJSON.put("result", "success");
+                    loJSON.put("message", "Search barangay success.");
+                    return loJSON;
+                }
+            }
+        }
+        
+       String lsSQL = "SELECT " +
+                        "  a.sBrgyIDxx" +
+                        ", a.sBrgyName" +
+                        ", b.sTownName" + 
+                        ", b.sZippCode" +
+                        ", c.sProvName" + 
+                        ", c.sProvIDxx" +
+                        ", b.sTownIDxx" +
+                    " FROM Barangay a" + 
+                        ", TownCity b" +
+                        ", Province c" +
+                    " WHERE a.sTownIDxx = b.sTownIDxx" + 
+                        " AND b.sProvIDxx = c.sProvIDxx" + 
+                        " AND a.cRecdStat = '1'" + 
+                        " AND b.cRecdStat = '1'" + 
+                        " AND c.cRecdStat = '1'" + 
+                        " AND a.sTownIDxx = " + SQLUtil.toSQL(paDetail.get(fnRow).getTownID());
+        
+        if (fbByCode){
+            lsSQL = MiscUtil.addCondition(lsSQL, "a.sBrgyIDxx = " + SQLUtil.toSQL(fsValue));
+        } else {
+            lsSQL = MiscUtil.addCondition(lsSQL, "a.sBrgyName LIKE " + SQLUtil.toSQL(fsValue + "%"));
+        }
+        System.out.println(lsSQL);
+        loJSON = ShowDialogFX.Search(poGRider, 
+                            lsSQL, 
+                            fsValue,
+                            "ID»Barangay»Town»Province", 
+                            "sBrgyIDxx»sBrgyName»sTownName»sProvName",
+                            "sBrgyIDxx»sBrgyName»sTownName»sProvName",
+                            fbByCode ? 0 : 1);
+            
+        if (loJSON != null) {
+            if("error".equals(loJSON.get("result"))){
+                paDetail.get(fnRow).setBrgyID("");
+                paDetail.get(fnRow).setBrgyName("");
+            } else {
+                paDetail.get(fnRow).setBrgyID((String) loJSON.get("sBrgyIDxx"));
+                paDetail.get(fnRow).setBrgyName((String) loJSON.get("sBrgyName"));
+            }
+        }else {
+            paDetail.get(fnRow).setBrgyID("");
+            paDetail.get(fnRow).setBrgyName("");
+            loJSON  = new JSONObject();  
+            loJSON.put("result", "error");
+            loJSON.put("message", "No record selected.");
+            return loJSON;
+        }
             
         return loJSON;
     }

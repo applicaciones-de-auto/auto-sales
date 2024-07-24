@@ -64,6 +64,7 @@ public class Activity_Member {
             paDetail.add(new Model_Activity_Member(poGRider));
             paDetail.get(0).newRecord();
             paDetail.get(0).setValue("sTransNox", fsTransNo);
+            paDetail.get(0).setValue("cOriginal", "1");
             poJSON.put("result", "success");
             poJSON.put("message", "Activity Member add record.");
         } else {
@@ -78,6 +79,7 @@ public class Activity_Member {
             paDetail.get(paDetail.size()-1).newRecord();
 
             paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
+            paDetail.get(paDetail.size()-1).setValue("cOriginal", "1");
             
             poJSON.put("result", "success");
             poJSON.put("message", "Activity Member add record.");
@@ -89,9 +91,9 @@ public class Activity_Member {
         paDetail = new ArrayList<>();
         poJSON = new JSONObject();
         String lsSQL =      "   SELECT "                                                                 
-                        + "   a.sTransNox "                                                            
-                        + " , a.nEntryNox "                                                            
-                        + " , a.cOriginal "                                                            
+                        + "   sTransNox "                                                            
+                        + " , nEntryNox "                                                            
+                        + " , cOriginal "                                                            
                         + " FROM activity_member " ;
         lsSQL = MiscUtil.addCondition(lsSQL, "sTransNox = " + SQLUtil.toSQL(fsValue));
         ResultSet loRS = poGRider.executeQuery(lsSQL);

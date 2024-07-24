@@ -334,6 +334,31 @@ public class Activity implements GTransaction{
         return poController.searchEmployee(fsValue);
     }
     
+   
+    
+    /**
+    * Searches for a branch by name and retrieves branch details.
+    *
+    * This method performs a search for a branch by name and retrieves branch details such as location and branch name. It allows both UI and non-UI search modes and provides feedback if no records are found.
+    *
+    * @param fsValue The branch name or a search query.
+    * @return True if the branch is successfully found and details are retrieved, otherwise false.
+    */
+    public JSONObject searchBranch(String fsValue) {
+        return poController.searchBranch(fsValue);
+        
+    }
+    
+    /**
+     * Search Barangay
+     * @param fsValue searching for value
+     * @param fnRow current row to be set
+     * @param fbByCode set fbByCode into TRUE if you're searching Town by CODE, otherwise set FALSE.
+     * @return 
+     */
+    public JSONObject searchBarangay(String fsValue, int fnRow, boolean fbByCode){
+        return poActLocation.searchBarangay(fsValue, fnRow, fbByCode);
+    }
     
     /**
      * Search Town

@@ -40,16 +40,19 @@ public class ActivityLocation {
         String lsSQL =    " SELECT "                                              
                         + "    a.sTransNox "                                      
                         + "  , a.nEntryNox "                                      
-                        + "  , a.sAddressx "                                     
+                        + "  , a.sAddressx "                                       
+                        + "  , a.sBrgyIDxx "                                    
                         + "  , a.sTownIDxx "                                        
-                        + "  , a.sCompnynx "                                    
+                        + "  , a.sCompnynx "                                      
+                        + "  , d.sBrgyName "                                   
                         + "  , b.sTownName "                                      
                         + "  , b.sZippCode "                                      
                         + "  , b.sProvIDxx "                                      
                         + "  , c.sProvName "                                     
                         + " FROM activity_location a "                                
                         + " LEFT JOIN towncity b ON b.sTownIDxx = a.sTownIDxx "        
-                        + " LEFT JOIN province c ON c.sProvIDxx = b.sProvIDxx "
+                        + " LEFT JOIN province c ON c.sProvIDxx = b.sProvIDxx "       
+                        + " LEFT JOIN barangay d ON d.sBrgyIDxx = a.sBrgyIDxx "
                         + " WHERE 0=1 ";
         
         //System.out.println(lsSQL);
