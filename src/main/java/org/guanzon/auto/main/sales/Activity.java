@@ -417,6 +417,9 @@ public class Activity implements GTransaction{
     public Object getEmployeeNm(int fnRow, int fnIndex){return poActMember.getEmployeeNm(fnRow, fnIndex);}
     public Object getEmployeeNm(int fnRow, String fsIndex){return poActMember.getEmployeeNm(fnRow, fsIndex);}
     
+    public Object getEmpDeptNm(int fnRow, int fnIndex){return poActMember.getEmpDeptNm(fnRow, fnIndex);}
+    public Object getEmpDeptNm(int fnRow, String fsIndex){return poActMember.getEmpDeptNm(fnRow, fsIndex);}
+    
     public JSONObject loadVehicle() {
         return poActVehicle.loadVehicle(); 
     }

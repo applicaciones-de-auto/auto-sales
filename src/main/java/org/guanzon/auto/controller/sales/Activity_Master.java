@@ -228,7 +228,7 @@ public class Activity_Master implements GTransaction {
     }
     
     public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
-        String lsHeader = "Activity Start Date»Activity End Date»Activity No»Activity Title";
+        String lsHeader = "Start Date»End Date»Activity No»Activity Title";
         String lsColName = "dDateFrom»dDateThru»sActNoxxx»sActTitle";
         String lsSQL =  poMaster.getSQL(); ;  
         
@@ -245,12 +245,13 @@ public class Activity_Master implements GTransaction {
                     fsValue,
                     lsHeader,
                     lsColName,
-                "0.3D»0.3D»0.5D", 
+                "0.1D»0.1D»0.3D»0.5D", 
                     "ACTIVITY",
                     0);
             
         if (loJSON != null && !"error".equals((String) loJSON.get("result"))) {
         }else {
+            loJSON = new JSONObject();
             loJSON.put("result", "error");
             loJSON.put("message", "No Transaction loaded.");
             return loJSON;

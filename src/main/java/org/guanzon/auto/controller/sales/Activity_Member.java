@@ -38,6 +38,7 @@ public class Activity_Member {
     ArrayList<String> paDepartmentNm;
     ArrayList<String> paEmployeeID;
     ArrayList<String> paEmployeeNm;
+    ArrayList<String> paEmpDeptNm;
     
     public Activity_Member(GRider foAppDrver){
         poGRider = foAppDrver;
@@ -65,6 +66,7 @@ public class Activity_Member {
             paDetail.get(0).newRecord();
             paDetail.get(0).setValue("sTransNox", fsTransNo);
             paDetail.get(0).setValue("cOriginal", "1");
+            paDetail.get(0).setValue("nEntryNox", 0);
             poJSON.put("result", "success");
             poJSON.put("message", "Activity Member add record.");
         } else {
@@ -80,6 +82,7 @@ public class Activity_Member {
 
             paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
             paDetail.get(paDetail.size()-1).setValue("cOriginal", "1");
+            paDetail.get(paDetail.size()-1).setValue("nEntryNox", 0);
             
             poJSON.put("result", "success");
             poJSON.put("message", "Activity Member add record.");
@@ -104,7 +107,7 @@ public class Activity_Member {
             if (MiscUtil.RecordCount(loRS) > 0) {
                 while(loRS.next()){
                         paDetail.add(new Model_Activity_Member(poGRider));
-                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"));
+                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"), loRS.getString("nEntryNox"));
                         
                         pnEditMode = EditMode.UPDATE;
                         lnctr++;
@@ -179,15 +182,13 @@ public class Activity_Member {
     
     public Object removeDetail(int fnRow){
         JSONObject loJSON = new JSONObject();
-        paDetail.get(fnRow).setOriginal("0");
-//        if(paDetail.get(fnRow).getEntryBy().isEmpty()){
-//            paDetail.remove(fnRow);
-//        } 
-//        else {
-//            loJSON.put("result", "error");
-//            loJSON.put("message", "You cannot remove Detail that already saved, Deactivate it instead.");
-//            return loJSON;
-//        }
+        
+        if(paDetail.get(fnRow).getEntryNo() != 0){
+            paDetail.get(fnRow).setOriginal("0");
+        } else {
+            paDetail.remove(fnRow);
+        }
+        
         return loJSON;
     }
     
@@ -253,6 +254,7 @@ public class Activity_Member {
     public JSONObject loadEmployee(String fsValue) {
         paEmployeeID = new ArrayList<>();
         paEmployeeNm = new ArrayList<>();
+        paEmpDeptNm = new ArrayList<>();
         JSONObject jObj = new JSONObject();
         
         if(fsValue.trim().isEmpty()){
@@ -262,9 +264,11 @@ public class Activity_Member {
         String lsSQL =    " SELECT "                                                             
                         + "   a.sEmployID "                                                      
                         + " , a.sDeptIDxx "                                                      
-                        + " , b.sCompnyNm "                                                      
+                        + " , b.sCompnyNm "  
+                        + " , c.sDeptName "                                                    
                         + " FROM GGC_ISysDBF.Employee_Master001 a "                              
                         + " LEFT JOIN GGC_ISysDBF.Client_Master b ON b.sClientID = a.sEmployID " 
+                        + " LEFT JOIN GGC_ISysDBF.Department c ON c.sDeptIDxx = a.sDeptIDxx "
                         + " WHERE a.cRecdStat = '1' AND ISNULL(a.dFiredxxx) "
                         + " AND a.sDeptIDxx = " + SQLUtil.toSQL(fsValue)   
                         + " ORDER BY b.sCompnyNm DESC ";
@@ -278,6 +282,7 @@ public class Activity_Member {
                 while(loRS.next()){
                     paEmployeeID.add(lnctr, loRS.getString("sEmployID"));
                     paEmployeeNm.add(lnctr, loRS.getString("sCompnyNm"));
+                    paEmpDeptNm.add(lnctr, loRS.getString("sDeptName"));
                 } 
                      
                 if(paEmployeeID.size() == paEmployeeNm.size()){
@@ -307,4 +312,7 @@ public class Activity_Member {
     
     public Object getEmployeeNm(int fnRow, int fnIndex){return paEmployeeNm.get(fnRow);}
     public Object getEmployeeNm(int fnRow, String fsIndex){return paEmployeeNm.get(fnRow);}
+    
+    public Object getEmpDeptNm(int fnRow, int fnIndex){return paEmpDeptNm.get(fnRow);}
+    public Object getEmpDeptNm(int fnRow, String fsIndex){return paEmpDeptNm.get(fnRow);}
 }

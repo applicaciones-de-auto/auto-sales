@@ -33,6 +33,7 @@ public class Activity_Location {
     public JSONObject poJSON;
     
     ArrayList<Model_Activity_Location> paDetail;
+    ArrayList<Model_Activity_Location> paRemDetail;
     
     public Activity_Location(GRider foAppDrver){
         poGRider = foAppDrver;
@@ -59,6 +60,7 @@ public class Activity_Location {
             paDetail.add(new Model_Activity_Location(poGRider));
             paDetail.get(0).newRecord();
             paDetail.get(0).setValue("sTransNox", fsTransNo);
+            paDetail.get(0).setValue("nEntryNox", 0);
             poJSON.put("result", "success");
             poJSON.put("message", "Activity Location add record.");
         } else {
@@ -73,6 +75,7 @@ public class Activity_Location {
             paDetail.get(paDetail.size()-1).newRecord();
 
             paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
+            paDetail.get(paDetail.size()-1).setEntryNo(0);
             
             poJSON.put("result", "success");
             poJSON.put("message", "Activity Location add record.");
@@ -86,8 +89,9 @@ public class Activity_Location {
         String lsSQL =    "  SELECT "              
                         + "    sTransNox "      
                         + "  , sTownIDxx "      
-                        + "  , sAddressx "       
-                        + " FROM activity_town " ;
+                        + "  , sAddressx "     
+                        + "  , nEntryNox "      
+                        + " FROM activity_location " ;
         lsSQL = MiscUtil.addCondition(lsSQL, " sTransNox = " + SQLUtil.toSQL(fsValue));
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
@@ -97,7 +101,7 @@ public class Activity_Location {
             if (MiscUtil.RecordCount(loRS) > 0) {
                 while(loRS.next()){
                         paDetail.add(new Model_Activity_Location(poGRider));
-                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"));
+                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"), loRS.getString("nEntryNox"));
                         
                         pnEditMode = EditMode.UPDATE;
                         lnctr++;
@@ -140,15 +144,20 @@ public class Activity_Location {
         String lsSQL;
         
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
-            paDetail.get(lnCtr).setTransNo(fsTransNo);
-            paDetail.get(lnCtr).setEntryNo(lnCtr+1);
-
-            if(lnCtr>0){
+            if(lnCtr>=0){
                 if(paDetail.get(lnCtr).getTownID().isEmpty()){
                     paDetail.remove(lnCtr);
-                }
+                    lnCtr++;
+                    if(lnCtr > lnSize){
+                        break;
+                    } else {
+                       continue;
+                    }
+                } 
             }
             
+            paDetail.get(lnCtr).setTransNo(fsTransNo);
+
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Activity_Location, paDetail.get(lnCtr));
             validator.setGRider(poGRider);
             if (!validator.isEntryOkay()){
@@ -172,17 +181,48 @@ public class Activity_Location {
     
     public Object removeDetail(int fnRow){
         JSONObject loJSON = new JSONObject();
-        //if(paDetail.get(fnRow).getEntryBy().isEmpty()){
+        if(pnEditMode == EditMode.ADDNEW){
             paDetail.remove(fnRow);
-        //} 
-//        else {
-//            loJSON.put("result", "error");
-//            loJSON.put("message", "You cannot remove Detail that already saved, Deactivate it instead.");
-//            return loJSON;
-//        }
+        } else {
+            RemoveDetail(fnRow);
+        }
+        
         return loJSON;
     }
     
+    private JSONObject RemoveDetail(Integer fnRow){
+        
+        if(paRemDetail == null){
+           paRemDetail = new ArrayList<>();
+        }
+        
+        poJSON = new JSONObject();
+        if (paRemDetail.size()<=0){
+            paRemDetail.add(new Model_Activity_Location(poGRider));
+            paRemDetail.get(0).newRecord();
+            paRemDetail.get(0).setValue("sTransNox", fsTransNo);
+            paDetail.get(0).setValue("nEntryNox", 0);
+            poJSON.put("result", "success");
+            poJSON.put("message", "Activity Location add record.");
+        } else {
+            ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Activity_Location, paDetail.get(paDetail.size()-1));
+            validator.setGRider(poGRider);
+            if(!validator.isEntryOkay()){
+                poJSON.put("result", "error");
+                poJSON.put("message", validator.getMessage());
+                return poJSON;
+            }
+            paDetail.add(new Model_Activity_Location(poGRider));
+            paDetail.get(paDetail.size()-1).newRecord();
+
+            paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
+            paDetail.get(paDetail.size()-1).setEntryNo(0);
+            
+            poJSON.put("result", "success");
+            poJSON.put("message", "Activity Location add record.");
+        }
+        return poJSON;
+    }
     
     
     /**

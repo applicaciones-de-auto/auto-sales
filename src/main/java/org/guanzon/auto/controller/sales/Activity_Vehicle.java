@@ -99,7 +99,7 @@ public class Activity_Vehicle  {
             if (MiscUtil.RecordCount(loRS) > 0) {
                 while(loRS.next()){
                         paDetail.add(new Model_Activity_Vehicle(poGRider));
-                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"));
+                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"), loRS.getString("nEntryNox"));
                         
                         pnEditMode = EditMode.UPDATE;
                         lnctr++;
@@ -191,14 +191,17 @@ public class Activity_Vehicle  {
     public JSONObject loadVehicle() {
         paSerialID = new ArrayList<>();
         paVehicleDesc = new ArrayList<>();
+        paVehicleCSNo = new ArrayList<>();
         JSONObject jObj = new JSONObject();
         String lsSQL =    "  SELECT  " 
                         + "  a.sSerialID " 
-                        + "  a.sCSNoxxxx " 
+                        + ", a.sCSNoxxxx " 
                         + ", b.sDescript " 
+                        + ", c.sPlateNox " 
                         + "  FROM vehicle_serial a " 
-                        + "  LEFT JOIN vehicle_master b ON b.sVhclIDxx = a.sVhclIDxx ";
-        lsSQL = MiscUtil.addCondition(lsSQL, " (a.cSoldStat = '1' ) AND (ISNULL(a.sClientID) OR  TRIM(a.sClientID) = '' ) ")
+                        + "  LEFT JOIN vehicle_master b ON b.sVhclIDxx = a.sVhclIDxx "
+                        + "  LEFT JOIN vehicle_serial_registration c ON c.sSerialID = a.sSerialID ";
+        lsSQL = MiscUtil.addCondition(lsSQL, " (a.cSoldStat = '1' ) AND (ISNULL(a.sClientID) OR TRIM(a.sClientID) = '' ) ")
                 + " ORDER BY sDescript DESC ";
         
         System.out.println(lsSQL);
@@ -209,7 +212,17 @@ public class Activity_Vehicle  {
                 while(loRS.next()){
                     paSerialID.add(lnctr, loRS.getString("sSerialID"));
                     paVehicleDesc.add(lnctr, loRS.getString("sDescript"));
-                    paVehicleCSNo.add(lnctr, loRS.getString("sCSNoxxxx"));
+                    
+                    if(loRS.getString("sCSNoxxxx") == null){
+                        paVehicleCSNo.add(lnctr, loRS.getString("sPlateNox"));
+                    } else {
+                        if(loRS.getString("sCSNoxxxx").trim().isEmpty()){
+                            paVehicleCSNo.add(lnctr, loRS.getString("sPlateNox"));
+                        } else {
+                            paVehicleCSNo.add(lnctr, loRS.getString("sCSNoxxxx"));
+                        }
+                    }
+                    
                 } 
                      
                 if(paSerialID.size() == paVehicleDesc.size()){
