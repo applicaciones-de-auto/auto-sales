@@ -61,29 +61,21 @@ public class Activity_Member {
         }
         
         poJSON = new JSONObject();
+        paDetail.add(new Model_Activity_Member(poGRider));
         if (paDetail.size()<=0){
-            paDetail.add(new Model_Activity_Member(poGRider));
             paDetail.get(0).newRecord();
+            
             paDetail.get(0).setValue("sTransNox", fsTransNo);
             paDetail.get(0).setValue("cOriginal", "1");
             paDetail.get(0).setValue("nEntryNox", 0);
             poJSON.put("result", "success");
             poJSON.put("message", "Activity Member add record.");
         } else {
-            ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Activity_Member, paDetail.get(paDetail.size()-1));
-            validator.setGRider(poGRider);
-            if(!validator.isEntryOkay()){
-                poJSON.put("result", "error");
-                poJSON.put("message", validator.getMessage());
-                return poJSON;
-            }
-            paDetail.add(new Model_Activity_Member(poGRider));
             paDetail.get(paDetail.size()-1).newRecord();
 
             paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
             paDetail.get(paDetail.size()-1).setValue("cOriginal", "1");
             paDetail.get(paDetail.size()-1).setValue("nEntryNox", 0);
-            
             poJSON.put("result", "success");
             poJSON.put("message", "Activity Member add record.");
         }
@@ -96,7 +88,8 @@ public class Activity_Member {
         String lsSQL =      "   SELECT "                                                                 
                         + "   sTransNox "                                                            
                         + " , nEntryNox "                                                            
-                        + " , cOriginal "                                                            
+                        + " , cOriginal "                                                           
+                        + " , sEmployID "                                                            
                         + " FROM activity_member " ;
         lsSQL = MiscUtil.addCondition(lsSQL, "sTransNox = " + SQLUtil.toSQL(fsValue));
         ResultSet loRS = poGRider.executeQuery(lsSQL);
@@ -107,7 +100,7 @@ public class Activity_Member {
             if (MiscUtil.RecordCount(loRS) > 0) {
                 while(loRS.next()){
                         paDetail.add(new Model_Activity_Member(poGRider));
-                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"), loRS.getString("nEntryNox"));
+                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"), loRS.getString("sEmployID"));
                         
                         pnEditMode = EditMode.UPDATE;
                         lnctr++;
@@ -150,14 +143,17 @@ public class Activity_Member {
         String lsSQL;
         
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
-            paDetail.get(lnCtr).setTransNo(fsTransNo);
-            paDetail.get(lnCtr).setEntryNo(lnCtr+1);
-            
             if(lnCtr>0){
                 if(paDetail.get(lnCtr).getEmployID().isEmpty()){
                     paDetail.remove(lnCtr);
+                    lnCtr++;
+                    if(lnCtr > lnSize){
+                        break;
+                    } 
                 }
             }
+            paDetail.get(lnCtr).setTransNo(fsTransNo);
+            paDetail.get(lnCtr).setEntryNo(lnCtr+1);
             
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Activity_Member, paDetail.get(lnCtr));
             validator.setGRider(poGRider);
@@ -172,7 +168,12 @@ public class Activity_Member {
         return obj;
     }
     
-    public ArrayList<Model_Activity_Member> getDetailList(){return paDetail;}
+    public ArrayList<Model_Activity_Member> getDetailList(){
+        if(paDetail == null){
+           paDetail = new ArrayList<>();
+        }
+        return paDetail;
+    }
     public void setDetailList(ArrayList<Model_Activity_Member> foObj){this.paDetail = foObj;}
     
     public void setDetail(int fnRow, int fnIndex, Object foValue){ paDetail.get(fnRow).setValue(fnIndex, foValue);}

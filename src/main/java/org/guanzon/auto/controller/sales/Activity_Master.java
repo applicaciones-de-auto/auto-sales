@@ -101,7 +101,7 @@ public class Activity_Master implements GTransaction {
             poMaster = new Model_Activity_Master(poGRider);
             Connection loConn = null;
             loConn = setConnection();
-            poMaster.setActvtyID(MiscUtil.getNextCode(poMaster.getTable(), "sActvtyID", true, poGRider.getConnection(), poGRider.getBranchCode()));
+            poMaster.setActvtyID(MiscUtil.getNextCode(poMaster.getTable(), "sActvtyID", true, poGRider.getConnection(), poGRider.getBranchCode()+"AC"));
             poMaster.setActNo(MiscUtil.getNextCode(poMaster.getTable(), "sActNoxxx", true, poGRider.getConnection(), poGRider.getBranchCode()+"ACT"));
             poMaster.newRecord();
             

@@ -141,7 +141,6 @@ public class Activity implements GTransaction{
             return poJSON;
         }
         
-        
         if (!pbWtParent) poGRider.beginTrans();
         
         poJSON =  poController.saveTransaction();
@@ -283,7 +282,7 @@ public class Activity implements GTransaction{
         JSONObject jObj = new JSONObject();
         
         //VALIDATE : Activity Location
-        if(poActLocation.getDetailList()== null){
+        if(poActLocation.getDetailList() == null){
             jObj.put("result", "error");
             jObj.put("message", "No activity location detected. Please encode activity location.");
             return jObj;
