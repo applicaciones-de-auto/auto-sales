@@ -159,12 +159,13 @@ public class Activity_Master implements GTransaction {
     @Override
     public JSONObject saveTransaction() {
         poJSON = new JSONObject();  
-//        ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Activity_Master, poMaster);
-//        if (!validator.isEntryOkay()){
-//            poJSON.put("result", "error");
-//            poJSON.put("message", validator.getMessage());
-//            return poJSON;
-//        }
+        ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Activity_Master, poMaster);
+        validator.setGRider(poGRider);
+        if (!validator.isEntryOkay()){
+            poJSON.put("result", "error");
+            poJSON.put("message", validator.getMessage());
+            return poJSON;
+        }
         
         poJSON =  poMaster.saveRecord();
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
@@ -451,11 +452,18 @@ public class Activity_Master implements GTransaction {
                 poMaster.setActTypID((String) poJSON.get("sActTypID"));
                 poMaster.setEventTyp((String) poJSON.get("sEventTyp"));
                 poMaster.setActTypDs((String) poJSON.get("sActTypDs"));
+                poMaster.setActSrce((String) poJSON.get("sActTypDs"));
+            } else {
+                poMaster.setActTypID("");
+                poMaster.setEventTyp("");
+                poMaster.setActTypDs("");
+                poMaster.setActSrce("");
             }
         } else {
             poMaster.setActTypID("");
             poMaster.setEventTyp("");
             poMaster.setActTypDs("");
+            poMaster.setActSrce("");
             poJSON = new JSONObject();
             poJSON.put("result", "error");
             poJSON.put("message", "No record loaded.");

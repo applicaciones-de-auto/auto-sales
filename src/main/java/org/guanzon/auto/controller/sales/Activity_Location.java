@@ -56,14 +56,15 @@ public class Activity_Location {
         }
         
         poJSON = new JSONObject();
-        paDetail.add(new Model_Activity_Location(poGRider));
         if (paDetail.size()<=0){
+            paDetail.add(new Model_Activity_Location(poGRider));
             paDetail.get(0).newRecord();
             paDetail.get(0).setValue("sTransNox", fsTransNo);
             paDetail.get(0).setValue("nEntryNox", 0);
             poJSON.put("result", "success");
             poJSON.put("message", "Activity Location add record.");
         } else {
+            paDetail.add(new Model_Activity_Location(poGRider));
             paDetail.get(paDetail.size()-1).newRecord();
             paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
             paDetail.get(paDetail.size()-1).setEntryNo(0);
@@ -76,6 +77,7 @@ public class Activity_Location {
     
     public JSONObject openDetail(String fsValue){
         paDetail = new ArrayList<>();
+        paRemDetail = new ArrayList<>();
         poJSON = new JSONObject();
         String lsSQL =    "  SELECT "              
                         + "    sTransNox "      
@@ -119,6 +121,19 @@ public class Activity_Location {
     public JSONObject saveDetail(String fsTransNo){
         JSONObject obj = new JSONObject();
         
+        int lnCtr;
+        if(paRemDetail != null){
+            int lnRemSize = paRemDetail.size() -1;
+            if(lnRemSize >= 0){
+                for(lnCtr = 0; lnCtr <= lnRemSize; lnCtr++){
+                    obj = paRemDetail.get(lnCtr).deleteRecord();
+                    if("error".equals((String) obj.get("result"))){
+                        return obj;
+                    }
+                }
+            }
+        }
+        
         if(paDetail == null){
             obj.put("result", "error");
             obj.put("continue", false);
@@ -130,19 +145,6 @@ public class Activity_Location {
             obj.put("result", "error");
             obj.put("continue", false);
             return obj;
-        }
-        
-        int lnCtr;
-        if(paRemDetail != null){
-            int lnRemSize = paRemDetail.size() -1;
-            if(lnRemSize >= 0){
-                for(lnCtr = 0; lnCtr <= lnRemSize; lnCtr++){
-                    obj = paRemDetail.get(lnCtr).deleteRecord();
-                    if("error".equals((String) obj.get("result"))){;
-                        return obj;
-                    }
-                }
-            }
         }
         
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
@@ -220,21 +222,22 @@ public class Activity_Location {
         }
         
         poJSON = new JSONObject();
-        paDetail.add(new Model_Activity_Location(poGRider));
         if (paRemDetail.size()<=0){
-            paRemDetail.get(0).newRecord();
+            paRemDetail.add(new Model_Activity_Location(poGRider));
+            paRemDetail.get(0).openRecord(paDetail.get(fnRow).getTransNo(),paDetail.get(fnRow).getBrgyID());
             
-            paRemDetail.get(0).setValue("sTransNox", paDetail.get(fnRow).getTransNo());
-            paRemDetail.get(0).setValue("nEntryNox", paDetail.get(fnRow).getEntryNo());
-            paRemDetail.get(0).setValue("sBrgyIDxx", paDetail.get(fnRow).getBrgyID());
+//            paRemDetail.get(0).setValue("sTransNox", paDetail.get(fnRow).getTransNo());
+//            paRemDetail.get(0).setValue("nEntryNox", paDetail.get(fnRow).getEntryNo());
+//            paRemDetail.get(0).setValue("sBrgyIDxx", paDetail.get(fnRow).getBrgyID());
             poJSON.put("result", "success");
             poJSON.put("message", "added to remove record.");
         } else {
-            paDetail.get(paDetail.size()-1).newRecord();
+            paRemDetail.add(new Model_Activity_Location(poGRider));
+            paRemDetail.get(paRemDetail.size()-1).openRecord(paDetail.get(fnRow).getTransNo(),paDetail.get(fnRow).getBrgyID());
             
-            paRemDetail.get(paDetail.size()-1).setValue("sTransNox", paDetail.get(fnRow).getTransNo());
-            paRemDetail.get(paDetail.size()-1).setValue("nEntryNox", paDetail.get(fnRow).getEntryNo());
-            paRemDetail.get(paDetail.size()-1).setValue("sBrgyIDxx", paDetail.get(fnRow).getBrgyID());
+//            paRemDetail.get(paRemDetail.size()-1).setValue("sTransNox", paDetail.get(fnRow).getTransNo());
+//            paRemDetail.get(paRemDetail.size()-1).setValue("nEntryNox", paDetail.get(fnRow).getEntryNo());
+//            paRemDetail.get(paRemDetail.size()-1).setValue("sBrgyIDxx", paDetail.get(fnRow).getBrgyID());
             poJSON.put("result", "success");
             poJSON.put("message", "added to remove record.");
         }
@@ -458,7 +461,7 @@ public class Activity_Location {
             }
         }
         
-       String lsSQL = "SELECT " +
+        String lsSQL = "SELECT " +
                         "  a.sBrgyIDxx" +
                         ", a.sBrgyName" +
                         ", b.sTownName" + 
@@ -495,8 +498,27 @@ public class Activity_Location {
                 paDetail.get(fnRow).setBrgyID("");
                 paDetail.get(fnRow).setBrgyName("");
             } else {
-                paDetail.get(fnRow).setBrgyID((String) loJSON.get("sBrgyIDxx"));
-                paDetail.get(fnRow).setBrgyName((String) loJSON.get("sBrgyName"));
+                
+                int lnSize = getDetailList().size() - 1;
+                boolean lbExist = false;
+                int lnCtr = 0;
+                for(lnCtr = 0;lnCtr <= lnSize; lnCtr++){
+                    if(paDetail.get(lnCtr).getBrgyID().equals((String) loJSON.get("sBrgyIDxx"))){
+                        lbExist = true;
+                        break;
+                    }
+                }
+                
+                if(!lbExist){
+                    paDetail.get(fnRow).setBrgyID((String) loJSON.get("sBrgyIDxx"));
+                    paDetail.get(fnRow).setBrgyName((String) loJSON.get("sBrgyName"));
+                } else {
+                    paDetail.get(fnRow).setBrgyID("");
+                    paDetail.get(fnRow).setBrgyName("");
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Barangay : " + (String) loJSON.get("sBrgyName") + " already exist.");
+                }
+                
             }
         }else {
             paDetail.get(fnRow).setBrgyID("");

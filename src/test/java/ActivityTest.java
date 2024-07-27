@@ -253,7 +253,7 @@ public class ActivityTest {
         System.out.println("------------------------------RETRIEVAL--------------------------------------");
         System.out.println("--------------------------------------------------------------------");
         
-        json = model.openTransaction("M00124000001");
+        json = model.openTransaction("M001AC240001");
         
         if (!"success".equals((String) json.get("result"))){
             result = false;

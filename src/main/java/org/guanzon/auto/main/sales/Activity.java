@@ -169,6 +169,8 @@ public class Activity implements GTransaction{
         
         if (!pbWtParent) poGRider.commitTrans();
         
+        
+        
         return poJSON;
     }
 
@@ -304,6 +306,20 @@ public class Activity implements GTransaction{
         lnSize = 0;
         lnSize = poActMember.getDetailList().size() -1;
         if (lnSize < 0){
+            jObj.put("result", "error");
+            jObj.put("message", "No activity member detected. Please encode activity member.");
+            return jObj;
+        }
+        
+        boolean lbEmpOrg = false;
+        for(int lnCtr = 0; lnCtr <= lnSize; lnCtr++){
+            if("1".equals(poActMember.getDetail(lnCtr).getOriginal())){
+                lbEmpOrg = true;
+                break;
+            }
+        }
+        
+        if(!lbEmpOrg){
             jObj.put("result", "error");
             jObj.put("message", "No activity member detected. Please encode activity member.");
             return jObj;

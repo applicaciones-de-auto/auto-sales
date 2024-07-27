@@ -61,8 +61,8 @@ public class Activity_Member {
         }
         
         poJSON = new JSONObject();
-        paDetail.add(new Model_Activity_Member(poGRider));
         if (paDetail.size()<=0){
+            paDetail.add(new Model_Activity_Member(poGRider));
             paDetail.get(0).newRecord();
             
             paDetail.get(0).setValue("sTransNox", fsTransNo);
@@ -71,6 +71,7 @@ public class Activity_Member {
             poJSON.put("result", "success");
             poJSON.put("message", "Activity Member add record.");
         } else {
+            paDetail.add(new Model_Activity_Member(poGRider));
             paDetail.get(paDetail.size()-1).newRecord();
 
             paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
@@ -140,8 +141,6 @@ public class Activity_Member {
         }
 
         int lnCtr;
-        String lsSQL;
-        
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
             if(lnCtr>0){
                 if(paDetail.get(lnCtr).getEmployID().isEmpty()){
@@ -183,7 +182,7 @@ public class Activity_Member {
     
     public Object removeDetail(int fnRow){
         JSONObject loJSON = new JSONObject();
-        
+        fnRow = fnRow-1;
         if(paDetail.get(fnRow).getEntryNo() != 0){
             paDetail.get(fnRow).setOriginal("0");
         } else {

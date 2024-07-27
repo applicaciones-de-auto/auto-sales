@@ -12,7 +12,6 @@ import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
-import org.guanzon.auto.model.sales.Model_Activity_Location;
 import org.guanzon.auto.model.sales.Model_Activity_Vehicle;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
 import org.guanzon.auto.validator.sales.ValidatorInterface;
@@ -60,8 +59,8 @@ public class Activity_Vehicle  {
         }
         
         poJSON = new JSONObject();
-        paDetail.add(new Model_Activity_Vehicle(poGRider));
         if (paDetail.size()<=0){
+            paDetail.add(new Model_Activity_Vehicle(poGRider));
             paDetail.get(0).newRecord();
             
             paDetail.get(0).setValue("sTransNox", fsTransNo);
@@ -69,6 +68,7 @@ public class Activity_Vehicle  {
             poJSON.put("result", "success");
             poJSON.put("message", "Activity Vehicle add record.");
         } else {
+            paDetail.add(new Model_Activity_Vehicle(poGRider));
             paDetail.get(paDetail.size()-1).newRecord();
 
             paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
@@ -81,6 +81,7 @@ public class Activity_Vehicle  {
     
     public JSONObject openDetail(String fsValue){
         paDetail = new ArrayList<>();
+        paRemDetail = new ArrayList<>();
         poJSON = new JSONObject();
         String lsSQL =    "  SELECT "                                                  
                         + "  sTransNox "                                             
@@ -122,6 +123,19 @@ public class Activity_Vehicle  {
     public JSONObject saveDetail(String fsTransNo){
         JSONObject obj = new JSONObject();
         
+        int lnCtr;
+        if(paRemDetail != null){
+            int lnRemSize = paRemDetail.size() -1;
+            if(lnRemSize >= 0){
+                for(lnCtr = 0; lnCtr <= lnRemSize; lnCtr++){
+                    obj = paRemDetail.get(lnCtr).deleteRecord();
+                    if("error".equals((String) obj.get("result"))){
+                        return obj;
+                    }
+                }
+            }
+        }
+        
         if(paDetail == null){
             obj.put("result", "error");
             obj.put("continue", true);
@@ -133,19 +147,6 @@ public class Activity_Vehicle  {
             obj.put("result", "error");
             obj.put("continue", true);
             return obj;
-        }
-        
-        int lnCtr;
-        if(paRemDetail != null){
-            int lnRemSize = paRemDetail.size() -1;
-            if(lnRemSize >= 0){
-                for(lnCtr = 0; lnCtr <= lnRemSize; lnCtr++){
-                    obj = paRemDetail.get(lnCtr).deleteRecord();
-                    if("error".equals((String) obj.get("result"))){;
-                        return obj;
-                    }
-                }
-            }
         }
         
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
@@ -207,19 +208,20 @@ public class Activity_Vehicle  {
         }
         
         poJSON = new JSONObject();
-        paRemDetail.add(new Model_Activity_Vehicle(poGRider));
         if (paRemDetail.size()<=0){
-            paRemDetail.get(0).newRecord();
-            paRemDetail.get(0).setValue("sTransNox", paDetail.get(fnRow).getTransNo());
-            paRemDetail.get(0).setValue("nEntryNox", paDetail.get(fnRow).getEntryNo());
-            paRemDetail.get(0).setValue("sSerialID", paDetail.get(fnRow).getSerialID());
+            paRemDetail.add(new Model_Activity_Vehicle(poGRider));
+            paRemDetail.get(0).openRecord(paDetail.get(fnRow).getTransNo(),paDetail.get(fnRow).getSerialID());
+//            paRemDetail.get(0).setValue("sTransNox", paDetail.get(fnRow).getTransNo());
+//            paRemDetail.get(0).setValue("nEntryNox", paDetail.get(fnRow).getEntryNo());
+//            paRemDetail.get(0).setValue("sSerialID", paDetail.get(fnRow).getSerialID());
             poJSON.put("result", "success");
             poJSON.put("message", "added to remove record.");
         } else {
-            paDetail.get(paDetail.size()-1).newRecord();
-            paRemDetail.get(paDetail.size()-1).setValue("sTransNox", paDetail.get(fnRow).getTransNo());
-            paRemDetail.get(paDetail.size()-1).setValue("nEntryNox", paDetail.get(fnRow).getEntryNo());
-            paRemDetail.get(paDetail.size()-1).setValue("sSerialID", paDetail.get(fnRow).getSerialID());
+            paRemDetail.add(new Model_Activity_Vehicle(poGRider));
+            paRemDetail.get(paRemDetail.size()-1).openRecord(paDetail.get(fnRow).getTransNo(),paDetail.get(fnRow).getSerialID());
+//            paRemDetail.get(paRemDetail.size()-1).setValue("sTransNox", paDetail.get(fnRow).getTransNo());
+//            paRemDetail.get(paRemDetail.size()-1).setValue("nEntryNox", paDetail.get(fnRow).getEntryNo());
+//            paRemDetail.get(paRemDetail.size()-1).setValue("sSerialID", paDetail.get(fnRow).getSerialID());
             poJSON.put("result", "success");
             poJSON.put("message", "added to remove record.");
         }
