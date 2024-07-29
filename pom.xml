@@ -7,6 +7,13 @@
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.1</version>
+            <scope>test</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>auto-sales-model</artifactId>
             <version>${project.version}</version>

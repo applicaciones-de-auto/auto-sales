@@ -6,6 +6,9 @@
 package org.guanzon.auto.controller.sales;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import org.guanzon.appdriver.agent.ShowDialogFX;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
@@ -34,6 +37,7 @@ public class Activity_Master implements GTransaction {
     public JSONObject poJSON;
     
     Model_Activity_Master poMaster;
+    ArrayList<Model_Activity_Master> paMaster;
     
     public Activity_Master(GRider foGRider, boolean fbWthParent, String fsBranchCd) {
         poGRider = foGRider;
@@ -76,6 +80,17 @@ public class Activity_Master implements GTransaction {
         return setMaster(poMaster.getColumn(fsCol), foData);
     }
     
+    public Object getMaster(int fnCol) {
+        if(pnEditMode == EditMode.UNKNOWN)
+            return null;
+        else 
+            return poMaster.getValue(fnCol);
+    }
+
+    public Object getMaster(String fsCol) {
+        return getMaster(poMaster.getColumn(fsCol));
+    }
+    
     @Override
     public JSONObject newTransaction() {
         poJSON = new JSONObject();
@@ -86,8 +101,8 @@ public class Activity_Master implements GTransaction {
             poMaster = new Model_Activity_Master(poGRider);
             Connection loConn = null;
             loConn = setConnection();
-            poMaster.setActvtyID(MiscUtil.getNextCode(poMaster.getTable(), "sActvtyID", true, poGRider.getConnection(), poGRider.getBranchCode()+"ACT"));
-            poMaster.setActNo(MiscUtil.getNextCode(poMaster.getTable(), "sActNoxxx", true, poGRider.getConnection(), poGRider.getBranchCode()));
+            poMaster.setActvtyID(MiscUtil.getNextCode(poMaster.getTable(), "sActvtyID", true, poGRider.getConnection(), poGRider.getBranchCode()+"AC"));
+            poMaster.setActNo(MiscUtil.getNextCode(poMaster.getTable(), "sActNoxxx", true, poGRider.getConnection(), poGRider.getBranchCode()+"ACT"));
             poMaster.newRecord();
             
             if (poMaster == null){
@@ -144,21 +159,19 @@ public class Activity_Master implements GTransaction {
     @Override
     public JSONObject saveTransaction() {
         poJSON = new JSONObject();  
-//        ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Activity_Master, poMaster);
-//        if (!validator.isEntryOkay()){
-//            poJSON.put("result", "error");
-//            poJSON.put("message", validator.getMessage());
-//            return poJSON;
-//        }
+        ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Activity_Master, poMaster);
+        validator.setGRider(poGRider);
+        if (!validator.isEntryOkay()){
+            poJSON.put("result", "error");
+            poJSON.put("message", validator.getMessage());
+            return poJSON;
+        }
         
-        if (!pbWtParent) poGRider.beginTrans();
         poJSON =  poMaster.saveRecord();
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
         }
-        
-        if (!pbWtParent) poGRider.commitTrans();
         
         return poJSON;
     }
@@ -216,7 +229,7 @@ public class Activity_Master implements GTransaction {
     }
     
     public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
-        String lsHeader = "Activity Start Date»Activity End Date»Activity No»Activity Title";
+        String lsHeader = "Start Date»End Date»Activity No»Activity Title";
         String lsColName = "dDateFrom»dDateThru»sActNoxxx»sActTitle";
         String lsSQL =  poMaster.getSQL(); ;  
         
@@ -233,12 +246,13 @@ public class Activity_Master implements GTransaction {
                     fsValue,
                     lsHeader,
                     lsColName,
-                "0.3D»0.3D»0.5D", 
+                "0.1D»0.1D»0.3D»0.5D", 
                     "ACTIVITY",
                     0);
             
         if (loJSON != null && !"error".equals((String) loJSON.get("result"))) {
         }else {
+            loJSON = new JSONObject();
             loJSON.put("result", "error");
             loJSON.put("message", "No Transaction loaded.");
             return loJSON;
@@ -267,7 +281,11 @@ public class Activity_Master implements GTransaction {
     }
 
     @Override
-    public Model_Activity_Master getMasterModel() {
+    public Object getMasterModel() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    public Model_Activity_Master getModel() {
         return poMaster;
     }
     
@@ -281,5 +299,228 @@ public class Activity_Master implements GTransaction {
             }
         }
         return joValue;
+    }
+    
+    public JSONObject searchDepartment(String fsValue) {
+        poJSON = new JSONObject();
+         
+        String lsSQL =    " SELECT "
+                        + " sDeptIDxx"
+                        + " , sDeptName "
+                        + " , cRecdStat "
+                        + "FROM ggc_isysdbf.department ";
+        
+        lsSQL = MiscUtil.addCondition(lsSQL, " sDeptName LIKE " + SQLUtil.toSQL(fsValue + "%")
+                                               + " AND cRecdStat = '1'");
+
+        System.out.println("SEARCH DEPARTMENT: " + lsSQL);
+        poJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                "ID»Department",
+                "sDeptIDxx»sDeptName",
+                "sDeptIDxx»sDeptName",
+                1);
+
+        if (poJSON != null) {
+            if(!"error".equals((String) poJSON.get("result"))){
+                poMaster.setDeptID((String) poJSON.get("sDeptIDxx"));
+                poMaster.setDeptName((String) poJSON.get("sDeptName"));
+            }
+        } else {
+            poMaster.setDeptID("");
+            poMaster.setDeptName("");
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No record loaded.");
+            return poJSON;
+        }
+        
+        return poJSON;
+    }
+    
+    private String getSQ_Employee() {
+        return " SELECT "
+                + " c.sCompnyNm  "
+                + " ,a.sEmployID "
+                + " ,b.sDeptName "
+                + " ,a.sDeptIDxx "
+                + " ,e.sBranchNm "
+                + " FROM GGC_ISysDBF.Employee_Master001 a	"
+                + " LEFT JOIN GGC_ISysDBF.Department b ON  b.sDeptIDxx = a.sDeptIDxx "
+                + " LEFT JOIN GGC_ISysDBF.Client_Master c on c.sClientID = a.sEmployID "
+                + " LEFT JOIN GGC_ISysDBF.Branch_Others d ON d.sBranchCD = a.sBranchCd "
+                + " LEFT JOIN GGC_ISysDBF.Branch e ON e.sBranchCd = a.sBranchCd "
+                + " WHERE a.cRecdStat = '1' AND ISNULL(a.dFiredxxx) " 
+                + " AND d.cDivision = (SELECT cDivision FROM GGC_ISysDBF.Branch_Others WHERE sBranchCd = " +  SQLUtil.toSQL(psBranchCd) + ")";
+    }
+    
+    public JSONObject searchEmployee(String fsValue) {
+        poJSON = new JSONObject();
+        
+        String lsSQL = getSQ_Employee() + " AND c.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%") 
+                                        + " AND a.sDeptIDxx = " + SQLUtil.toSQL(poMaster.getDeptID());
+
+        System.out.println("SEARCH EMPLOYEE: " + lsSQL);
+        poJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                    "Employee Name»Department Name»Branch",
+                    "sCompnyNm»sDeptName»sBranchNm",
+                    "c.sCompnyNm»b.sDeptName»e.sBranchNm",
+                0);
+
+        if (poJSON != null) {
+            if(!"error".equals((String) poJSON.get("result"))){
+                poMaster.setEmployID((String) poJSON.get("sEmployID"));
+                poMaster.setEmpInCharge((String) poJSON.get("sCompnyNm"));
+            }
+        } else {
+            poMaster.setEmployID("");
+            poMaster.setEmpInCharge("");
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No record loaded.");
+            return poJSON;
+        }
+        
+        return poJSON;
+    }
+    
+    public JSONObject searchBranch(String fsValue) {
+        poJSON = new JSONObject();
+        
+        String lsSQL =   " SELECT "
+                + " IFNULL(a.sBranchCd, '') sBranchCd "
+                + " , IFNULL(a.sBranchNm, '') sBranchNm "
+                + " , IFNULL(b.cDivision, '') cDivision "
+                + " FROM branch a "
+                + " LEFT JOIN branch_others b ON a.sBranchCd = b.sBranchCd  "
+                + " WHERE a.cRecdStat = '1'  "
+                + " AND b.cDivision = (SELECT cDivision FROM branch_others WHERE sBranchCd = " + SQLUtil.toSQL(psBranchCd) + ")"
+                + " AND sBranchNm LIKE " + SQLUtil.toSQL(fsValue + "%");
+
+        System.out.println("SEARCH BRANCH: " + lsSQL);
+        poJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                    "Branch Code»Branch Name",
+                    "sBranchCd»sBranchNm",
+                    "sBranchCd»sBranchNm",
+                1);
+
+        if (poJSON != null) {
+            if(!"error".equals((String) poJSON.get("result"))){
+                poMaster.setLocation((String) poJSON.get("sBranchCd"));
+                poMaster.setBranchNm((String) poJSON.get("sBranchNm"));
+            }
+        } else {
+            poMaster.setLocation("");
+            poMaster.setBranchNm("");
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No record loaded.");
+            return poJSON;
+        }
+        
+        return poJSON;
+    }
+    
+    public JSONObject searchEventType(String fsValue) {
+        poJSON = new JSONObject();
+        
+        String lsSQL =    " SELECT"
+                        + " sActTypID "
+                        + " ,sActTypDs "
+                        + " ,sEventTyp "
+                        + " ,cRecdStat "
+                        + " FROM event_type "
+                        + " WHERE sActTypDs LIKE " + SQLUtil.toSQL(fsValue + "%")
+                        + " AND sEventTyp = " + SQLUtil.toSQL(poMaster.getEventTyp());
+
+        System.out.println("SEARCH EVENT TYPE: " + lsSQL);
+        poJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                    "Source",
+                    "sActTypDs",
+                    "sActTypDs",
+                0);
+
+        if (poJSON != null) {
+            if(!"error".equals((String) poJSON.get("result"))){
+                poMaster.setActTypID((String) poJSON.get("sActTypID"));
+                poMaster.setEventTyp((String) poJSON.get("sEventTyp"));
+                poMaster.setActTypDs((String) poJSON.get("sActTypDs"));
+                poMaster.setActSrce((String) poJSON.get("sActTypDs"));
+            } else {
+                poMaster.setActTypID("");
+                poMaster.setEventTyp("");
+                poMaster.setActTypDs("");
+                poMaster.setActSrce("");
+            }
+        } else {
+            poMaster.setActTypID("");
+            poMaster.setEventTyp("");
+            poMaster.setActTypDs("");
+            poMaster.setActSrce("");
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No record loaded.");
+            return poJSON;
+        }
+        
+        return poJSON;
+    }
+    
+    public JSONObject ApproveTransaction(String fsValue) {
+        poJSON = new JSONObject();
+
+        if (poMaster.getEditMode() == EditMode.UPDATE) {
+            poJSON = poMaster.setActive(true);
+
+            if ("error".equals((String) poJSON.get("result"))) {
+                return poJSON;
+            }
+            
+//            poJSON = validateEntry();
+//            if ("error".equals((String) poJSON.get("result"))) {
+//                return poJSON;
+//            }
+
+            poJSON = poMaster.saveRecord();
+            if ("success".equals((String) poJSON.get("result"))) {
+                poJSON.put("result", "success");
+                poJSON.put("message", "Cancellation success.");
+            } else {
+                poJSON.put("result", "error");
+                poJSON.put("message", "Cancellation failed.");
+            }
+        } else {
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No transaction loaded to update.");
+        }
+        return poJSON;
+    }
+    
+    public JSONObject loadTransactionForApproval() {
+        poJSON = new JSONObject();
+        if (poGRider == null) {
+            poJSON.put("result", "error");
+            poJSON.put("message", "Application driver is not set.");
+            return poJSON;
+        }
+
+        String lsSQL = MiscUtil.addCondition(poMaster.getSQL(), " a.cTranStat <> '1' AND (a.sApproved IS NULL OR a.sApproved = '') ORDER BY dDateFrom DESC ");
+        System.out.println(lsSQL);
+//        
+//        loRS = poGRider.executeQuery(lsSQL);
+//        poMaster = factory.createCachedRowSet();
+//        poMaster.populate(loRS);
+//        MiscUtil.close(loRS);
+
+        return poJSON;
+    
     }
 }

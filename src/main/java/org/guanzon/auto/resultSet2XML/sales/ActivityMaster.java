@@ -37,7 +37,7 @@ public class ActivityMaster {
         
         System.setProperty("sys.default.path.metadata", "D:/GGC_Maven_Systems/config/metadata/Model_Activity_Master.xml");
         
-        String lsSQL =    " SELECT "                                                                   
+        String lsSQL =   " SELECT "                                                                   
                         + "   a.sActvtyID "                                                            
                         + " , a.sActNoxxx "                                                            
                         + " , a.sActTitle "                                                            
@@ -46,9 +46,9 @@ public class ActivityMaster {
                         + " , a.sActSrcex "                                                            
                         + " , a.dDateFrom "                                                            
                         + " , a.dDateThru "                                                            
-                        + " , a.sProvIDxx "                                                            
+                       // + " , a.sProvIDxx "                                                            
                         + " , a.sLocation "                                                            
-                        + " , a.sCompnynx "                                                            
+                       // + " , a.sCompnynx "                                                            
                         + " , a.nPropBdgt "                                                            
                         + " , a.nRcvdBdgt "                                                            
                         + " , a.nTrgtClnt "                                                            
@@ -66,18 +66,18 @@ public class ActivityMaster {
                         + " , b.sDeptName "                                                            
                         + " , d.sCompnyNm "                                                            
                         + " , e.sBranchNm "                                                            
-                        + " , f.sProvName "                                                            
-                        + " , g.sEventTyp "                                                            
+                        //+ " , f.sProvName "                                                            
+                        + " , f.sEventTyp "                                                              
+                        + " , f.sActTypDs "                                                           
                         + " FROM activity_master a "                                                   
                         + " LEFT JOIN GGC_ISysDBF.Department b ON b.sDeptIDxx = a.sDeptIDxx "          
                         + " LEFT JOIN GGC_ISysDBF.Employee_Master001 c ON c.sEmployID = a.sEmployID "  
                         + " LEFT JOIN GGC_ISysDBF.Client_Master d ON d.sClientID = a.sEmployID "       
-                        + " LEFT JOIN branch e ON e.sBranchCd = a.sLocation "                          
-                        + " LEFT JOIN province f ON f.sProvIDxx = a.sProvIDxx "                        
-                        + " LEFT JOIN event_type g ON g.sActTypID = a.sActTypID "     
+                        + " LEFT JOIN branch e ON e.sBranchCd = a.sLocation "                           
+                        + " LEFT JOIN event_type f ON f.sActTypID = a.sActTypID " 
                         + " WHERE 0=1 ";
         
-        //System.out.println(lsSQL);
+        System.out.println(lsSQL);
         ResultSet loRS = instance.executeQuery(lsSQL);
         try {
             if (MiscUtil.resultSet2XML(instance, loRS, System.getProperty("sys.default.path.metadata"), "activity_master", "")){
