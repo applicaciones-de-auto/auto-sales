@@ -8,6 +8,7 @@ package org.guanzon.auto.main.sales;
 import java.util.ArrayList;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.constant.EditMode;
+import org.guanzon.appdriver.iface.GRecord;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.controller.sales.Activity_Master;
 import org.guanzon.auto.controller.sales.Activity_Member;
@@ -19,7 +20,7 @@ import org.json.simple.JSONObject;
  *
  * @author Arsiela
  */
-public class Activity implements GTransaction{
+public class Activity implements GRecord{
     final String XML = "Model_Activity_Master.xml";
     GRider poGRider;
     String psBranchCd;
@@ -52,7 +53,7 @@ public class Activity implements GTransaction{
     }
 
     @Override
-    public void setTransactionStatus(String string) {
+    public void setRecordStatus(String string) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
@@ -78,10 +79,10 @@ public class Activity implements GTransaction{
     }
     
     @Override
-    public JSONObject newTransaction() {
+    public JSONObject newRecord() {
         poJSON = new JSONObject();
         try{
-            poJSON = poController.newTransaction();
+            poJSON = poController.newRecord();
             
             if("success".equals(poJSON.get("result"))){
                 pnEditMode = poController.getEditMode();
@@ -98,10 +99,10 @@ public class Activity implements GTransaction{
     }
 
     @Override
-    public JSONObject openTransaction(String fsValue) {
+    public JSONObject openRecord(String fsValue) {
         poJSON = new JSONObject();
         
-        poJSON = poController.openTransaction(fsValue);
+        poJSON = poController.openRecord(fsValue);
         if("success".equals(poJSON.get("result"))){
             pnEditMode = poController.getEditMode();
         } else {
@@ -124,15 +125,15 @@ public class Activity implements GTransaction{
     }
 
     @Override
-    public JSONObject updateTransaction() {
+    public JSONObject updateRecord() {
         poJSON = new JSONObject();  
-        poJSON = poController.updateTransaction();
+        poJSON = poController.updateRecord();
         pnEditMode = poController.getEditMode();
         return poJSON;
     }
 
     @Override
-    public JSONObject saveTransaction() {
+    public JSONObject saveRecord() {
         
         poJSON = new JSONObject();  
         
@@ -143,7 +144,7 @@ public class Activity implements GTransaction{
         
         if (!pbWtParent) poGRider.beginTrans();
         
-        poJSON =  poController.saveTransaction();
+        poJSON =  poController.saveRecord();
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
@@ -169,68 +170,40 @@ public class Activity implements GTransaction{
         
         if (!pbWtParent) poGRider.commitTrans();
         
-        
-        
         return poJSON;
     }
 
-    @Override
-    public JSONObject deleteTransaction(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject closeTransaction(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject postTransaction(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject voidTransaction(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject cancelTransaction(String fsValue) {
-        poJSON =  poController.cancelTransaction(fsValue);
+    public JSONObject cancelRecord(String fsValue) {
+        poJSON =  poController.deactivateRecord(fsValue);
         return poJSON;
     }
     
-    public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
+    public JSONObject searchRecord(String fsValue, boolean fbByCode) {
         poJSON = new JSONObject();  
-        poJSON = poController.searchTransaction(fsValue, fbByCode);
+        poJSON = poController.searchRecord(fsValue, fbByCode);
         if(!"error".equals(poJSON.get("result"))){
-            poJSON = openTransaction((String) poJSON.get("sActvtyID"));
+            poJSON = openRecord((String) poJSON.get("sActvtyID"));
         }
         return poJSON;
     }
     
     @Override
-    public JSONObject searchWithCondition(String string) {
+    public JSONObject deleteRecord(String string) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public JSONObject searchTransaction(String string, String string1, boolean bln) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public JSONObject deactivateRecord(String fsValue) {
+        return poController.deactivateRecord(fsValue);
     }
 
     @Override
-    public JSONObject searchMaster(String string, String string1, boolean bln) {
+    public JSONObject activateRecord(String string) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    
     @Override
-    public JSONObject searchMaster(int i, String string, boolean bln) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Activity_Master getMasterModel() {
+    public Activity_Master getModel() {
         return poController;
     }
     
@@ -328,6 +301,14 @@ public class Activity implements GTransaction{
         return jObj;
     }
     
+    /**
+     * Check Existing Activity Record
+     * @return 
+     */
+    public JSONObject validateExistingRecord(){
+        return poController.validateExistingRecord();
+    }
+    
      /**
      *
      * Searches for a department based on the specified value.
@@ -348,8 +329,6 @@ public class Activity implements GTransaction{
     public JSONObject searchEmployee(String fsValue) {
         return poController.searchEmployee(fsValue);
     }
-    
-   
     
     /**
     * Searches for a branch by name and retrieves branch details.
@@ -449,6 +428,7 @@ public class Activity implements GTransaction{
     
     public Object getVehicleCSNo(int fnRow, int fnIndex){return poActVehicle.getVehicleCSNo(fnRow, fnIndex);}
     public Object getVehicleCSNo(int fnRow, String fsIndex){return poActVehicle.getVehicleCSNo(fnRow, fsIndex);}
+
     
     
 }
