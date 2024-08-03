@@ -158,6 +158,9 @@ public class Inquiry_Master implements GTransaction {
             poJSON.put("message", "Invalid edit mode.");
             return poJSON;
         }
+        
+        poModel.setLockedBy(poGRider.getUserID());
+        poModel.setLockedDt(poGRider.getServerDate());
         pnEditMode = EditMode.UPDATE;
         poJSON.put("result", "success");
         poJSON.put("message", "Update mode success.");
@@ -185,7 +188,7 @@ public class Inquiry_Master implements GTransaction {
         return poJSON;
     }
 
-    public JSONObject searchTransaction() {
+    public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
         String lsHeader = "Inquiry Date»Inquiry ID»Customer Name»Customer Address»Inquiry Status»Branch";
         String lsColName = "dTransact»sTransNox»sCompnyNm»sAddressx»sTranStat»sBranchNm";
         String lsSQL =    " SELECT "                                                                       
@@ -494,7 +497,6 @@ public class Inquiry_Master implements GTransaction {
     
     public JSONObject searchOnlinePlatform(String fsValue) {
         poJSON = new JSONObject();
-        
         String lsSQL =  "  SELECT " 
                        + "   sTransNox " 
                        + " , sPlatform " 
@@ -514,14 +516,14 @@ public class Inquiry_Master implements GTransaction {
 
         if (poJSON != null) {
             if(!"error".equals((String) poJSON.get("result"))){
-                poModel.setSourceCD((String) poJSON.get("sTransNox"));
+                poModel.setSourceNo((String) poJSON.get("sTransNox"));
                 poModel.setPlatform((String) poJSON.get("sPlatform"));
             } else {
-                poModel.setSourceCD("");
+                poModel.setSourceNo("");
                 poModel.setPlatform("");
             }
         } else {
-            poModel.setSourceCD("");
+            poModel.setSourceNo("");
             poModel.setPlatform("");
             poJSON = new JSONObject();
             poJSON.put("result", "error");
