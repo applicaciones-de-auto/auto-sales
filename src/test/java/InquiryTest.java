@@ -94,13 +94,7 @@ public class InquiryTest {
 //                System.exit(1);
 //            }
 //
-//            json = model.setMaster("sVhclIDxx","M001VM000005");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("sClientID","M00124000001");
+//            json = model.setMaster("sClientID","M00124000002");
 //            if ("error".equals((String) json.get("result"))){
 //                System.err.println((String) json.get("message"));
 //                System.exit(1);
@@ -212,6 +206,26 @@ public class InquiryTest {
 //            if ("error".equals((String) json.get("result"))){
 //                System.err.println((String) json.get("message"));
 //                System.exit(1);
+//            }
+//            
+//            //Add Vehicle Priority
+//            model.addVehiclePriority();
+//            System.out.println("vehicle priority size = " + model.getVehiclePriorityList().size());
+//            for(int lnctr = 0; lnctr < model.getVehiclePriorityList().size(); lnctr++){
+//                model.setVehiclePriority(lnctr, "nPriority", 1);
+//                model.setVehiclePriority(lnctr, "sVhclIDxx", "M001VM000005");
+//            }
+//
+//            json = model.setMaster("sVhclIDxx","M001VM000005");
+//            if ("error".equals((String) json.get("result"))){
+//                System.err.println((String) json.get("message"));
+//                System.exit(1);
+//            }
+//            
+//            model.addPromo();
+//            System.out.println("promo size = " + model.getPromoList().size());
+//            for(int lnctr = 0; lnctr < model.getPromoList().size(); lnctr++){
+//                model.setPromo(lnctr, "sPromoIDx", "M001AC240004");
 //            }
 //                 
 //        } else {

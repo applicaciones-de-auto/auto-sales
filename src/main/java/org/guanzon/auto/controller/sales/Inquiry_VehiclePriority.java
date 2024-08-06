@@ -8,6 +8,8 @@ package org.guanzon.auto.controller.sales;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
+import org.guanzon.appdriver.agent.ShowDialogFX;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
@@ -220,6 +222,44 @@ public class Inquiry_VehiclePriority {
         return poJSON;
     }
     
+    public JSONObject searchVehicle(String fsTransNo) {
+        poJSON = new JSONObject();
+        String lsHeader = "ID»Description";
+        String lsColName = "sVhclIDxx»sDescript"; 
+        String lsCriteria = "sVhclIDxx»sDescript";
+        
+        String lsSQL =    "  SELECT  " 
+                        + "   sVhclIDxx " 
+                        + " , sDescript " 
+                        + " , cRecdStat " 
+                        + " FROM vehicle_master "
+                        + " WHERE cRecdStat = '1' " ;  
+                
+
+        System.out.println("SEARCH VEHICLE MASTER: " + lsSQL);
+        poJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                "",
+                    lsHeader,
+                    lsColName,
+                    lsCriteria,
+                0);
+
+        if (poJSON != null) {
+            if(!"error".equals((String) poJSON.get("result"))){
+                addDetail(fsTransNo);
+                setDetail(paDetail.size()-1,"sVhclIDxx", (String) poJSON.get("sVhclIDxx"));
+                setDetail(paDetail.size()-1,"sDescript", (String) poJSON.get("sDescript"));
+            } 
+        } else {
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No record loaded.");
+            return poJSON;
+        }
+        
+        return poJSON;
+    }
     
     
 }

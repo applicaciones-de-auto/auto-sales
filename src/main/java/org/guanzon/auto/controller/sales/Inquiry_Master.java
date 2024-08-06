@@ -6,6 +6,11 @@
 package org.guanzon.auto.controller.sales;
 
 import java.sql.Connection;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.guanzon.appdriver.agent.ShowDialogFX;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
@@ -17,6 +22,7 @@ import org.guanzon.auto.model.sales.Model_Inquiry_Master;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
 import org.guanzon.auto.validator.sales.ValidatorInterface;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
 
 /**
  *
@@ -304,8 +310,19 @@ public class Inquiry_Master implements GTransaction {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
-    public Model_Inquiry_Master getModel() {
-        return poModel;
+    public JSONObject lostSale(String fsValue) {
+        poJSON = new JSONObject();
+        
+        poJSON = poModel.lostSale(fsValue);
+        if ("success".equals((String) poJSON.get("result"))) {
+            poJSON.put("result", "success");
+            poJSON.put("message", "Lost Sale success.");
+        } else {
+            poJSON.put("result", "error");
+            poJSON.put("message", "Lost Sale failed.");
+            }
+        
+        return poJSON;
     }
     
     public JSONObject searchSalesExecutive(String fsValue) {
@@ -352,6 +369,12 @@ public class Inquiry_Master implements GTransaction {
     public JSONObject searchReferralAgent(String fsValue) {
         poJSON = new JSONObject();
         
+        if(!poModel.getSourceCD().equals("3")){
+            poJSON.put("result", "error");
+            poJSON.put("message", "Invalid Inquiry type.");
+            return poJSON;
+        }
+        
         String lsSQL =   " SELECT "
                        + " a.sClientID "
                        + " , a.cRecdStat "
@@ -392,20 +415,20 @@ public class Inquiry_Master implements GTransaction {
     
     public JSONObject searchClient(String fsValue, boolean fbInqClient) {
         String lsHeader = "ID»Name»Address";
-        String lsColName = "sClientID»sCompnyNm»xAddressx"; 
-        String lsColCrit = "a.sClientID»a.sCompnyNm»CONCAT(bb.sHouseNox, ' ', bb.sAddressx, ', ', c.sTownName, ' ', d.sProvName)";
+        String lsColName = "sClientID»sCompnyNm»sAddressx"; 
+        String lsColCrit = "a.sClientID»a.sCompnyNm»CONCAT(c.sHouseNox, ' ', c.sAddressx,' ', d.sBrgyName, ', ', e.sTownName, ' ', f.sProvName)";
         String lsSQL =    "  SELECT  "                                                                                                
                         + "  a.sClientID "                                                                                             
-                        + " , a.sCompnyNm sCompnyNm "                                                                                  
-                        + " , CONCAT(c.sHouseNox, ' ', c.sAddressx,' ', d.sBrgyName, ', ', e.sTownName, ' ', f.sProvName)) sAddressx " 
+                        + " , a.sCompnyNm "                                                                                  
+                        + " , CONCAT(c.sHouseNox, ' ', c.sAddressx,' ', d.sBrgyName, ', ', e.sTownName, ' ', f.sProvName) AS sAddressx " 
                         + " , a.sLastName "                                                                                            
                         + " , a.sFrstName "                                                                                            
                         + " , a.sMiddName "                                                                                            
                         + " , a.sSuffixNm "                                                                                            
                         + " , a.cClientTp "                                                                                            
                         + " , g.sMobileNo "                                                                                            
-                        + " , h.sEmailAdd "                                                                                            
-                        + " , GROUP_CONCAT(DISTINCT i.sAccountx) AS sAccountx "                                                        
+                        + " , IFNULL(h.sEmailAdd,'') AS sEmailAdd"                                                                                            
+                        + " , IFNULL(GROUP_CONCAT(DISTINCT i.sAccountx),'') AS sAccountx "                                                        
                         + " FROM client_master a  "                                                                                    
                         + " LEFT JOIN client_address b ON b.sClientID = a.sClientID AND b.cPrimaryx = 1 "                              
                         + " LEFT JOIN addresses c ON c.sAddrssID = b.sAddrssID "                                                       
@@ -446,13 +469,10 @@ public class Inquiry_Master implements GTransaction {
                     poModel.setMobileNo((String) loJSON.get("sMobileNo"));
                     poModel.setEmailAdd((String) loJSON.get("sEmailAdd"));
                     poModel.setAccount((String) loJSON.get("sAccountx"));
+                    poModel.setAddress((String) loJSON.get("sAddressx"));
                 } else {
                     poModel.setContctID((String) loJSON.get("sClientID"));
                     poModel.setContctNm((String) loJSON.get("sCompnyNm"));
-                    poModel.setClientTp("");
-                    poModel.setMobileNo("");
-                    poModel.setEmailAdd("");
-                    poModel.setAccount("");
                 } 
             } else {
                 if(fbInqClient){
@@ -462,13 +482,10 @@ public class Inquiry_Master implements GTransaction {
                     poModel.setMobileNo("");
                     poModel.setEmailAdd("");
                     poModel.setAccount("");
+                    poModel.setAddress("");
                 } else {
                     poModel.setContctID("");
                     poModel.setContctNm("");
-                    poModel.setClientTp("");
-                    poModel.setMobileNo("");
-                    poModel.setEmailAdd("");
-                    poModel.setAccount("");
                 }
             }
         }else {
@@ -479,13 +496,10 @@ public class Inquiry_Master implements GTransaction {
                 poModel.setMobileNo("");
                 poModel.setEmailAdd("");
                 poModel.setAccount("");
+                poModel.setAddress("");
             } else {
                 poModel.setContctID("");
                 poModel.setContctNm("");
-                poModel.setClientTp("");
-                poModel.setMobileNo("");
-                poModel.setEmailAdd("");
-                poModel.setAccount("");
             }
             loJSON  = new JSONObject();  
             loJSON.put("result", "error");
@@ -497,13 +511,20 @@ public class Inquiry_Master implements GTransaction {
     
     public JSONObject searchOnlinePlatform(String fsValue) {
         poJSON = new JSONObject();
+        
+        if(!poModel.getSourceCD().equals("1")){
+            poJSON.put("result", "error");
+            poJSON.put("message", "Invalid Inquiry type.");
+            return poJSON;
+        }
+        
         String lsSQL =  "  SELECT " 
                        + "   sTransNox " 
                        + " , sPlatform " 
                        + " , sWebSitex " 
                        + " FROM online_platforms " ;  
                 
-        lsSQL = MiscUtil.addCondition(lsSQL, "a.cRecdStat = '1' AND b.sPlatform LIKE " + SQLUtil.toSQL(fsValue + "%"));  
+        lsSQL = MiscUtil.addCondition(lsSQL, "sPlatform LIKE " + SQLUtil.toSQL(fsValue + "%"));  
 
         System.out.println("SEARCH ONLINE PLATFORMS: " + lsSQL);
         poJSON = ShowDialogFX.Search(poGRider,
@@ -540,18 +561,39 @@ public class Inquiry_Master implements GTransaction {
         String lsColName = "dDateFrom»dDateThru»sActvtyID»sActNoxxx»sActTitle"; 
         String lsCriteria = "dDateFrom»dDateThru»sActvtyID»sActNoxxx»sActTitle";
         
+        String lsEventType = "";
+        
+        switch(poModel.getSourceCD()){
+            case "4":
+                lsEventType = "sal";
+                break;
+            case "5":
+                lsEventType = "eve";
+                break;
+        }
+        
+        if(lsEventType.trim().isEmpty()){
+            poJSON.put("result", "error");
+            poJSON.put("message", "Invalid Inquiry type.");
+            return poJSON;
+        }
+        
         String lsSQL =    " SELECT "                                                                   
-                        + "   sActvtyID "                                                            
-                        + " , sActNoxxx "                                                            
-                        + " , sActTitle "                                                            
-                        + " , dDateFrom "                                                            
-                        + " , dDateThru "                                                           
-                        + " , cTranStat "                                                             
-                        + " FROM activity_master "   ;  
+                        + "   a.sActvtyID "                                                            
+                        + " , a.sActNoxxx "                                                            
+                        + " , a.sActTitle "                                                           
+                        + " , a.sActTypID "                                                           
+                        + " , a.dDateFrom "                                                            
+                        + " , a.dDateThru "                                                           
+                        + " , a.cTranStat "                                                             
+                        + " , b.sEventTyp "                                                            
+                        + " FROM activity_master a"                                                       
+                        + " LEFT JOIN event_type b ON b.sActTypID = a.sActTypID "   ;  
                 
-        lsSQL = MiscUtil.addCondition(lsSQL, " cTranStat = '3' AND sActTitle LIKE " + SQLUtil.toSQL(fsValue + "%")
-                                                + " AND dDateFrom >=" + SQLUtil.toSQL(poModel.getTransactDte())
-                                                + " AND dDateThru <=" + SQLUtil.toSQL(poModel.getTransactDte()));  
+        lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = '3' AND a.sActTitle LIKE " + SQLUtil.toSQL(fsValue + "%")
+                                                + " AND b.sEventTyp =" + SQLUtil.toSQL(lsEventType)
+                                                + " AND a.dDateFrom <=" + SQLUtil.toSQL(xsDateShort(poModel.getTransactDte()))
+                                                + " AND a.dDateThru >=" + SQLUtil.toSQL(xsDateShort(poModel.getTransactDte())));  
 
         System.out.println("SEARCH ACTIVITY: " + lsSQL);
         poJSON = ShowDialogFX.Search(poGRider,
@@ -573,6 +615,59 @@ public class Inquiry_Master implements GTransaction {
         } else {
             poModel.setActvtyID("");
             poModel.setActTitle("");
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No record loaded.");
+            return poJSON;
+        }
+        
+        return poJSON;
+    }
+    
+    public static String xsDateShort(Date fdValue) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String date = sdf.format(fdValue);
+        return date;
+    }
+
+    public static String xsDateShort(String fsValue) throws ParseException, java.text.ParseException {
+        SimpleDateFormat fromUser = new SimpleDateFormat("MMMM dd, yyyy");
+        SimpleDateFormat myFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String lsResult = "";
+        lsResult = myFormat.format(fromUser.parse(fsValue));
+        return lsResult;
+    }
+    
+    public JSONObject searchBranch(String fsValue) {
+        poJSON = new JSONObject();
+        
+        String lsSQL =   " SELECT "
+                + " IFNULL(a.sBranchCd, '') sBranchCd "
+                + " , IFNULL(a.sBranchNm, '') sBranchNm "
+                + " , IFNULL(b.cDivision, '') cDivision "
+                + " FROM branch a "
+                + " LEFT JOIN branch_others b ON a.sBranchCd = b.sBranchCd  "
+                + " WHERE a.cRecdStat = '1'  "
+                + " AND b.cDivision = (SELECT cDivision FROM branch_others WHERE sBranchCd = " + SQLUtil.toSQL(psBranchCd) + ")"
+                + " AND sBranchNm LIKE " + SQLUtil.toSQL(fsValue + "%");
+
+        System.out.println("SEARCH BRANCH: " + lsSQL);
+        poJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                    "Branch Code»Branch Name",
+                    "sBranchCd»sBranchNm",
+                    "sBranchCd»sBranchNm",
+                1);
+
+        if (poJSON != null) {
+            if(!"error".equals((String) poJSON.get("result"))){
+                poModel.setBranchCd((String) poJSON.get("sBranchCd"));
+                poModel.setBranchNm((String) poJSON.get("sBranchNm"));
+            }
+        } else {
+            poModel.setBranchCd("");
+            poModel.setBranchNm("");
             poJSON = new JSONObject();
             poJSON.put("result", "error");
             poJSON.put("message", "No record loaded.");

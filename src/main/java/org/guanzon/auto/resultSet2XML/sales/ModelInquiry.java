@@ -13,7 +13,7 @@ import org.guanzon.appdriver.base.MiscUtil;
 
 /**
  *
- * @author MIS-PC
+ * @author Arsiela
  */
 public class ModelInquiry {
     public static void main (String [] args){
@@ -45,8 +45,7 @@ public class ModelInquiry {
                         + " , a.sEmployID "                                                                        
                         + " , a.cIsVhclNw "                                                                        
                         + " , a.sVhclIDxx "                                                                        
-                        + " , a.sClientID "                                                                        
-                        + " , a.sAddrssID "                                                                        
+                        + " , a.sClientID "                                                                         
                         + " , a.sContctID "                                                                        
                         + " , a.sRemarksx "                                                                        
                         + " , a.sAgentIDx "                                                                        
@@ -57,7 +56,7 @@ public class ModelInquiry {
                         + " , a.sTestModl "                                                                        
                         + " , a.sActvtyID "                                                                        
                         + " , a.dLastUpdt "                                                                        
-                        + " , a.nReserved "                                                                        
+                        + " , a.sReserved "                                                                        
                         + " , a.nRsrvTotl "                                                                        
                         + " , a.sLockedBy "                                                                        
                         + " , a.sLockedDt "                                                                        
@@ -102,8 +101,8 @@ public class ModelInquiry {
                         + " LEFT JOIN client_master m ON m.sClientID = a.sAgentIDx    "                            
                         + " LEFT JOIN online_platforms n ON n.sTransNox = a.sSourceCD "                            
                         + " LEFT JOIN activity_master o ON o.sActvtyID = a.sActvtyID  "                            
-                        + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd           "  +
-                        " WHERE 0=1";
+                        + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd           "   
+                        + " WHERE 0=1";
         
         
         ResultSet loRS = instance.executeQuery(lsSQL);

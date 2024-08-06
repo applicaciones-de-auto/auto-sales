@@ -8,13 +8,10 @@ package org.guanzon.auto.main.sales;
 import java.util.ArrayList;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.constant.EditMode;
-import org.guanzon.appdriver.iface.GRecord;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.controller.sales.Inquiry_Master;
 import org.guanzon.auto.controller.sales.Inquiry_Promo;
 import org.guanzon.auto.controller.sales.Inquiry_VehiclePriority;
-import org.guanzon.auto.model.sales.Model_Inquiry_Promo;
-import org.guanzon.auto.model.sales.Model_Inquiry_VehiclePriority;
 import org.json.simple.JSONObject;
 
 /**
@@ -37,6 +34,8 @@ public class Inquiry implements GTransaction{
     
     public Inquiry(GRider foAppDrver, boolean fbWtParent, String fsBranchCd){
         poController = new Inquiry_Master(foAppDrver,fbWtParent,fsBranchCd);
+        poVehiclePriority = new Inquiry_VehiclePriority(foAppDrver);
+        poPromo = new Inquiry_Promo(foAppDrver);
         
         poGRider = foAppDrver;
         pbWtParent = fbWtParent;
@@ -104,6 +103,13 @@ public class Inquiry implements GTransaction{
             pnEditMode = EditMode.UNKNOWN;
         }
         
+        poJSON = poVehiclePriority.openDetail(fsValue);
+        if(!"success".equals(poJSON.get("result"))){
+            pnEditMode = EditMode.UNKNOWN;
+        }
+        
+        poJSON = checkData(poPromo.openDetail(fsValue));
+        
         return poJSON;
     }
 
@@ -128,6 +134,18 @@ public class Inquiry implements GTransaction{
         if (!pbWtParent) poGRider.beginTrans();
         
         poJSON =  poController.saveTransaction();
+        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return checkData(poJSON);
+        }
+        
+        poJSON =  poVehiclePriority.saveDetail((String) poController.getMasterModel().getTransNo());
+        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return checkData(poJSON);
+        }
+        
+        poJSON =  poPromo.saveDetail((String) poController.getMasterModel().getTransNo());
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
@@ -160,7 +178,7 @@ public class Inquiry implements GTransaction{
     }
     
     public JSONObject lostSale(String fsValue) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return poController.lostSale(fsValue);
     }
 
     @Override
@@ -209,8 +227,8 @@ public class Inquiry implements GTransaction{
     }
 
     @Override
-    public Object getMasterModel() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public Inquiry_Master getMasterModel() {
+        return poController;
     }
 
     @Override
@@ -218,35 +236,77 @@ public class Inquiry implements GTransaction{
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
-    public Model_Inquiry_Promo getPromo(int fnIndex){
-        return poPromo.getPromo(fnIndex);
+    public JSONObject searchSalesExecutive(String fsValue) {
+        return poController.searchSalesExecutive(fsValue);
     }
     
-    public ArrayList<Model_Inquiry_Promo> getPromoList(){
-        return poPromo.getPromoList();
+    public JSONObject searchReferralAgent(String fsValue) {
+        return poController.searchReferralAgent(fsValue);
     }
     
-    public void setPromo(int fnRow, int fnIndex, Object foValue){ poPromo.setPromo(fnRow, fnIndex, foValue); }
-    public void setPromo(int fnRow, String fsIndex, Object foValue){  poPromo.setPromo(fnRow, fsIndex, foValue);}
-    public Object getPromo(int fnRow, int fnIndex){return poPromo.getPromo( fnRow, fnIndex);}
-    public Object getPromo(int fnRow, String fsIndex){return poPromo.getPromo( fnRow, fsIndex);}
-    
-//    public JSONObject addVehiclePriority(){
-//        return poPromo.addPromo(poController.getTransNox());
-//    }
-    
-    public Model_Inquiry_VehiclePriority getVehiclePriority(int fnIndex){
-        return poVehiclePriority.getVehiclePriority(fnIndex);
+    public JSONObject searchClient(String fsValue, boolean fbIsInqClient) {
+        return poController.searchClient(fsValue, fbIsInqClient);
     }
     
-    public ArrayList<Model_Inquiry_VehiclePriority> getVehiclePriorityList(){
-        return poVehiclePriority.getVehiclePriorityList();
+    public JSONObject searchActivity(String fsValue) {
+        return poController.searchActivity(fsValue);
     }
-
-    public void setVehiclePriority(int fnRow, int fnIndex, Object foValue){ poVehiclePriority.setVehiclePriority(fnRow, fnIndex, foValue); }
-    public void setVehiclePriority(int fnRow, String fsIndex, Object foValue){  poVehiclePriority.setVehiclePriority(fnRow, fsIndex, foValue);}
-    public Object getVehiclePriority(int fnRow, int fnIndex){return poVehiclePriority.getVehiclePriority( fnRow, fnIndex);}
-    public Object getVehiclePriority(int fnRow, String fsIndex){return poVehiclePriority.getVehiclePriority( fnRow, fsIndex);}
     
+    public JSONObject searchOnlinePlatform(String fsValue) {
+        return poController.searchOnlinePlatform(fsValue);
+    }
     
+    public JSONObject searchBranch(String fsValue) {
+        return poController.searchBranch(fsValue);
+    }
+    
+    public JSONObject searchVehicle() {
+        return poVehiclePriority.searchVehicle(poController.getMasterModel().getTransNo());
+    }
+    
+    public ArrayList getVehiclePriorityList(){return poVehiclePriority.getDetailList();}
+    public void setVehiclePriorityList(ArrayList foObj){this.poVehiclePriority.setDetailList(foObj);}
+    
+    public void setVehiclePriority(int fnRow, int fnIndex, Object foValue){ poVehiclePriority.setDetail(fnRow, fnIndex, foValue);}
+    public void setVehiclePriority(int fnRow, String fsIndex, Object foValue){ poVehiclePriority.setDetail(fnRow, fsIndex, foValue);}
+    public Object getVehiclePriority(int fnRow, int fnIndex){return poVehiclePriority.getDetail(fnRow, fnIndex);}
+    public Object getVehiclePriority(int fnRow, String fsIndex){return poVehiclePriority.getDetail(fnRow, fsIndex);}
+    
+    public Object addVehiclePriority(){ return poVehiclePriority.addDetail(poController.getMasterModel().getTransNo());}
+    public Object removeVehiclePriority(int fnRow){ return poVehiclePriority.removeDetail(fnRow);}
+    
+    public JSONObject searchPromo() {
+        return poPromo.searchPromo(poController.getMasterModel().getTransNo(),poController.getMasterModel().getTransactDte());
+    }
+    
+    public ArrayList getPromoList(){return poPromo.getDetailList();}
+    public void setPromoList(ArrayList foObj){this.poPromo.setDetailList(foObj);}
+    
+    public void setPromo(int fnRow, int fnIndex, Object foValue){ poPromo.setDetail(fnRow, fnIndex, foValue);}
+    public void setPromo(int fnRow, String fsIndex, Object foValue){ poPromo.setDetail(fnRow, fsIndex, foValue);}
+    public Object getPromo(int fnRow, int fnIndex){return poPromo.getDetail(fnRow, fnIndex);}
+    public Object getPromo(int fnRow, String fsIndex){return poPromo.getDetail(fnRow, fsIndex);}
+    
+    public Object addPromo(){ return poPromo.addDetail(poController.getMasterModel().getTransNo());}
+    public Object removePromo(int fnRow){ return poPromo.removeDetail(fnRow);}
+    
+    public JSONObject validateEntry() {
+        JSONObject jObj = new JSONObject();
+        
+        //VALIDATE : Vehicle Priority
+        if(poVehiclePriority.getDetailList() == null){
+            jObj.put("result", "error");
+            jObj.put("message", "No Vehicle Priority detected. Please encode vehicle priority.");
+            return jObj;
+        }
+        
+        int lnSize = poVehiclePriority.getDetailList().size() -1;
+        if (lnSize < 0){
+            jObj.put("result", "error");
+            jObj.put("message", "No Vehicle Priority detected. Please encode vehicle priority.");
+            return jObj;
+        }
+        
+        return jObj;
+    }
 }
