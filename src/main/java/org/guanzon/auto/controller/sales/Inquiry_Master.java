@@ -6,11 +6,15 @@
 package org.guanzon.auto.controller.sales;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.sql.rowset.CachedRowSet;
+import javax.sql.rowset.RowSetFactory;
+import javax.sql.rowset.RowSetProvider;
 import org.guanzon.appdriver.agent.ShowDialogFX;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
@@ -38,6 +42,7 @@ public class Inquiry_Master implements GTransaction {
     
     String psMessagex;
     public JSONObject poJSON;
+    CachedRowSet poTestModel;
     
     Model_Inquiry_Master poModel;
     
@@ -202,8 +207,7 @@ public class Inquiry_Master implements GTransaction {
                         + "  , a.sBranchCd "                                                               
                         + "  , a.dTransact "                                                               
                         + "  , a.sEmployID "                                                               
-                        + "  , a.sClientID "                                                               
-                        + "  , a.sAddrssID "                                                               
+                        + "  , a.sClientID "                                                                
                         + "  , a.sContctID "                                                               
                         + "  , a.sAgentIDx "                                                               
                         + "  , a.dTargetDt "                                                               
@@ -664,6 +668,9 @@ public class Inquiry_Master implements GTransaction {
             if(!"error".equals((String) poJSON.get("result"))){
                 poModel.setBranchCd((String) poJSON.get("sBranchCd"));
                 poModel.setBranchNm((String) poJSON.get("sBranchNm"));
+            } else {
+                poModel.setBranchCd("");
+                poModel.setBranchNm("");
             }
         } else {
             poModel.setBranchCd("");
@@ -675,6 +682,124 @@ public class Inquiry_Master implements GTransaction {
         }
         
         return poJSON;
+    }
+    
+//    public JSONObject loadTestModel() {
+//        poJSON = new JSONObject();
+//        
+//        String lsSQL =    " SELECT "             
+//                        + "   sVhclIDxx "        
+//                        + " , sDescript "        
+//                        + " , cRecdStat "        
+//                        + " FROM vehicle_master " ;
+//        lsSQL = MiscUtil.addCondition(lsSQL, " cRecdStat = '1' AND sDescript LIKE " + SQLUtil.toSQL(fsValue + "%"));
+//        System.out.println("SEARCH TEST DRIVE: " + lsSQL);
+//        poJSON = ShowDialogFX.Search(poGRider,
+//                lsSQL,
+//                fsValue,
+//                    "ID»Description",
+//                    "sVhclIDxx»sDescript",
+//                    "sVhclIDxx»sDescript",
+//                1);
+//
+//        if (poJSON != null) {
+//            if(!"error".equals((String) poJSON.get("result"))){
+//                poModel.setVhclID((String) poJSON.get("sVhclIDxx"));
+//                poModel.setTestModl((String) poJSON.get("sDescript"));
+//            } else {
+//                poModel.setVhclID("");
+//                poModel.setTestModl("");
+//            }
+//        } else {
+//            poModel.setVhclID("");
+//            poModel.setTestModl("");
+//            poJSON = new JSONObject();
+//            poJSON.put("result", "error");
+//            poJSON.put("message", "No record loaded.");
+//            return poJSON;
+//        }
+//        
+//        return poJSON;
+//    }
+    
+    public JSONObject loadTestModel(){
+        poJSON = new JSONObject();
+        try {
+//            String lsSQL =   " SELECT "
+//                           + "  sDescript "
+//                           + " , sValuexxx "
+//                           + " FROM xxxstandard_sets ";
+//            lsSQL = MiscUtil.addCondition(lsSQL, " (sDescript = 'affiliated_make' OR sDescript = 'mainproduct') ");
+//            System.out.println("AFFILIATED MAKE AND MAIN PRODUCT CHECK: " + lsSQL);
+//            ResultSet loRS = poGRider.executeQuery(lsSQL);
+//
+//            if (MiscUtil.RecordCount(loRS) == 0){
+//                poJSON.put("result", "error");
+//                poJSON.put("message", "Please notify System Administrator to config `affiliated_make` or `mainproduct`.");
+//            }
+            
+            String lsSQL =   " SELECT "
+                    + "  sDescript "
+                    + " , sValuexxx "
+                    + " FROM xxxstandard_sets "
+                    + " WHERE sDescript = 'mainproduct' ";
+            System.out.println("MAIN PRODUCT CHECK: " + lsSQL);
+            ResultSet loRS = poGRider.executeQuery(lsSQL);
+            
+            lsSQL =   " SELECT "                                               
+                    + "   a.sModelIDx "                                        
+                    + " , a.sModelDsc "                                        
+                    + " , a.sMakeIDxx "                                        
+                    + " , a.cRecdStat "                                        
+                    + " , b.sMakeDesc "                                        
+                    + " FROM vehicle_model a "                                 
+                    + " LEFT JOIN vehicle_make b ON b.sMakeIDxx = a.sMakeIDxx ";
+            if (MiscUtil.RecordCount(loRS) > 0){
+                lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' "
+                                                        + " AND b.sMakeDesc = (SELECT sValuexxx FROM xxxstandard_sets WHERE sDescript = 'mainproduct') "
+                                                        + " GROUP BY a.sModelDsc ORDER BY a.sModelDsc DESC ");
+            } else {
+                lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' "
+                                                        //+ " AND b.sMakeDesc = (SELECT sValuexxx FROM xxxstandard_sets WHERE sDescript = 'affiliated_make') "
+                                                        + " GROUP BY a.sModelDsc ORDER BY a.sModelDsc DESC ");
+            }
+            
+            System.out.println("LOAD TEST MODEL "+ lsSQL);
+            RowSetFactory factory = RowSetProvider.newFactory();
+            loRS = poGRider.executeQuery(lsSQL);
+            try {
+                poTestModel = factory.createCachedRowSet();
+                poTestModel.populate(loRS);
+                MiscUtil.close(loRS);
+            } catch (SQLException e) {
+                poJSON.put("result", "error");
+                poJSON.put("message", e.getMessage());
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(Inquiry_Master.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return poJSON;
+    }
+    
+    public int getTestModelCount() throws SQLException{
+        if (poTestModel != null){
+            poTestModel.last();
+            return poTestModel.getRow();
+        }else{
+            return 0;
+        }
+    }
+    
+    public Object getTestModelDetail(int fnRow, int fnIndex) throws SQLException{
+        if (fnIndex == 0) return null;
+        
+        poTestModel.absolute(fnRow);
+        return poTestModel.getObject(fnIndex);
+    }
+    
+    public Object getTestModelDetail(int fnRow, String fsIndex) throws SQLException{
+        return getTestModelDetail(fnRow, MiscUtil.getColumnIndex(poTestModel, fsIndex));
     }
     
 }

@@ -222,20 +222,33 @@ public class Inquiry_VehiclePriority {
         return poJSON;
     }
     
-    public JSONObject searchVehicle(String fsTransNo) {
+    public JSONObject searchVehicle() {
         poJSON = new JSONObject();
         String lsHeader = "ID»Description";
         String lsColName = "sVhclIDxx»sDescript"; 
-        String lsCriteria = "sVhclIDxx»sDescript";
+        String lsCriteria = "a.sVhclIDxx»a.sDescript";
         
-        String lsSQL =    "  SELECT  " 
-                        + "   sVhclIDxx " 
-                        + " , sDescript " 
-                        + " , cRecdStat " 
-                        + " FROM vehicle_master "
-                        + " WHERE cRecdStat = '1' " ;  
-                
-
+        String lsSQL =   " SELECT "
+                    + "  sDescript "
+                    + " , sValuexxx "
+                    + " FROM xxxstandard_sets "
+                    + " WHERE sDescript = 'mainproduct' ";
+        System.out.println("MAIN PRODUCT CHECK: " + lsSQL);
+        ResultSet loRS = poGRider.executeQuery(lsSQL);
+        
+        lsSQL =   " SELECT "                                             
+                + "   a.sVhclIDxx "                                      
+                + " , a.sDescript "                                      
+                + " , a.cRecdStat "                                      
+                + " , b.sMakeDesc "                                      
+                + " FROM vehicle_master a"                                
+                + " LEFT JOIN vehicle_make b ON b.sMakeIDxx = a.sMakeIDxx" ; 
+        if (MiscUtil.RecordCount(loRS) > 0){
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' AND b.sMakeDesc = (SELECT sValuexxx FROM xxxstandard_sets WHERE sDescript = 'mainproduct') ");
+        } else {
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' ");
+        }
+        
         System.out.println("SEARCH VEHICLE MASTER: " + lsSQL);
         poJSON = ShowDialogFX.Search(poGRider,
                 lsSQL,
@@ -243,14 +256,16 @@ public class Inquiry_VehiclePriority {
                     lsHeader,
                     lsColName,
                     lsCriteria,
-                0);
+                1);
 
         if (poJSON != null) {
-            if(!"error".equals((String) poJSON.get("result"))){
-                addDetail(fsTransNo);
-                setDetail(paDetail.size()-1,"sVhclIDxx", (String) poJSON.get("sVhclIDxx"));
-                setDetail(paDetail.size()-1,"sDescript", (String) poJSON.get("sDescript"));
-            } 
+//            if(!"error".equals((String) poJSON.get("result"))){
+//                addDetail(fsTransNo);
+//                setDetail(paDetail.size()-1,"sVhclIDxx", (String) poJSON.get("sVhclIDxx"));
+//                setDetail(paDetail.size()-1,"sDescript", (String) poJSON.get("sDescript"));
+//                poJSON.put("result", "success");
+//                poJSON.put("message", "Vehicle Priority added successfully.");
+//            } 
         } else {
             poJSON = new JSONObject();
             poJSON.put("result", "error");

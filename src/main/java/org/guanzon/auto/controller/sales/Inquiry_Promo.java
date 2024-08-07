@@ -24,7 +24,7 @@ import org.json.simple.JSONObject;
  *
  * @author Arsiela
  */
-public class Inquiry_Promo{
+public class Inquiry_Promo {
     final String XML = "Model_Inquiry_Promo.xml";
     GRider poGRider;
     String psBranchCd;
@@ -63,14 +63,14 @@ public class Inquiry_Promo{
             
             paDetail.get(0).setValue("sTransNox", fsTransNo);
             poJSON.put("result", "success");
-            poJSON.put("message", "Inquiry Vehicle add record.");
+            poJSON.put("message", "Inquiry Promo add record.");
         } else {
             paDetail.add(new Model_Inquiry_Promo(poGRider));
             paDetail.get(paDetail.size()-1).newRecord();
 
             paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
             poJSON.put("result", "success");
-            poJSON.put("message", "Inquiry Vehicle add record.");
+            poJSON.put("message", "Inquiry Promo add record.");
         }
         return poJSON;
     }
@@ -220,7 +220,7 @@ public class Inquiry_Promo{
         return poJSON;
     }
     
-    public JSONObject searchPromo(String fsTransNo, Date fdInqDate) {
+    public JSONObject searchPromo(Date fdInqDate) {
         poJSON = new JSONObject();
         String lsHeader = "Actvitiy Date From»Actvitiy Date To»Activity ID»Activity No»Activity Title";
         String lsColName = "dDateFrom»dDateThru»sActvtyID»sActNoxxx»sActTitle"; 
@@ -234,13 +234,13 @@ public class Inquiry_Promo{
                         + " , a.dDateFrom "                                                            
                         + " , a.dDateThru "                                                           
                         + " , a.cTranStat "                                                             
-                        + " , b.cTranStat "                                                            
+                        + " , b.sEventTyp "                                                            
                         + " FROM activity_master a"                                                       
                         + " LEFT JOIN event_type b ON b.sActTypID = a.sActTypID "   ;  
                 
         lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = '3' AND b.sEventTyp = 'pro' " 
-                                                + " AND a.dDateFrom >=" + SQLUtil.toSQL(fdInqDate)
-                                                + " AND a.dDateThru <=" + SQLUtil.toSQL(fdInqDate));  
+                                                + " AND a.dDateFrom <=" + SQLUtil.toSQL(fdInqDate)
+                                                + " AND a.dDateThru >=" + SQLUtil.toSQL(fdInqDate));  
 
         System.out.println("SEARCH PROMO ACTIVITY: " + lsSQL);
         poJSON = ShowDialogFX.Search(poGRider,
@@ -253,12 +253,14 @@ public class Inquiry_Promo{
 
         if (poJSON != null) {
             if(!"error".equals((String) poJSON.get("result"))){
-                addDetail(fsTransNo);
-                setDetail(paDetail.size()-1,"sPromoIDx", (String) poJSON.get("sActvtyID"));
-                setDetail(paDetail.size()-1,"sActNoxxx", (String) poJSON.get("sActNoxxx"));
-                setDetail(paDetail.size()-1,"sActTitle", (String) poJSON.get("sActTitle"));
-                setDetail(paDetail.size()-1,"dDateFrom", (String) poJSON.get("dDateFrom"));
-                setDetail(paDetail.size()-1,"dDateThru", (String) poJSON.get("dDateThru"));
+//                addDetail(fsTransNo);
+//                setDetail(paDetail.size()-1,"sPromoIDx", (String) poJSON.get("sActvtyID"));
+//                setDetail(paDetail.size()-1,"sActNoxxx", (String) poJSON.get("sActNoxxx"));
+//                setDetail(paDetail.size()-1,"sActTitle", (String) poJSON.get("sActTitle"));
+//                setDetail(paDetail.size()-1,"dDateFrom", (String) poJSON.get("dDateFrom"));
+//                setDetail(paDetail.size()-1,"dDateThru", (String) poJSON.get("dDateThru"));
+//                poJSON.put("result", "success");
+//                poJSON.put("message", "Promo added successfully.");
             } 
         } else {
             poJSON = new JSONObject();

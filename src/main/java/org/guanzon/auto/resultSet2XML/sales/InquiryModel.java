@@ -15,7 +15,7 @@ import org.guanzon.appdriver.base.MiscUtil;
  *
  * @author Arsiela
  */
-public class ModelInquiry {
+public class InquiryModel {
     public static void main (String [] args){
         String path;
         if(System.getProperty("os.name").toLowerCase().contains("win")){
@@ -56,8 +56,8 @@ public class ModelInquiry {
                         + " , a.sTestModl "                                                                        
                         + " , a.sActvtyID "                                                                        
                         + " , a.dLastUpdt "                                                                        
-                        + " , a.sReserved "                                                                        
-                        + " , a.nRsrvTotl "                                                                        
+//                        + " , a.sReserved "                                                                        
+//                        + " , a.nRsrvTotl "                                                                        
                         + " , a.sLockedBy "                                                                        
                         + " , a.sLockedDt "                                                                        
                         + " , a.sApproved "                                                                        

@@ -5,12 +5,14 @@
  */
 package org.guanzon.auto.main.sales;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.controller.sales.Inquiry_Master;
 import org.guanzon.auto.controller.sales.Inquiry_Promo;
+import org.guanzon.auto.controller.sales.Inquiry_Requirements;
 import org.guanzon.auto.controller.sales.Inquiry_VehiclePriority;
 import org.json.simple.JSONObject;
 
@@ -31,11 +33,13 @@ public class Inquiry implements GTransaction{
     Inquiry_Master poController;
     Inquiry_VehiclePriority poVehiclePriority;
     Inquiry_Promo poPromo;
+    Inquiry_Requirements poRequirements;
     
     public Inquiry(GRider foAppDrver, boolean fbWtParent, String fsBranchCd){
         poController = new Inquiry_Master(foAppDrver,fbWtParent,fsBranchCd);
         poVehiclePriority = new Inquiry_VehiclePriority(foAppDrver);
         poPromo = new Inquiry_Promo(foAppDrver);
+        poRequirements = new Inquiry_Requirements(foAppDrver);
         
         poGRider = foAppDrver;
         pbWtParent = fbWtParent;
@@ -89,9 +93,6 @@ public class Inquiry implements GTransaction{
         return poJSON;
     }
     
-//    public JSONObject addPromo(){
-//        return poPromo.addPromo(poController.getTransNox());
-//    }
     @Override
     public JSONObject openTransaction(String fsValue) {
         poJSON = new JSONObject();
@@ -109,6 +110,8 @@ public class Inquiry implements GTransaction{
         }
         
         poJSON = checkData(poPromo.openDetail(fsValue));
+        
+        poJSON = checkData(poRequirements.openDetail(fsValue));
         
         return poJSON;
     }
@@ -146,6 +149,12 @@ public class Inquiry implements GTransaction{
         }
         
         poJSON =  poPromo.saveDetail((String) poController.getMasterModel().getTransNo());
+        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return checkData(poJSON);
+        }
+        
+        poJSON =  poRequirements.saveDetail((String) poController.getMasterModel().getTransNo());
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
@@ -260,8 +269,24 @@ public class Inquiry implements GTransaction{
         return poController.searchBranch(fsValue);
     }
     
+    public JSONObject loadTestModel() {
+        return poController.loadTestModel();
+    }
+    
+    public int getTestModelCount() throws SQLException{
+        return poController.getTestModelCount();
+    }
+    
+    public Object getTestModelDetail(int fnRow, int fnIndex) throws SQLException{
+        return poController.getTestModelDetail(fnRow, fnIndex);
+    }
+    
+    public Object getTestModelDetail(int fnRow, String fsIndex) throws SQLException{
+        return poController.getTestModelDetail(fnRow, fsIndex);
+    }
+    
     public JSONObject searchVehicle() {
-        return poVehiclePriority.searchVehicle(poController.getMasterModel().getTransNo());
+        return poVehiclePriority.searchVehicle();
     }
     
     public ArrayList getVehiclePriorityList(){return poVehiclePriority.getDetailList();}
@@ -276,7 +301,7 @@ public class Inquiry implements GTransaction{
     public Object removeVehiclePriority(int fnRow){ return poVehiclePriority.removeDetail(fnRow);}
     
     public JSONObject searchPromo() {
-        return poPromo.searchPromo(poController.getMasterModel().getTransNo(),poController.getMasterModel().getTransactDte());
+        return poPromo.searchPromo(poController.getMasterModel().getTransactDte());
     }
     
     public ArrayList getPromoList(){return poPromo.getDetailList();}
@@ -289,6 +314,26 @@ public class Inquiry implements GTransaction{
     
     public Object addPromo(){ return poPromo.addDetail(poController.getMasterModel().getTransNo());}
     public Object removePromo(int fnRow){ return poPromo.removeDetail(fnRow);}
+    
+    
+    public JSONObject loadRequirements() {
+        return poRequirements.loadRequirements(poController.getMasterModel().getTransNo(), poController.getMasterModel().getPayMode(), poController.getMasterModel().getCustGrp());
+    }
+    
+    public ArrayList getRequirementList(){return poRequirements.getDetailList();}
+    public void setRequirementList(ArrayList foObj){this.poRequirements.setDetailList(foObj);}
+    
+    public void setRequirement(int fnRow, int fnIndex, Object foValue){ poRequirements.setDetail(fnRow, fnIndex, foValue);}
+    public void setRequirement(int fnRow, String fsIndex, Object foValue){ poRequirements.setDetail(fnRow, fsIndex, foValue);}
+    public Object getRequirement(int fnRow, int fnIndex){return poRequirements.getDetail(fnRow, fnIndex);}
+    public Object getRequirement(int fnRow, String fsIndex){return poRequirements.getDetail(fnRow, fsIndex);}
+    
+    public Object addRequirements(){ return poRequirements.addDetail(poController.getMasterModel().getTransNo());}
+    public Object removeRequirements(int fnRow){ return poRequirements.removeDetail(fnRow);}
+    
+    public JSONObject searchEmployee(int fnRow) {
+        return poRequirements.searchEmployee(fnRow);
+    }
     
     public JSONObject validateEntry() {
         JSONObject jObj = new JSONObject();

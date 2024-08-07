@@ -14,7 +14,7 @@ import org.guanzon.appdriver.base.MiscUtil;
  *
  * @author Arsiela
  */
-public class ModelInquiryVehiclePriority {
+public class InquiryPromo {
     public static void main (String [] args){
         String path;
         if(System.getProperty("os.name").toLowerCase().contains("win")){
@@ -34,24 +34,26 @@ public class ModelInquiryVehiclePriority {
 
         System.out.println("Connected");
         
-        System.setProperty("sys.default.path.metadata", "D:/GGC_Maven_Systems/config/metadata/Model_Inquiry_VehiclePriority.xml");
+        System.setProperty("sys.default.path.metadata", "D:/GGC_Maven_Systems/config/metadata/Model_Inquiry_Promo.xml");
         
         
-        String lsSQL =    " SELECT "                                                  
-                        + "   a.sTransNox "                                           
-                        + " , a.nPriority "                                           
-                        + " , a.sVhclIDxx "                                           
-                        + " , a.sEntryByx "                                           
-                        + " , a.dEntryDte "                                           
-                        + " , b.sDescript "                                           
-                        + " FROM customer_inquiry_vehicle_priority a "                
-                        + " LEFT JOIN vehicle_master b ON b.sVhclIDxx = a.sVhclIDxx " 
+        String lsSQL =    " SELECT "                                                   
+                        + "   a.sTransNox "                                            
+                        + " , a.sPromoIDx "                                            
+                        + " , a.sEntryByx "                                            
+                        + " , a.dEntryDte "                                            
+                        + " , b.sActNoxxx "                                            
+                        + " , b.sActTitle "                                            
+                        + " , b.dDateFrom "                                            
+                        + " , b.dDateThru "                                            
+                        + " FROM customer_inquiry_promo a "                            
+                        + " LEFT JOIN activity_master b ON b.sActvtyID = a.sPromoIDx " 
                         + " WHERE 0=1";
         
         
         ResultSet loRS = instance.executeQuery(lsSQL);
         try {
-            if (MiscUtil.resultSet2XML(instance, loRS, System.getProperty("sys.default.path.metadata"), "customer_inquiry_vehicle_priority", "")){
+            if (MiscUtil.resultSet2XML(instance, loRS, System.getProperty("sys.default.path.metadata"), "customer_inquiry_promo", "")){
                 System.out.println("ResultSet exported.");
             }
         } catch (SQLException e) {

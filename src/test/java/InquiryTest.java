@@ -68,172 +68,160 @@ public class InquiryTest {
      * ARSIELA 08-03-2024
      */
     
-//    @Test
-//    public void test01NewRecord() throws SQLException{
-//        System.out.println("--------------------------------------------------------------------");
-//        System.out.println("------------------------------NEW RECORD--------------------------------------");
-//        System.out.println("--------------------------------------------------------------------");
-//        
-//        json = model.newTransaction();
-//        if ("success".equals((String) json.get("result"))){
-//            json = model.setMaster("sBranchCd","V001");
+    @Test
+    public void test01NewRecord() throws SQLException{
+        System.out.println("--------------------------------------------------------------------");
+        System.out.println("------------------------------NEW RECORD--------------------------------------");
+        System.out.println("--------------------------------------------------------------------");
+        
+        json = model.newTransaction();
+        if ("success".equals((String) json.get("result"))){
+            json = model.setMaster("sBranchCd","V001");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+
+            json = model.setMaster("sEmployID","M001000001");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+
+            json = model.setMaster("cIsVhclNw","0");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+
+            json = model.setMaster("sClientID","M00124000002");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+
+            json = model.setMaster("sAddrssID","M00124000001");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+
+            json = model.setMaster("sContctID","");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+
+            json = model.setMaster("sRemarksx","TEST LANG ITO");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+
+            json = model.setMaster("sAgentIDx","");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+
+//            json = model.setMaster("dTargetDt", "");
 //            if ("error".equals((String) json.get("result"))){
 //                System.err.println((String) json.get("message"));
 //                System.exit(1);
 //            }
-//
-//            json = model.setMaster("sEmployID","M001000001");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("cIsVhclNw","0");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("sClientID","M00124000002");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("sAddrssID","M00124000001");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("sContctID","");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("sRemarksx","TEST LANG ITO");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("sAgentIDx","");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-////            json = model.setMaster("dTargetDt", "");
-////            if ("error".equals((String) json.get("result"))){
-////                System.err.println((String) json.get("message"));
-////                System.exit(1);
-////            }
-//
-//            json = model.setMaster("cIntrstLv","c");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("sSourceCD","0");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("sSourceNo","");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("sTestModl","");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("sActvtyID","");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("nReserved",0.00);
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("nRsrvTotl",0.00);
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("sApproved","");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//
-//            json = model.setMaster("sSerialID","");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//            
-//            json = model.setMaster("sInqryCde","");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//            
-//            json = model.setMaster("cTranStat","0");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//            
-//            json = model.setMaster("cPayModex","");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//            
-//            json = model.setMaster("cCustGrpx","");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//            
-//            //Add Vehicle Priority
-//            model.addVehiclePriority();
-//            System.out.println("vehicle priority size = " + model.getVehiclePriorityList().size());
-//            for(int lnctr = 0; lnctr < model.getVehiclePriorityList().size(); lnctr++){
-//                model.setVehiclePriority(lnctr, "nPriority", 1);
-//                model.setVehiclePriority(lnctr, "sVhclIDxx", "M001VM000005");
-//            }
-//
-//            json = model.setMaster("sVhclIDxx","M001VM000005");
-//            if ("error".equals((String) json.get("result"))){
-//                System.err.println((String) json.get("message"));
-//                System.exit(1);
-//            }
-//            
-//            model.addPromo();
-//            System.out.println("promo size = " + model.getPromoList().size());
-//            for(int lnctr = 0; lnctr < model.getPromoList().size(); lnctr++){
-//                model.setPromo(lnctr, "sPromoIDx", "M001AC240004");
-//            }
-//                 
-//        } else {
-//            System.err.println("result = " + (String) json.get("result"));
-//            fail((String) json.get("message"));
-//        }
-//        
-//    }
+
+            json = model.setMaster("cIntrstLv","c");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+
+            json = model.setMaster("sSourceCD","0");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+
+            json = model.setMaster("sSourceNo","");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+
+            json = model.setMaster("sTestModl","");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+
+            json = model.setMaster("sActvtyID","");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+
+            json = model.setMaster("sApproved","");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+
+            json = model.setMaster("sSerialID","");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+            
+            json = model.setMaster("sInqryCde","");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+            
+            json = model.setMaster("cTranStat","0");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+            
+            json = model.setMaster("cPayModex","2");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+            
+            json = model.setMaster("cCustGrpx","1");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+            
+            //Add Vehicle Priority
+            model.addVehiclePriority();
+            System.out.println("vehicle priority size = " + model.getVehiclePriorityList().size());
+            for(int lnctr = 0; lnctr < model.getVehiclePriorityList().size(); lnctr++){
+                model.setVehiclePriority(lnctr, "nPriority", 1);
+                model.setVehiclePriority(lnctr, "sVhclIDxx", "M001VM000005");
+            }
+
+            json = model.setMaster("sVhclIDxx","M001VM000005");
+            if ("error".equals((String) json.get("result"))){
+                System.err.println((String) json.get("message"));
+                System.exit(1);
+            }
+            
+            model.addPromo();
+            System.out.println("promo size = " + model.getPromoList().size());
+            for(int lnctr = 0; lnctr < model.getPromoList().size(); lnctr++){
+                model.setPromo(lnctr, "sPromoIDx", "M001AC240004");
+            }
+                 
+        } else {
+            System.err.println("result = " + (String) json.get("result"));
+            fail((String) json.get("message"));
+        }
+        
+    }
 ////    
 //    @Test
 //    public void test01NewRecordSave(){
@@ -254,6 +242,32 @@ public class InquiryTest {
 //        assertTrue(result);
 //        //assertFalse(result);
 //    }
+    
+    @Test
+    public void test01loadRequirements(){
+        System.out.println("--------------------------------------------------------------------");
+        System.out.println("------------------------------LOAD REQUIREMENTS--------------------------------------");
+        System.out.println("--------------------------------------------------------------------");
+        
+        json = model.loadRequirements();
+        System.err.println((String) json.get("message"));
+        
+        if (!"success".equals((String) json.get("result"))){
+            System.err.println((String) json.get("message"));
+            result = false;
+        } else {
+            System.out.println((String) json.get("message"));
+            result = true;
+        }
+        
+        System.out.println("requirements size = " + model.getRequirementList().size());
+            for(int lnctr = 0; lnctr < model.getRequirementList().size(); lnctr++){
+                System.out.println("sRqrmtCde : " + model.getRequirement(lnctr, "sRqrmtCde"));
+                System.out.println("sDescript : " + model.getRequirement(lnctr, "sDescript"));
+            }
+        assertTrue(result);
+        //assertFalse(result);
+    }
 //    
 //    @Test
 //    public void test02OpenRecord(){
