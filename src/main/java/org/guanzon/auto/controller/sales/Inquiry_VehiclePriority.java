@@ -8,18 +8,20 @@ package org.guanzon.auto.controller.sales;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
+import org.guanzon.appdriver.agent.ShowDialogFX;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
-import org.guanzon.appdriver.iface.GRecord;
-import org.guanzon.auto.model.sales.Model_Inquiry_Master;
 import org.guanzon.auto.model.sales.Model_Inquiry_VehiclePriority;
+import org.guanzon.auto.validator.sales.ValidatorFactory;
+import org.guanzon.auto.validator.sales.ValidatorInterface;
 import org.json.simple.JSONObject;
 
 /**
  *
- * @author MIS-PC
+ * @author Arsiela
  */
 public class Inquiry_VehiclePriority {
     final String XML = "Model_Inquiry_Promo.xml";
@@ -29,90 +31,70 @@ public class Inquiry_VehiclePriority {
     
     int pnEditMode;
     String psMessagex;
-    
     public JSONObject poJSON;
     
-    ArrayList<Model_Inquiry_VehiclePriority> paVehiclePriority;
+    ArrayList<Model_Inquiry_VehiclePriority> paDetail;
+    ArrayList<Model_Inquiry_VehiclePriority> paRemDetail;
     
-    public Inquiry_VehiclePriority(GRider foAppDrver, boolean fbWtParent, String fsBranchCd){
+    public Inquiry_VehiclePriority(GRider foAppDrver){
         poGRider = foAppDrver;
-        pbWtParent = fbWtParent;
-        psBranchCd = fsBranchCd.isEmpty() ? foAppDrver.getBranchCode() : fsBranchCd;
     }
     
-    public JSONObject checkData(JSONObject joValue){
-        if(pnEditMode == EditMode.READY || pnEditMode == EditMode.UPDATE){
-            if(joValue.containsKey("continue")){
-                if(true == (boolean)joValue.get("continue")){
-                    joValue.put("result", "success");
-                    joValue.put("message", "Record saved successfully.");
-                }
-            }
-        }
-        return joValue;
+    public int getEditMode() {
+        return pnEditMode;
     }
 
     public Model_Inquiry_VehiclePriority getVehiclePriority(int fnIndex){
-        if (fnIndex > paVehiclePriority.size() - 1 || fnIndex < 0) return null;
-        return paVehiclePriority.get(fnIndex);
+        if (fnIndex > paDetail.size() - 1 || fnIndex < 0) return null;
+        
+        return paDetail.get(fnIndex);
     }
     
-    public ArrayList<Model_Inquiry_VehiclePriority> getVehiclePriorityList(){return paVehiclePriority;}
-    public void setVehiclePriorityList(ArrayList<Model_Inquiry_VehiclePriority> foObj){this.paVehiclePriority = foObj;}
-    
-    public void setVehiclePriority(int fnRow, int fnIndex, Object foValue){ paVehiclePriority.get(fnRow).setValue(fnIndex, foValue);}
-    public void setVehiclePriority(int fnRow, String fsIndex, Object foValue){ paVehiclePriority.get(fnRow).setValue(fsIndex, foValue);}
-    public Object getVehiclePriority(int fnRow, int fnIndex){return paVehiclePriority.get(fnRow).getValue(fnIndex);}
-    public Object getVehiclePriority(int fnRow, String fsIndex){return paVehiclePriority.get(fnRow).getValue(fsIndex);}
-    
-    public JSONObject addVehiclePriority(String fsTransNox) {
-        poJSON = new JSONObject();
-        paVehiclePriority = new ArrayList<>();
-        if (paVehiclePriority.size()<=0){
-            paVehiclePriority.add(new Model_Inquiry_VehiclePriority(poGRider));
-            paVehiclePriority.get(0).newRecord();
-            paVehiclePriority.get(0).setValue("sTransNox", fsTransNox);
-            poJSON.put("result", "success");
-            poJSON.put("message", "Inquiry Vehicle Priority add record.");
-        } else {
-            
-//            Validator_Client_Mobile  validator = new Validator_Client_Mobile(paMobile.get(paMobile.size()-1));
-            //ValidatorInterface validator = ValidatorFactory.make(types,  ValidatorFactory.TYPE.Client_Mobile, paMobile.get(paMobile.size()-1));
-//            if(!validator.isEntryOkay()){
-//                poJSON.put("result", "error");
-//                poJSON.put("message", validator.getMessage());
-//                return poJSON;
-//            }
-            paVehiclePriority.add(new Model_Inquiry_VehiclePriority(poGRider));
-            paVehiclePriority.get(paVehiclePriority.size()-1).newRecord();
-            paVehiclePriority.get(paVehiclePriority.size()-1).setTransNox(fsTransNox);
+    public JSONObject addDetail(String fsTransNo){
+        if(paDetail == null){
+           paDetail = new ArrayList<>();
         }
         
+        poJSON = new JSONObject();
+        if (paDetail.size()<=0){
+            paDetail.add(new Model_Inquiry_VehiclePriority(poGRider));
+            paDetail.get(0).newRecord();
+            
+            paDetail.get(0).setValue("sTransNox", fsTransNo);
+            paDetail.get(paDetail.size()-1).setPriority(1);
+            poJSON.put("result", "success");
+            poJSON.put("message", "Inquiry Vehicle add record.");
+        } else {
+            paDetail.add(new Model_Inquiry_VehiclePriority(poGRider));
+            paDetail.get(paDetail.size()-1).newRecord();
+
+            paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
+            paDetail.get(paDetail.size()-1).setPriority(paDetail.size());
+            poJSON.put("result", "success");
+            poJSON.put("message", "Inquiry Vehicle add record.");
+        }
         return poJSON;
     }
     
-    public JSONObject openPromo(String fsValue){
-        String lsSQL = " SELECT " +
-                            " IFNULL(a.sTransNox,'') sTransNox " +  
-                            " , IFNULL(a.sPromoIDx,'') sPromoIDx " + 
-                            " , a.sEntryByx " +
-                            " , a.dEntryDte " +
-                            " , IFNULL(b.sActTitle,'') sActTitle " +
-                            " , b.dDateFrom " +  
-                            " , b.dDateThru " +                  
-                        "  FROM customer_inquiry_promo a " +  
-                        "  LEFT JOIN activity_master b ON b.sActvtyID = a.sPromoIDx";     
-        lsSQL = MiscUtil.addCondition(lsSQL, "a.sTransNox = " + SQLUtil.toSQL(fsValue) + " GROUP BY sTransNox");
-        System.out.println(lsSQL);
+    public JSONObject openDetail(String fsValue){
+        paDetail = new ArrayList<>();
+        paRemDetail = new ArrayList<>();
+        poJSON = new JSONObject();
+        String lsSQL =    "  SELECT "                                                  
+                        + "  sTransNox "                                             
+                        + ", nPriority "                                             
+                        + ", sVhclIDxx "                                             
+                        + "  FROM customer_inquiry_vehicle_priority "  ;
+        lsSQL = MiscUtil.addCondition(lsSQL, " sTransNox = " + SQLUtil.toSQL(fsValue));
         ResultSet loRS = poGRider.executeQuery(lsSQL);
-
-        try {
+        
+        System.out.println(lsSQL);
+       try {
             int lnctr = 0;
             if (MiscUtil.RecordCount(loRS) > 0) {
-                paVehiclePriority = new ArrayList<>();
                 while(loRS.next()){
-                        paVehiclePriority.add(new Model_Inquiry_VehiclePriority(poGRider));
-                        paVehiclePriority.get(paVehiclePriority.size() - 1).openRecord(loRS.getString("sTransNox"));
+                        paDetail.add(new Model_Inquiry_VehiclePriority(poGRider));
+                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"), loRS.getString("sVhclIDxx"));
                         
                         pnEditMode = EditMode.UPDATE;
                         lnctr++;
@@ -120,16 +102,13 @@ public class Inquiry_VehiclePriority {
                         poJSON.put("message", "Record loaded successfully.");
                     } 
                 
-                System.out.println("lnctr = " + lnctr);
-                
             }else{
-                paVehiclePriority = new ArrayList<>();
-                addVehiclePriority(fsValue);
+//                paDetail = new ArrayList<>();
+//                addDetail(fsValue);
                 poJSON.put("result", "error");
                 poJSON.put("continue", true);
                 poJSON.put("message", "No record selected.");
             }
-            
             MiscUtil.close(loRS);
         } catch (SQLException e) {
             poJSON.put("result", "error");
@@ -138,38 +117,164 @@ public class Inquiry_VehiclePriority {
         return poJSON;
     }
     
-    public JSONObject saveVehiclePriority(String fsTransNox){
-        
+    public JSONObject saveDetail(String fsTransNo){
         JSONObject obj = new JSONObject();
-        if (paVehiclePriority.size()<= 0){
+        
+        int lnCtr;
+        if(paRemDetail != null){
+            int lnRemSize = paRemDetail.size() -1;
+            if(lnRemSize >= 0){
+                for(lnCtr = 0; lnCtr <= lnRemSize; lnCtr++){
+                    obj = paRemDetail.get(lnCtr).deleteRecord();
+                    if("error".equals((String) obj.get("result"))){
+                        return obj;
+                    }
+                }
+            }
+        }
+        
+        if(paDetail == null){
             obj.put("result", "error");
-            obj.put("message", "No client address detected. Please encode client address.");
+            obj.put("continue", true);
             return obj;
         }
         
-        int lnCtr;
-        String lsSQL;
+        int lnSize = paDetail.size() -1;
+        if(lnSize < 0){
+            obj.put("result", "error");
+            obj.put("continue", true);
+            return obj;
+        }
         
-        for (lnCtr = 0; lnCtr <= paVehiclePriority.size() -1; lnCtr++){
-            paVehiclePriority.get(lnCtr).setTransNox(fsTransNox);
+        for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
             if(lnCtr>0){
-                if(paVehiclePriority.get(lnCtr).getVehicleID().isEmpty()){
-                    paVehiclePriority.remove(lnCtr);
+                if(paDetail.get(lnCtr).getVhclID().isEmpty()){
+                    paDetail.remove(lnCtr);
+                    lnCtr++;
+                    if(lnCtr > lnSize){
+                        break;
+                    } 
                 }
             }
-            //ValidatorInterface validator = ValidatorFactory.make(types,  ValidatorFactory.TYPE.Client_Address, paPromo.get(lnCtr));
-           
-//            if (!validator.isEntryOkay()){
-//                obj.put("result", "error");
-//                obj.put("message", validator.getMessage());
-//                return obj;
-//            
-//            }
-            obj = paVehiclePriority.get(lnCtr).saveRecord();
-
+            
+            paDetail.get(lnCtr).setTransNo(fsTransNo);
+            
+            ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Inquiry_Vehicle_Priority, paDetail.get(lnCtr));
+            validator.setGRider(poGRider);
+            if (!validator.isEntryOkay()){
+                obj.put("result", "error");
+                obj.put("message", validator.getMessage());
+                return obj;
+            }
+            obj = paDetail.get(lnCtr).saveRecord();
         }    
         
         return obj;
     }
+    
+    public ArrayList<Model_Inquiry_VehiclePriority> getDetailList(){
+        if(paDetail == null){
+           paDetail = new ArrayList<>();
+        }
+        return paDetail;
+    }
+    public void setDetailList(ArrayList<Model_Inquiry_VehiclePriority> foObj){this.paDetail = foObj;}
+    
+    public void setDetail(int fnRow, int fnIndex, Object foValue){ paDetail.get(fnRow).setValue(fnIndex, foValue);}
+    public void setDetail(int fnRow, String fsIndex, Object foValue){ paDetail.get(fnRow).setValue(fsIndex, foValue);}
+    public Object getDetail(int fnRow, int fnIndex){return paDetail.get(fnRow).getValue(fnIndex);}
+    public Object getDetail(int fnRow, String fsIndex){return paDetail.get(fnRow).getValue(fsIndex);}
+    
+    
+    public Object removeDetail(int fnRow){
+        JSONObject loJSON = new JSONObject();
+        
+        if(paDetail.get(fnRow).getEntryBy() == null){
+            RemoveDetail(fnRow);
+        } else {
+            if(paDetail.get(fnRow).getEntryBy().trim().isEmpty()){
+                RemoveDetail(fnRow);
+            }
+        }
+        
+        paDetail.remove(fnRow);
+        return loJSON;
+    }
+    
+    private JSONObject RemoveDetail(Integer fnRow){
+        
+        if(paRemDetail == null){
+           paRemDetail = new ArrayList<>();
+        }
+        
+        poJSON = new JSONObject();
+        if (paRemDetail.size()<=0){
+            paRemDetail.add(new Model_Inquiry_VehiclePriority(poGRider));
+            paRemDetail.get(0).openRecord(paDetail.get(fnRow).getTransNo(),paDetail.get(fnRow).getVhclID());
+            poJSON.put("result", "success");
+            poJSON.put("message", "added to remove record.");
+        } else {
+            paRemDetail.add(new Model_Inquiry_VehiclePriority(poGRider));
+            paRemDetail.get(paRemDetail.size()-1).openRecord(paDetail.get(fnRow).getTransNo(),paDetail.get(fnRow).getVhclID());
+            poJSON.put("result", "success");
+            poJSON.put("message", "added to remove record.");
+        }
+        return poJSON;
+    }
+    
+    public JSONObject searchVehicle() {
+        poJSON = new JSONObject();
+        String lsHeader = "ID»Description";
+        String lsColName = "sVhclIDxx»sDescript"; 
+        String lsCriteria = "a.sVhclIDxx»a.sDescript";
+        
+        String lsSQL =   " SELECT "
+                    + "  sDescript "
+                    + " , sValuexxx "
+                    + " FROM xxxstandard_sets "
+                    + " WHERE sDescript = 'mainproduct' ";
+        System.out.println("MAIN PRODUCT CHECK: " + lsSQL);
+        ResultSet loRS = poGRider.executeQuery(lsSQL);
+        
+        lsSQL =   " SELECT "                                             
+                + "   a.sVhclIDxx "                                      
+                + " , a.sDescript "                                      
+                + " , a.cRecdStat "                                      
+                + " , b.sMakeDesc "                                      
+                + " FROM vehicle_master a"                                
+                + " LEFT JOIN vehicle_make b ON b.sMakeIDxx = a.sMakeIDxx" ; 
+        if (MiscUtil.RecordCount(loRS) > 0){
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' AND b.sMakeDesc = (SELECT sValuexxx FROM xxxstandard_sets WHERE sDescript = 'mainproduct') ");
+        } else {
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' ");
+        }
+        
+        System.out.println("SEARCH VEHICLE MASTER: " + lsSQL);
+        poJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                "",
+                    lsHeader,
+                    lsColName,
+                    lsCriteria,
+                1);
+
+        if (poJSON != null) {
+//            if(!"error".equals((String) poJSON.get("result"))){
+//                addDetail(fsTransNo);
+//                setDetail(paDetail.size()-1,"sVhclIDxx", (String) poJSON.get("sVhclIDxx"));
+//                setDetail(paDetail.size()-1,"sDescript", (String) poJSON.get("sDescript"));
+//                poJSON.put("result", "success");
+//                poJSON.put("message", "Vehicle Priority added successfully.");
+//            } 
+        } else {
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No record loaded.");
+            return poJSON;
+        }
+        
+        return poJSON;
+    }
+    
     
 }

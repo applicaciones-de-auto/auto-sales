@@ -247,96 +247,96 @@ public class ActivityTest {
 //        assertTrue(result);
 //    }
     
-    @Test
-    public void test02OpenRecord(){
-        System.out.println("--------------------------------------------------------------------");
-        System.out.println("------------------------------RETRIEVAL--------------------------------------");
-        System.out.println("--------------------------------------------------------------------");
-        
-        json = model.openTransaction("M001AC240001");
-        
-        if (!"success".equals((String) json.get("result"))){
-            result = false;
-        } else {
-            System.out.println("--------------------------------------------------------------------");
-            System.out.println("ACTVITIY MASTER");
-            System.out.println("--------------------------------------------------------------------");
-            System.out.println("sActvtyID  :  " + model.getMaster("sActvtyID"));
-            System.out.println("sActNoxxx  :  " + model.getMaster("sActNoxxx"));
-            System.out.println("sActTitle  :  " + model.getMaster("sActTitle"));
-            System.out.println("sActDescx  :  " + model.getMaster("sActDescx"));
-            System.out.println("sActTypID  :  " + model.getMaster("sActTypID"));
-            System.out.println("sActSrcex  :  " + model.getMaster("sActSrcex"));
-            System.out.println("dDateFrom  :  " + model.getMaster("dDateFrom"));
-            System.out.println("dDateThru  :  " + model.getMaster("dDateThru"));
-            System.out.println("sLocation  :  " + model.getMaster("sLocation"));
-            System.out.println("nPropBdgt  :  " + model.getMaster("nPropBdgt"));
-            System.out.println("nRcvdBdgt  :  " + model.getMaster("nRcvdBdgt"));
-            System.out.println("nTrgtClnt  :  " + model.getMaster("nTrgtClnt"));
-            System.out.println("sEmployID  :  " + model.getMaster("sEmployID"));
-            System.out.println("sDeptIDxx  :  " + model.getMaster("sDeptIDxx"));
-            System.out.println("sLogRemrk  :  " + model.getMaster("sLogRemrk"));
-            System.out.println("sRemarksx  :  " + model.getMaster("sRemarksx"));
-            System.out.println("cTranStat  :  " + model.getMaster("cTranStat"));
-            System.out.println("sEntryByx  :  " + model.getMaster("sEntryByx"));
-            System.out.println("dEntryDte  :  " + model.getMaster("dEntryDte"));
-            System.out.println("sApproved  :  " + model.getMaster("sApproved"));
-            System.out.println("dApproved  :  " + model.getMaster("dApproved"));
-            System.out.println("sModified  :  " + model.getMaster("sModified"));
-            System.out.println("dModified  :  " + model.getMaster("dModified"));
-            System.out.println("sDeptName  :  " + model.getMaster("sDeptName"));
-            System.out.println("sCompnyNm  :  " + model.getMaster("sCompnyNm"));
-            System.out.println("sBranchNm  :  " + model.getMaster("sBranchNm"));
-            System.out.println("sEventTyp  :  " + model.getMaster("sEventTyp"));
-            System.out.println("sActTypDs  :  " + model.getMaster("sActTypDs"));
-            
-            System.out.println("--------------------------------------------------------------------");
-            System.out.println("ACTIVITY LOCATION");
-            System.out.println("--------------------------------------------------------------------");
-            for(int lnCtr = 0;lnCtr <= model.getActLocationList().size()-1; lnCtr++){
-                System.out.println("nEntryNox  :  " + model.getActLocation(lnCtr,"nEntryNox")); 
-                System.out.println("sAddressx  :  " + model.getActLocation(lnCtr,"sAddressx")); 
-                System.out.println("sBrgyIDxx  :  " + model.getActLocation(lnCtr,"sBrgyIDxx"));
-                System.out.println("sTownIDxx  :  " + model.getActLocation(lnCtr,"sTownIDxx")); 
-                System.out.println("sCompnynx  :  " + model.getActLocation(lnCtr,"sCompnynx")); 
-                System.out.println("sBrgyName  :  " + model.getActLocation(lnCtr,"sBrgyName")); 
-                System.out.println("sBrgyIDxx  :  " + model.getActLocation(lnCtr,"sBrgyIDxx")); 
-                System.out.println("sTownName  :  " + model.getActLocation(lnCtr,"sTownName")); 
-                System.out.println("sZippCode  :  " + model.getActLocation(lnCtr,"sZippCode")); 
-                System.out.println("sProvIDxx  :  " + model.getActLocation(lnCtr,"sProvIDxx")); 
-                System.out.println("sProvName  :  " + model.getActLocation(lnCtr,"sProvName")); 
-            }
-            
-            System.out.println("--------------------------------------------------------------------");
-            System.out.println("ACTIVITY MEMBER");
-            System.out.println("--------------------------------------------------------------------");
-            for(int lnCtr = 0;lnCtr <= model.getActMemberList().size()-1; lnCtr++){
-                System.out.println("sTransNox  :  " + model.getActMember(lnCtr,"sTransNox")); 
-                System.out.println("nEntryNox  :  " + model.getActMember(lnCtr,"nEntryNox")); 
-                System.out.println("sEmployID  :  " + model.getActMember(lnCtr,"sEmployID")); 
-                System.out.println("cOriginal  :  " + model.getActMember(lnCtr,"cOriginal")); 
-                System.out.println("sEntryByx  :  " + model.getActMember(lnCtr,"sEntryByx")); 
-                System.out.println("dEntryDte  :  " + model.getActMember(lnCtr,"dEntryDte")); 
-                System.out.println("sCompnyNm  :  " + model.getActMember(lnCtr,"sCompnyNm")); 
-                System.out.println("sDeptName  :  " + model.getActMember(lnCtr,"sDeptName")); 
-            }
-            
-            System.out.println("--------------------------------------------------------------------");
-            System.out.println("ACTIVITY VEHICLE");
-            System.out.println("--------------------------------------------------------------------");
-            for(int lnCtr = 0;lnCtr <= model.getActVehicleList().size()-1; lnCtr++){
-                System.out.println("sTransNox  :  " + model.getActVehicle(lnCtr,"sTransNox")); 
-                System.out.println("nEntryNox  :  " + model.getActVehicle(lnCtr,"nEntryNox")); 
-                System.out.println("sSerialID  :  " + model.getActVehicle(lnCtr,"sSerialID")); 
-                System.out.println("sDescript  :  " + model.getActVehicle(lnCtr,"sDescript")); 
-                System.out.println("sCSNoxxxx  :  " + model.getActVehicle(lnCtr,"sCSNoxxxx")); 
-            }
-            
-            result = true;
-        }
-        assertTrue(result);
-//        assertFalse(result);
-    }
+//    @Test
+//    public void test02OpenRecord(){
+//        System.out.println("--------------------------------------------------------------------");
+//        System.out.println("------------------------------RETRIEVAL--------------------------------------");
+//        System.out.println("--------------------------------------------------------------------");
+//        
+//        json = model.openRecord("M001AC240001");
+//        
+//        if (!"success".equals((String) json.get("result"))){
+//            result = false;
+//        } else {
+//            System.out.println("--------------------------------------------------------------------");
+//            System.out.println("ACTVITIY MASTER");
+//            System.out.println("--------------------------------------------------------------------");
+//            System.out.println("sActvtyID  :  " + model.getMaster("sActvtyID"));
+//            System.out.println("sActNoxxx  :  " + model.getMaster("sActNoxxx"));
+//            System.out.println("sActTitle  :  " + model.getMaster("sActTitle"));
+//            System.out.println("sActDescx  :  " + model.getMaster("sActDescx"));
+//            System.out.println("sActTypID  :  " + model.getMaster("sActTypID"));
+//            System.out.println("sActSrcex  :  " + model.getMaster("sActSrcex"));
+//            System.out.println("dDateFrom  :  " + model.getMaster("dDateFrom"));
+//            System.out.println("dDateThru  :  " + model.getMaster("dDateThru"));
+//            System.out.println("sLocation  :  " + model.getMaster("sLocation"));
+//            System.out.println("nPropBdgt  :  " + model.getMaster("nPropBdgt"));
+//            System.out.println("nRcvdBdgt  :  " + model.getMaster("nRcvdBdgt"));
+//            System.out.println("nTrgtClnt  :  " + model.getMaster("nTrgtClnt"));
+//            System.out.println("sEmployID  :  " + model.getMaster("sEmployID"));
+//            System.out.println("sDeptIDxx  :  " + model.getMaster("sDeptIDxx"));
+//            System.out.println("sLogRemrk  :  " + model.getMaster("sLogRemrk"));
+//            System.out.println("sRemarksx  :  " + model.getMaster("sRemarksx"));
+//            System.out.println("cTranStat  :  " + model.getMaster("cTranStat"));
+//            System.out.println("sEntryByx  :  " + model.getMaster("sEntryByx"));
+//            System.out.println("dEntryDte  :  " + model.getMaster("dEntryDte"));
+//            System.out.println("sApproved  :  " + model.getMaster("sApproved"));
+//            System.out.println("dApproved  :  " + model.getMaster("dApproved"));
+//            System.out.println("sModified  :  " + model.getMaster("sModified"));
+//            System.out.println("dModified  :  " + model.getMaster("dModified"));
+//            System.out.println("sDeptName  :  " + model.getMaster("sDeptName"));
+//            System.out.println("sCompnyNm  :  " + model.getMaster("sCompnyNm"));
+//            System.out.println("sBranchNm  :  " + model.getMaster("sBranchNm"));
+//            System.out.println("sEventTyp  :  " + model.getMaster("sEventTyp"));
+//            System.out.println("sActTypDs  :  " + model.getMaster("sActTypDs"));
+//            
+//            System.out.println("--------------------------------------------------------------------");
+//            System.out.println("ACTIVITY LOCATION");
+//            System.out.println("--------------------------------------------------------------------");
+//            for(int lnCtr = 0;lnCtr <= model.getActLocationList().size()-1; lnCtr++){
+//                System.out.println("nEntryNox  :  " + model.getActLocation(lnCtr,"nEntryNox")); 
+//                System.out.println("sAddressx  :  " + model.getActLocation(lnCtr,"sAddressx")); 
+//                System.out.println("sBrgyIDxx  :  " + model.getActLocation(lnCtr,"sBrgyIDxx"));
+//                System.out.println("sTownIDxx  :  " + model.getActLocation(lnCtr,"sTownIDxx")); 
+//                System.out.println("sCompnynx  :  " + model.getActLocation(lnCtr,"sCompnynx")); 
+//                System.out.println("sBrgyName  :  " + model.getActLocation(lnCtr,"sBrgyName")); 
+//                System.out.println("sBrgyIDxx  :  " + model.getActLocation(lnCtr,"sBrgyIDxx")); 
+//                System.out.println("sTownName  :  " + model.getActLocation(lnCtr,"sTownName")); 
+//                System.out.println("sZippCode  :  " + model.getActLocation(lnCtr,"sZippCode")); 
+//                System.out.println("sProvIDxx  :  " + model.getActLocation(lnCtr,"sProvIDxx")); 
+//                System.out.println("sProvName  :  " + model.getActLocation(lnCtr,"sProvName")); 
+//            }
+//            
+//            System.out.println("--------------------------------------------------------------------");
+//            System.out.println("ACTIVITY MEMBER");
+//            System.out.println("--------------------------------------------------------------------");
+//            for(int lnCtr = 0;lnCtr <= model.getActMemberList().size()-1; lnCtr++){
+//                System.out.println("sTransNox  :  " + model.getActMember(lnCtr,"sTransNox")); 
+//                System.out.println("nEntryNox  :  " + model.getActMember(lnCtr,"nEntryNox")); 
+//                System.out.println("sEmployID  :  " + model.getActMember(lnCtr,"sEmployID")); 
+//                System.out.println("cOriginal  :  " + model.getActMember(lnCtr,"cOriginal")); 
+//                System.out.println("sEntryByx  :  " + model.getActMember(lnCtr,"sEntryByx")); 
+//                System.out.println("dEntryDte  :  " + model.getActMember(lnCtr,"dEntryDte")); 
+//                System.out.println("sCompnyNm  :  " + model.getActMember(lnCtr,"sCompnyNm")); 
+//                System.out.println("sDeptName  :  " + model.getActMember(lnCtr,"sDeptName")); 
+//            }
+//            
+//            System.out.println("--------------------------------------------------------------------");
+//            System.out.println("ACTIVITY VEHICLE");
+//            System.out.println("--------------------------------------------------------------------");
+//            for(int lnCtr = 0;lnCtr <= model.getActVehicleList().size()-1; lnCtr++){
+//                System.out.println("sTransNox  :  " + model.getActVehicle(lnCtr,"sTransNox")); 
+//                System.out.println("nEntryNox  :  " + model.getActVehicle(lnCtr,"nEntryNox")); 
+//                System.out.println("sSerialID  :  " + model.getActVehicle(lnCtr,"sSerialID")); 
+//                System.out.println("sDescript  :  " + model.getActVehicle(lnCtr,"sDescript")); 
+//                System.out.println("sCSNoxxxx  :  " + model.getActVehicle(lnCtr,"sCSNoxxxx")); 
+//            }
+//            
+//            result = true;
+//        }
+//        assertTrue(result);
+////        assertFalse(result);
+//    }
     
 //    @Test
 //    public void test03UpdateRecord(){

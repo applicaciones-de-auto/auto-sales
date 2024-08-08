@@ -1,20 +1,27 @@
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\controller\sales\VehicleDeliveryReceipt_Master.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\controller\sales\VehicleSalesProposal_Master.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\controller\sales\VehicleSalesProposal_Labor.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Inquiry_VehiclePriority.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\controller\sales\VehicleSalesProposal_Finance.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\controller\sales\VehicleSalesProposal_Parts.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Activity_Master.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\main\sales\VehicleSalesProposal.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\resultSet2XML\sales\ModelInquiryPromo.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\main\sales\Activity.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\main\sales\Inquiry.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\main\sales\VehicleDeliveryReceipt.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Inquiry_Master.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Inquiry_Requirements.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\resultSet2XML\sales\ModelInquiry.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\resultSet2XML\sales\ModelInquiryVehiclePriority.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\resultSet2XML\sales\ActivityMaster.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Inquiry_Reservation.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Inquiry_Promo.java
-D:\MAVEN\Integrated Automotive System\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Inquiry_FollowUp.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\resultSet2XML\sales\InquiryModel.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\VehicleSalesProposal_Master.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\main\sales\VehicleDeliveryReceipt.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Inquiry_FollowUp.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Inquiry_VehiclePriority.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Activity_Location.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Inquiry_Promo.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\VehicleSalesProposal_Parts.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\resultSet2XML\sales\ActivityMember.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\VehicleSalesProposal_Labor.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\resultSet2XML\sales\InquiryPromo.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\resultSet2XML\sales\ActivityMaster.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\main\sales\Inquiry.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\main\sales\VehicleSalesProposal.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Activity_Master.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\main\sales\Activity.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\VehicleSalesProposal_Finance.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\resultSet2XML\sales\InquiryRequirements.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\resultSet2XML\sales\InquiryVehiclePriority.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Activity_Vehicle.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Activity_Member.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\resultSet2XML\sales\ActivityVehicle.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\VehicleDeliveryReceipt_Master.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Inquiry_Master.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Inquiry_Reservation.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\controller\sales\Inquiry_Requirements.java
+D:\Guanzon\GMC SEG Folder - Maven\auto-sales\src\main\java\org\guanzon\auto\resultSet2XML\sales\ActivityLocation.java

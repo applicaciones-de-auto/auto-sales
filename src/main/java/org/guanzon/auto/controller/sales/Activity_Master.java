@@ -8,13 +8,19 @@ package org.guanzon.auto.controller.sales;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.guanzon.appdriver.agent.ShowDialogFX;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
+import org.guanzon.appdriver.iface.GRecord;
 import org.guanzon.appdriver.iface.GTransaction;
+import org.guanzon.auto.general.CancelForm;
 import org.guanzon.auto.general.SearchDialog;
 import org.guanzon.auto.model.sales.Model_Activity_Master;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
@@ -25,7 +31,7 @@ import org.json.simple.JSONObject;
  *
  * @author Arsiela
  */
-public class Activity_Master implements GTransaction {
+public class Activity_Master implements GRecord {
     final String XML = "Model_Inquiry_Master.xml";
     GRider poGRider;
     String psBranchCd;
@@ -36,7 +42,7 @@ public class Activity_Master implements GTransaction {
     String psMessagex;
     public JSONObject poJSON;
     
-    Model_Activity_Master poMaster;
+    Model_Activity_Master poModel;
     ArrayList<Model_Activity_Master> paMaster;
     
     public Activity_Master(GRider foGRider, boolean fbWthParent, String fsBranchCd) {
@@ -44,7 +50,7 @@ public class Activity_Master implements GTransaction {
         pbWtParent = fbWthParent;
         psBranchCd = fsBranchCd.isEmpty() ? foGRider.getBranchCode() : fsBranchCd;
 
-        poMaster = new Model_Activity_Master(foGRider);
+        poModel = new Model_Activity_Master(foGRider);
         pnEditMode = EditMode.UNKNOWN;
     }
 
@@ -54,7 +60,7 @@ public class Activity_Master implements GTransaction {
     }
 
     @Override
-    public void setTransactionStatus(String fsValue) {
+    public void setRecordStatus(String fsValue) {
         psTransStat = fsValue;
     }
 
@@ -64,11 +70,11 @@ public class Activity_Master implements GTransaction {
         obj.put("pnEditMode", pnEditMode);
         if (pnEditMode != EditMode.UNKNOWN){
             // Don't allow specific fields to assign values
-            if(!(fnCol == poMaster.getColumn("sTransNox") ||
-                fnCol == poMaster.getColumn("cRecdStat") ||
-                fnCol == poMaster.getColumn("sModified") ||
-                fnCol == poMaster.getColumn("dModified"))){
-                poMaster.setValue(fnCol, foData);
+            if(!(fnCol == poModel.getColumn("sTransNox") ||
+                fnCol == poModel.getColumn("cRecdStat") ||
+                fnCol == poModel.getColumn("sModified") ||
+                fnCol == poModel.getColumn("dModified"))){
+                poModel.setValue(fnCol, foData);
                 obj.put(fnCol, pnEditMode);
             }
         }
@@ -77,35 +83,35 @@ public class Activity_Master implements GTransaction {
 
     @Override
     public JSONObject setMaster(String fsCol, Object foData) {
-        return setMaster(poMaster.getColumn(fsCol), foData);
+        return setMaster(poModel.getColumn(fsCol), foData);
     }
     
     public Object getMaster(int fnCol) {
         if(pnEditMode == EditMode.UNKNOWN)
             return null;
         else 
-            return poMaster.getValue(fnCol);
+            return poModel.getValue(fnCol);
     }
 
     public Object getMaster(String fsCol) {
-        return getMaster(poMaster.getColumn(fsCol));
+        return getMaster(poModel.getColumn(fsCol));
     }
     
     @Override
-    public JSONObject newTransaction() {
+    public JSONObject newRecord() {
         poJSON = new JSONObject();
         try{
             pnEditMode = EditMode.ADDNEW;
             org.json.simple.JSONObject obj;
 
-            poMaster = new Model_Activity_Master(poGRider);
+            poModel = new Model_Activity_Master(poGRider);
             Connection loConn = null;
             loConn = setConnection();
-            poMaster.setActvtyID(MiscUtil.getNextCode(poMaster.getTable(), "sActvtyID", true, poGRider.getConnection(), poGRider.getBranchCode()+"AC"));
-            poMaster.setActNo(MiscUtil.getNextCode(poMaster.getTable(), "sActNoxxx", true, poGRider.getConnection(), poGRider.getBranchCode()+"ACT"));
-            poMaster.newRecord();
+            poModel.setActvtyID(MiscUtil.getNextCode(poModel.getTable(), "sActvtyID", true, poGRider.getConnection(), poGRider.getBranchCode()+"AC"));
+            poModel.setActNo(MiscUtil.getNextCode(poModel.getTable(), "sActNoxxx", true, poGRider.getConnection(), poGRider.getBranchCode()+"ACT"));
+            poModel.newRecord();
             
-            if (poMaster == null){
+            if (poModel == null){
                 poJSON.put("result", "error");
                 poJSON.put("message", "initialized new record failed.");
                 return poJSON;
@@ -132,18 +138,18 @@ public class Activity_Master implements GTransaction {
     }
     
     @Override
-    public JSONObject openTransaction(String fsValue) {
+    public JSONObject openRecord(String fsValue) {
         pnEditMode = EditMode.READY;
         poJSON = new JSONObject();
         
-        poMaster = new Model_Activity_Master(poGRider);
-        poJSON = poMaster.openRecord(fsValue);
+        poModel = new Model_Activity_Master(poGRider);
+        poJSON = poModel.openRecord(fsValue);
         
         return poJSON;
     }
 
     @Override
-    public JSONObject updateTransaction() {
+    public JSONObject updateRecord() {
         poJSON = new JSONObject();
         if (pnEditMode != EditMode.READY && pnEditMode != EditMode.UPDATE){
             poJSON.put("result", "error");
@@ -157,9 +163,9 @@ public class Activity_Master implements GTransaction {
     }
 
     @Override
-    public JSONObject saveTransaction() {
+    public JSONObject saveRecord() {
         poJSON = new JSONObject();  
-        ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Activity_Master, poMaster);
+        ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Activity_Master, poModel);
         validator.setGRider(poGRider);
         if (!validator.isEntryOkay()){
             poJSON.put("result", "error");
@@ -167,7 +173,7 @@ public class Activity_Master implements GTransaction {
             return poJSON;
         }
         
-        poJSON =  poMaster.saveRecord();
+        poJSON =  poModel.saveRecord();
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
@@ -177,48 +183,47 @@ public class Activity_Master implements GTransaction {
     }
 
     @Override
-    public JSONObject deleteTransaction(String string) {
+    public JSONObject deleteRecord(String string) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public JSONObject closeTransaction(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject postTransaction(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject voidTransaction(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject cancelTransaction(String fsValue) {
+    public JSONObject deactivateRecord(String fsValue) {
         poJSON = new JSONObject();
 
-        if (poMaster.getEditMode() == EditMode.UPDATE) {
-            poJSON = poMaster.setActive(false);
+        if (poModel.getEditMode() == EditMode.UPDATE) {
+            try {
+                poJSON = poModel.setActive(false);
+                
+                if ("error".equals((String) poJSON.get("result"))) {
+                    return poJSON;
+                }
+                
+                ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Activity_Master, poModel);
+                validator.setGRider(poGRider);
+                if (!validator.isEntryOkay()){
+                    poJSON.put("result", "error");
+                    poJSON.put("message", validator.getMessage());
+                    return poJSON;
+                }
 
-            if ("error".equals((String) poJSON.get("result"))) {
-                return poJSON;
-            }
-            
-//            poJSON = validateEntry();
-//            if ("error".equals((String) poJSON.get("result"))) {
-//                return poJSON;
-//            }
+                CancelForm cancelform = new CancelForm();
+                if (!cancelform.loadCancelWindow(poGRider, poModel.getActvtyID(), poModel.getActvtyID(), "ACTIVITY")) {
+                    poJSON.put("result", "error");
+                    poJSON.put("message", "Cancellation failed.");
+                    return poJSON;
+                }
 
-            poJSON = poMaster.saveRecord();
-            if ("success".equals((String) poJSON.get("result"))) {
-                poJSON.put("result", "success");
-                poJSON.put("message", "Cancellation success.");
-            } else {
-                poJSON.put("result", "error");
-                poJSON.put("message", "Cancellation failed.");
+                poJSON = poModel.saveRecord();
+                if ("success".equals((String) poJSON.get("result"))) {
+                    poJSON.put("result", "success");
+                    poJSON.put("message", "Cancellation success.");
+                } else {
+                    poJSON.put("result", "error");
+                    poJSON.put("message", "Cancellation failed.");
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(Activity_Master.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
             poJSON = new JSONObject();
@@ -227,11 +232,17 @@ public class Activity_Master implements GTransaction {
         }
         return poJSON;
     }
+
+    @Override
+    public JSONObject activateRecord(String string) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
-    public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
+    @Override
+    public JSONObject searchRecord(String fsValue, boolean fbByCode) {
         String lsHeader = "Start Date»End Date»Activity No»Activity Title";
         String lsColName = "dDateFrom»dDateThru»sActNoxxx»sActTitle";
-        String lsSQL =  poMaster.getSQL(); ;  
+        String lsSQL =  poModel.getSQL(); ;  
         
         if (fbByCode){
             lsSQL = MiscUtil.addCondition(lsSQL, " a.sActNoxxx = " + SQLUtil.toSQL(fsValue));
@@ -259,34 +270,10 @@ public class Activity_Master implements GTransaction {
         }
         return loJSON;
     }
-
-    @Override
-    public JSONObject searchWithCondition(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject searchTransaction(String string, String string1, boolean bln) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject searchMaster(String string, String string1, boolean bln) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject searchMaster(int i, String string, boolean bln) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object getMasterModel() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
     
+    @Override
     public Model_Activity_Master getModel() {
-        return poMaster;
+        return poModel;
     }
     
     private JSONObject checkData(JSONObject joValue){
@@ -324,12 +311,12 @@ public class Activity_Master implements GTransaction {
 
         if (poJSON != null) {
             if(!"error".equals((String) poJSON.get("result"))){
-                poMaster.setDeptID((String) poJSON.get("sDeptIDxx"));
-                poMaster.setDeptName((String) poJSON.get("sDeptName"));
+                poModel.setDeptID((String) poJSON.get("sDeptIDxx"));
+                poModel.setDeptName((String) poJSON.get("sDeptName"));
             }
         } else {
-            poMaster.setDeptID("");
-            poMaster.setDeptName("");
+            poModel.setDeptID("");
+            poModel.setDeptName("");
             poJSON = new JSONObject();
             poJSON.put("result", "error");
             poJSON.put("message", "No record loaded.");
@@ -359,7 +346,7 @@ public class Activity_Master implements GTransaction {
         poJSON = new JSONObject();
         
         String lsSQL = getSQ_Employee() + " AND c.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%") 
-                                        + " AND a.sDeptIDxx = " + SQLUtil.toSQL(poMaster.getDeptID());
+                                        + " AND a.sDeptIDxx = " + SQLUtil.toSQL(poModel.getDeptID());
 
         System.out.println("SEARCH EMPLOYEE: " + lsSQL);
         poJSON = ShowDialogFX.Search(poGRider,
@@ -372,12 +359,12 @@ public class Activity_Master implements GTransaction {
 
         if (poJSON != null) {
             if(!"error".equals((String) poJSON.get("result"))){
-                poMaster.setEmployID((String) poJSON.get("sEmployID"));
-                poMaster.setEmpInCharge((String) poJSON.get("sCompnyNm"));
+                poModel.setEmployID((String) poJSON.get("sEmployID"));
+                poModel.setEmpInCharge((String) poJSON.get("sCompnyNm"));
             }
         } else {
-            poMaster.setEmployID("");
-            poMaster.setEmpInCharge("");
+            poModel.setEmployID("");
+            poModel.setEmpInCharge("");
             poJSON = new JSONObject();
             poJSON.put("result", "error");
             poJSON.put("message", "No record loaded.");
@@ -411,12 +398,12 @@ public class Activity_Master implements GTransaction {
 
         if (poJSON != null) {
             if(!"error".equals((String) poJSON.get("result"))){
-                poMaster.setLocation((String) poJSON.get("sBranchCd"));
-                poMaster.setBranchNm((String) poJSON.get("sBranchNm"));
+                poModel.setLocation((String) poJSON.get("sBranchCd"));
+                poModel.setBranchNm((String) poJSON.get("sBranchNm"));
             }
         } else {
-            poMaster.setLocation("");
-            poMaster.setBranchNm("");
+            poModel.setLocation("");
+            poModel.setBranchNm("");
             poJSON = new JSONObject();
             poJSON.put("result", "error");
             poJSON.put("message", "No record loaded.");
@@ -436,7 +423,7 @@ public class Activity_Master implements GTransaction {
                         + " ,cRecdStat "
                         + " FROM event_type "
                         + " WHERE sActTypDs LIKE " + SQLUtil.toSQL(fsValue + "%")
-                        + " AND sEventTyp = " + SQLUtil.toSQL(poMaster.getEventTyp());
+                        + " AND sEventTyp = " + SQLUtil.toSQL(poModel.getEventTyp());
 
         System.out.println("SEARCH EVENT TYPE: " + lsSQL);
         poJSON = ShowDialogFX.Search(poGRider,
@@ -449,21 +436,21 @@ public class Activity_Master implements GTransaction {
 
         if (poJSON != null) {
             if(!"error".equals((String) poJSON.get("result"))){
-                poMaster.setActTypID((String) poJSON.get("sActTypID"));
-                poMaster.setEventTyp((String) poJSON.get("sEventTyp"));
-                poMaster.setActTypDs((String) poJSON.get("sActTypDs"));
-                poMaster.setActSrce((String) poJSON.get("sActTypDs"));
+                poModel.setActTypID((String) poJSON.get("sActTypID"));
+                poModel.setEventTyp((String) poJSON.get("sEventTyp"));
+                poModel.setActTypDs((String) poJSON.get("sActTypDs"));
+                poModel.setActSrce((String) poJSON.get("sActTypDs"));
             } else {
-                poMaster.setActTypID("");
-                poMaster.setEventTyp("");
-                poMaster.setActTypDs("");
-                poMaster.setActSrce("");
+                poModel.setActTypID("");
+                poModel.setEventTyp("");
+                poModel.setActTypDs("");
+                poModel.setActSrce("");
             }
         } else {
-            poMaster.setActTypID("");
-            poMaster.setEventTyp("");
-            poMaster.setActTypDs("");
-            poMaster.setActSrce("");
+            poModel.setActTypID("");
+            poModel.setEventTyp("");
+            poModel.setActTypDs("");
+            poModel.setActSrce("");
             poJSON = new JSONObject();
             poJSON.put("result", "error");
             poJSON.put("message", "No record loaded.");
@@ -473,11 +460,11 @@ public class Activity_Master implements GTransaction {
         return poJSON;
     }
     
-    public JSONObject ApproveTransaction(String fsValue) {
+    public JSONObject ApproveRecord(String fsValue) {
         poJSON = new JSONObject();
 
-        if (poMaster.getEditMode() == EditMode.UPDATE) {
-            poJSON = poMaster.setActive(true);
+        if (poModel.getEditMode() == EditMode.UPDATE) {
+            poJSON = poModel.setActive(true);
 
             if ("error".equals((String) poJSON.get("result"))) {
                 return poJSON;
@@ -488,7 +475,7 @@ public class Activity_Master implements GTransaction {
 //                return poJSON;
 //            }
 
-            poJSON = poMaster.saveRecord();
+            poJSON = poModel.saveRecord();
             if ("success".equals((String) poJSON.get("result"))) {
                 poJSON.put("result", "success");
                 poJSON.put("message", "Cancellation success.");
@@ -512,15 +499,71 @@ public class Activity_Master implements GTransaction {
             return poJSON;
         }
 
-        String lsSQL = MiscUtil.addCondition(poMaster.getSQL(), " a.cTranStat <> '1' AND (a.sApproved IS NULL OR a.sApproved = '') ORDER BY dDateFrom DESC ");
+        String lsSQL = MiscUtil.addCondition(poModel.getSQL(), " a.cTranStat <> '1' AND (a.sApproved IS NULL OR a.sApproved = '') ORDER BY dDateFrom DESC ");
         System.out.println(lsSQL);
 //        
 //        loRS = poGRider.executeQuery(lsSQL);
-//        poMaster = factory.createCachedRowSet();
-//        poMaster.populate(loRS);
+//        poModel = factory.createCachedRowSet();
+//        poModel.populate(loRS);
 //        MiscUtil.close(loRS);
 
         return poJSON;
     
+    }
+    
+    public JSONObject validateExistingRecord(){
+        JSONObject loJSON = new JSONObject();
+        String lsID = "";
+        String lsDesc  = "";
+        try {
+            String lsSQL =    "   SELECT "                                                  
+                            + "   a.sActvtyID "                                             
+                            + " , a.sActNoxxx "                                             
+                            + " , a.sActTitle "                                             
+                            + " , a.sActTypID "                                              
+                            + " , a.dDateFrom "                                             
+                            + " , a.dDateThru "                                             
+                            + " , a.sLocation "                                             
+                            + " , a.cTranStat "                                               
+                            + "FROM activity_master a "   ;                                  
+            lsSQL = MiscUtil.addCondition(lsSQL, " REPLACE(a.sActTitle,' ','') = " + SQLUtil.toSQL(poModel.getActTitle().replace(" ",""))) +
+                                                    " AND a.sActTypID = " + SQLUtil.toSQL(poModel.getActTypID()) +
+                                                    " AND a.dDateFrom = " + SQLUtil.toSQL(xsDateShort((Date) poModel.getValue("dDateFrom")))+
+                                                    " AND a.dDateThru = " + SQLUtil.toSQL(xsDateShort((Date) poModel.getValue("dDateThru")))+
+                                                    " AND a.sLocation = " + SQLUtil.toSQL(poModel.getLocation())+
+                                                    " AND a.cTranStat = '1' " +
+                                                    " AND a.sActvtyID <> " + SQLUtil.toSQL(poModel.getActvtyID()) ;
+            System.out.println("EXISTING ACTIVITY CHECK: " + lsSQL);
+            ResultSet loRS = poGRider.executeQuery(lsSQL);
+
+            if (MiscUtil.RecordCount(loRS) > 0){
+                    while(loRS.next()){
+                        lsID = loRS.getString("sActvtyID");
+                        lsDesc = loRS.getString("sActTitle");
+                    }
+                    
+                    MiscUtil.close(loRS);
+                    
+                    loJSON.put("result", "error") ;
+                    loJSON.put("message","Found an existing acivity record for\n" + lsDesc.toUpperCase() + " <Activity ID:" + lsID + ">\n\n Do you want to view the record?");
+                    loJSON.put("sActvtyID", lsID) ;
+                    return loJSON;
+            }
+        
+        } catch (SQLException ex) {
+            Logger.getLogger(Activity_Master.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NullPointerException e) {
+            // Handle the NullPointerException
+            loJSON.put("result", "") ;
+            System.out.println("Caught a NullPointerException: " + e.getMessage());
+        }
+    
+        return loJSON;
+    }
+    
+    public static String xsDateShort(Date fdValue) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String date = sdf.format(fdValue);
+        return date;
     }
 }
