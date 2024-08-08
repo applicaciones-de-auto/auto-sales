@@ -106,7 +106,6 @@ public class Inquiry_VehiclePriority {
 //                paDetail = new ArrayList<>();
 //                addDetail(fsValue);
                 poJSON.put("result", "error");
-                poJSON.put("continue", true);
                 poJSON.put("message", "No record selected.");
             }
             MiscUtil.close(loRS);
@@ -147,15 +146,16 @@ public class Inquiry_VehiclePriority {
         }
         
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
-            if(lnCtr>0){
+            //if(lnCtr>0){
                 if(paDetail.get(lnCtr).getVhclID().isEmpty()){
-                    paDetail.remove(lnCtr);
-                    lnCtr++;
-                    if(lnCtr > lnSize){
-                        break;
-                    } 
+                    continue; //skip, instead of removing the actual detail
+//                    paDetail.remove(lnCtr);
+//                    lnCtr++;
+//                    if(lnCtr > lnSize){
+//                        break;
+//                    } 
                 }
-            }
+            //}
             
             paDetail.get(lnCtr).setTransNo(fsTransNo);
             
@@ -189,10 +189,8 @@ public class Inquiry_VehiclePriority {
     public Object removeDetail(int fnRow){
         JSONObject loJSON = new JSONObject();
         
-        if(paDetail.get(fnRow).getEntryBy() == null){
-            RemoveDetail(fnRow);
-        } else {
-            if(paDetail.get(fnRow).getEntryBy().trim().isEmpty()){
+        if(paDetail.get(fnRow).getEntryBy() != null){
+            if(!paDetail.get(fnRow).getEntryBy().trim().isEmpty()){
                 RemoveDetail(fnRow);
             }
         }

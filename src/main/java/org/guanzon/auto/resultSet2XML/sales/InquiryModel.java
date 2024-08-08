@@ -39,7 +39,8 @@ public class InquiryModel {
         
         
         String lsSQL =    " SELECT "                                                                               
-                        + "   a.sTransNox "                                                                        
+                        + "   a.sTransNox "                                                                            
+                        + " , a.sInqryIDx "                                                                        
                         + " , a.sBranchCd "                                                                        
                         + " , a.dTransact "                                                                        
                         + " , a.sEmployID "                                                                        
@@ -55,9 +56,7 @@ public class InquiryModel {
                         + " , a.sSourceNo "                                                                        
                         + " , a.sTestModl "                                                                        
                         + " , a.sActvtyID "                                                                        
-                        + " , a.dLastUpdt "                                                                        
-//                        + " , a.sReserved "                                                                        
-//                        + " , a.nRsrvTotl "                                                                        
+                        + " , a.dLastUpdt "                                                                           
                         + " , a.sLockedBy "                                                                        
                         + " , a.sLockedDt "                                                                        
                         + " , a.sApproved "                                                                        

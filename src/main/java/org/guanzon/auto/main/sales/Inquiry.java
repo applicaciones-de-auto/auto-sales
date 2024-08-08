@@ -13,6 +13,7 @@ import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.controller.sales.Inquiry_Master;
 import org.guanzon.auto.controller.sales.Inquiry_Promo;
 import org.guanzon.auto.controller.sales.Inquiry_Requirements;
+import org.guanzon.auto.controller.sales.Inquiry_Reservation;
 import org.guanzon.auto.controller.sales.Inquiry_VehiclePriority;
 import org.json.simple.JSONObject;
 
@@ -34,12 +35,14 @@ public class Inquiry implements GTransaction{
     Inquiry_VehiclePriority poVehiclePriority;
     Inquiry_Promo poPromo;
     Inquiry_Requirements poRequirements;
+    Inquiry_Reservation poReservation;
     
     public Inquiry(GRider foAppDrver, boolean fbWtParent, String fsBranchCd){
         poController = new Inquiry_Master(foAppDrver,fbWtParent,fsBranchCd);
         poVehiclePriority = new Inquiry_VehiclePriority(foAppDrver);
         poPromo = new Inquiry_Promo(foAppDrver);
         poRequirements = new Inquiry_Requirements(foAppDrver);
+        poReservation = new Inquiry_Reservation(foAppDrver);
         
         poGRider = foAppDrver;
         pbWtParent = fbWtParent;
@@ -107,11 +110,41 @@ public class Inquiry implements GTransaction{
         poJSON = poVehiclePriority.openDetail(fsValue);
         if(!"success".equals(poJSON.get("result"))){
             pnEditMode = EditMode.UNKNOWN;
+            return poJSON;
         }
         
-        poJSON = checkData(poPromo.openDetail(fsValue));
+        poJSON = poPromo.openDetail(fsValue);
+        if(!"success".equals(poJSON.get("result"))){
+            if(true == (boolean) poJSON.get("continue")){
+                poJSON.put("result", "success");
+                poJSON.put("message", "Record loaded succesfully.");
+            } else {
+                pnEditMode = EditMode.UNKNOWN;
+                return poJSON;
+            } 
+        }
         
-        poJSON = checkData(poRequirements.openDetail(fsValue));
+        poJSON = poRequirements.openDetail(fsValue);
+        if(!"success".equals(poJSON.get("result"))){
+            if(true == (boolean) poJSON.get("continue")){
+                poJSON.put("result", "success");
+                poJSON.put("message", "Record loaded succesfully.");
+            } else {
+                pnEditMode = EditMode.UNKNOWN;
+                return poJSON;
+            }
+        }
+        
+        poJSON = poReservation.openDetail(fsValue);
+        if(!"success".equals(poJSON.get("result"))){
+            if(true == (boolean) poJSON.get("continue")){
+                poJSON.put("result", "success");
+                poJSON.put("message", "Record loaded succesfully.");
+            } else {
+                pnEditMode = EditMode.UNKNOWN;
+                return poJSON;
+            }
+        }
         
         return poJSON;
     }
@@ -155,6 +188,12 @@ public class Inquiry implements GTransaction{
         }
         
         poJSON =  poRequirements.saveDetail((String) poController.getMasterModel().getTransNo());
+        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return checkData(poJSON);
+        }
+        
+        poJSON =  poReservation.saveDetail((String) poController.getMasterModel().getTransNo());
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
@@ -315,7 +354,6 @@ public class Inquiry implements GTransaction{
     public Object addPromo(){ return poPromo.addDetail(poController.getMasterModel().getTransNo());}
     public Object removePromo(int fnRow){ return poPromo.removeDetail(fnRow);}
     
-    
     public JSONObject loadRequirements() {
         return poRequirements.loadRequirements(poController.getMasterModel().getTransNo(), poController.getMasterModel().getPayMode(), poController.getMasterModel().getCustGrp());
     }
@@ -334,6 +372,17 @@ public class Inquiry implements GTransaction{
     public JSONObject searchEmployee(int fnRow) {
         return poRequirements.searchEmployee(fnRow);
     }
+    
+    public ArrayList getReservationList(){return poReservation.getDetailList();}
+    public void setReservationList(ArrayList foObj){this.poReservation.setDetailList(foObj);}
+    
+    public void setReservation(int fnRow, int fnIndex, Object foValue){ poReservation.setDetail(fnRow, fnIndex, foValue);}
+    public void setReservation(int fnRow, String fsIndex, Object foValue){ poReservation.setDetail(fnRow, fsIndex, foValue);}
+    public Object getReservation(int fnRow, int fnIndex){return poReservation.getDetail(fnRow, fnIndex);}
+    public Object getReservation(int fnRow, String fsIndex){return poReservation.getDetail(fnRow, fsIndex);}
+    
+    public Object addReservation(){ return poReservation.addDetail(poController.getMasterModel().getTransNo(),poController.getMasterModel().getClientID());}
+    public Object removeReservation(int fnRow){ return poReservation.removeDetail(fnRow);}
     
     public JSONObject validateEntry() {
         JSONObject jObj = new JSONObject();

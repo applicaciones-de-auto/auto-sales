@@ -146,20 +146,17 @@ public class Inquiry_Requirements {
             return obj;
         }
         
+
+        int lnEntryNo = 1;
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
-            if(lnCtr>0){
-                if(paDetail.get(lnCtr).getReceived().trim().isEmpty()){
-                    paDetail.remove(lnCtr);
-                    lnCtr++;
-                    if(lnCtr > lnSize){
-                        break;
-                    } 
-                }
+            if(paDetail.get(lnCtr).getReceived().trim().isEmpty()){
+//                paDetail.remove(lnCtr);
+                continue; //skip instead of removing the actual detail
             }
             
             paDetail.get(lnCtr).setTransNo(fsTransNo);
-            paDetail.get(lnCtr).setEntryNo(lnCtr);
-            
+            paDetail.get(lnCtr).setEntryNo(lnEntryNo);
+
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Inquiry_Requirements, paDetail.get(lnCtr));
             validator.setGRider(poGRider);
             if (!validator.isEntryOkay()){
@@ -168,6 +165,7 @@ public class Inquiry_Requirements {
                 return obj;
             }
             obj = paDetail.get(lnCtr).saveRecord();
+            lnEntryNo++;
         }    
         
         return obj;
@@ -190,10 +188,8 @@ public class Inquiry_Requirements {
     public Object removeDetail(int fnRow){
         JSONObject loJSON = new JSONObject();
         
-        if(paDetail.get(fnRow).getEntryNo() == null){
-            RemoveDetail(fnRow);
-        } else {
-            if(paDetail.get(fnRow).getEntryNo() == 0){
+        if(paDetail.get(fnRow).getEntryNo() != null){
+            if(paDetail.get(fnRow).getEntryNo() != 0){
                 RemoveDetail(fnRow);
             }
         }

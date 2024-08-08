@@ -110,6 +110,7 @@ public class Inquiry_Master implements GTransaction {
             loConn = setConnection();
 
             poModel.setTransNo(MiscUtil.getNextCode(poModel.getTable(), "sTransNox", true, poGRider.getConnection(), poGRider.getBranchCode()+"IQ"));
+            poModel.setInqryID(MiscUtil.getNextCode(poModel.getTable(), "sInqryIDx", true, poGRider.getConnection(), poGRider.getBranchCode()));
             poModel.newRecord();
             
             if (poModel == null){
@@ -465,7 +466,7 @@ public class Inquiry_Master implements GTransaction {
                                         1);
         
         if (loJSON != null) {
-            if(!"error".equals((String) poJSON.get("result"))){
+            if(!"error".equals((String) loJSON.get("result"))){
                 if(fbInqClient){
                     poModel.setClientID((String) loJSON.get("sClientID"));
                     poModel.setClientNm((String) loJSON.get("sCompnyNm"));
@@ -771,6 +772,8 @@ public class Inquiry_Master implements GTransaction {
                 poTestModel = factory.createCachedRowSet();
                 poTestModel.populate(loRS);
                 MiscUtil.close(loRS);
+                poJSON.put("result", "success");
+                poJSON.put("message", "Test Model load successfully.");
             } catch (SQLException e) {
                 poJSON.put("result", "error");
                 poJSON.put("message", e.getMessage());

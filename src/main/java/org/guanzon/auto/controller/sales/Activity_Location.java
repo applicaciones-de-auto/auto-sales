@@ -147,19 +147,21 @@ public class Activity_Location {
             return obj;
         }
         
+        int lnEntryNo = 1;
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
-            if(lnCtr>=0){
+            //if(lnCtr>=0){
                 if(paDetail.get(lnCtr).getBrgyID().isEmpty()){
-                    paDetail.remove(lnCtr);
-                    lnCtr++;
-                    if(lnCtr > lnSize){
-                        break;
-                    } 
+                    continue; //skip, instead of removing the actual detail
+//                    paDetail.remove(lnCtr);
+//                    lnCtr++;
+//                    if(lnCtr > lnSize){
+//                        break;
+//                    } 
                 } 
-            }
+            //}
             
             paDetail.get(lnCtr).setTransNo(fsTransNo);
-            paDetail.get(lnCtr).setEntryNo(lnCtr+1);
+            paDetail.get(lnCtr).setEntryNo(lnEntryNo);
 
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Activity_Location, paDetail.get(lnCtr));
             validator.setGRider(poGRider);
@@ -169,6 +171,7 @@ public class Activity_Location {
                 return obj;
             }
             obj = paDetail.get(lnCtr).saveRecord();
+            lnEntryNo++;
         }    
         
         return obj;
