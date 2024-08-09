@@ -48,7 +48,7 @@ public class Inquiry_Reservation {
         return paDetail.get(fnIndex);
     }
     
-    public JSONObject addDetail(String fsSourceNo, String fsClientID){
+    public JSONObject addDetail(String fsSourceCD, String fsSourceNo, String fsClientID){
         if(paDetail == null){
            paDetail = new ArrayList<>();
         }
@@ -58,9 +58,8 @@ public class Inquiry_Reservation {
             paDetail.add(new Model_Inquiry_Reservation(poGRider));
             paDetail.get(0).newRecord();
             
-            
             paDetail.get(0).setValue("sClientID", fsClientID);
-            paDetail.get(0).setValue("sSourceCD", "VINQ");
+            paDetail.get(0).setValue("sSourceCD", fsSourceCD);
             paDetail.get(0).setValue("sSourceNo", fsSourceNo);
             poJSON.put("result", "success");
             poJSON.put("message", "Reservation add record.");
@@ -68,8 +67,9 @@ public class Inquiry_Reservation {
             paDetail.add(new Model_Inquiry_Reservation(poGRider));
             paDetail.get(paDetail.size()-1).newRecord();
 
+            paDetail.get(paDetail.size()-1).setClientID(fsClientID);
+            paDetail.get(paDetail.size()-1).setSourceCD(fsSourceCD);
             paDetail.get(paDetail.size()-1).setSourceNo(fsSourceNo);
-            paDetail.get(paDetail.size()-1).setSourceCD("VINQ");
             poJSON.put("result", "success");
             poJSON.put("message", "Reservation add record.");
         }
@@ -147,8 +147,6 @@ public class Inquiry_Reservation {
 //                    } 
                 }
             }
-            
-            paDetail.get(lnCtr).setSourceNo(fsTransNo);
             
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Inquiry_Reservation, paDetail.get(lnCtr));
             validator.setGRider(poGRider);

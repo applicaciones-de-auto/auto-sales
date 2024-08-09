@@ -38,6 +38,8 @@ public class Inquiry_Requirements {
     ArrayList<Model_Inquiry_Requirements> paDetail;
     ArrayList<Model_Inquiry_Requirements> paRemDetail;
     
+    ArrayList<Model_Inquiry_Requirements> paRequirements;
+    
     public Inquiry_Requirements(GRider foAppDrver){
         poGRider = foAppDrver;
     }
@@ -52,7 +54,7 @@ public class Inquiry_Requirements {
         return paDetail.get(fnIndex);
     }
     
-    public JSONObject addDetail(String fsTransNo){
+    public JSONObject addDetail(){ //String fsTransNo
         if(paDetail == null){
            paDetail = new ArrayList<>();
         }
@@ -62,14 +64,14 @@ public class Inquiry_Requirements {
             paDetail.add(new Model_Inquiry_Requirements(poGRider));
             paDetail.get(0).newRecord();
             
-            paDetail.get(0).setValue("sTransNox", fsTransNo);
+            //paDetail.get(0).setValue("sTransNox", fsTransNo);
             poJSON.put("result", "success");
             poJSON.put("message", "Inquiry Requirements add record.");
         } else {
             paDetail.add(new Model_Inquiry_Requirements(poGRider));
             paDetail.get(paDetail.size()-1).newRecord();
 
-            paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
+            //paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
             poJSON.put("result", "success");
             poJSON.put("message", "Inquiry Requirements add record.");
         }
@@ -219,39 +221,120 @@ public class Inquiry_Requirements {
         return poJSON;
     }
     
+//    public JSONObject loadRequirements(String fsTransNo, String fsPaymode, String fsCustGrp) {
+//        poJSON = new JSONObject();
+//        if(paDetail == null){
+//           paDetail = new ArrayList<>();
+//        }
+//        boolean lbExist = false;
+//        String lsSQL =    " SELECT "                                                              
+//                        + "    a.sRqrmtCde "                                                      
+//                        + "  , a.sDescript "                                                      
+//                        + "  , b.sRqrmtIDx "                                                      
+//                        + "  , b.cPayModex "                                                      
+//                        + "  , b.cCustGrpx "                                                      
+//                        + " FROM requirement_source a "                                           
+//                        + " LEFT JOIN requirement_source_pergroup b ON b.sRqrmtCde = a.sRqrmtCde " ;  
+//        lsSQL = MiscUtil.addCondition(lsSQL, " b.cPayModex = " + SQLUtil.toSQL(fsPaymode)
+//                                               + " AND b.cCustGrpx = " + SQLUtil.toSQL(fsCustGrp));  
+//
+//        System.out.println("LOAD REQUIREMENTS: " + lsSQL);
+//        ResultSet loRS = poGRider.executeQuery(lsSQL);
+//        if (MiscUtil.RecordCount(loRS) > 0){
+//            try {
+//                while(loRS.next()){
+//                    for (int lnCtr = 0; lnCtr <= paDetail.size()-1;lnCtr++){
+//                        if(paDetail.get(lnCtr).getRqrmtCde().equals( loRS.getString("sRqrmtCde"))){
+//                           lbExist = true;
+//                           break;
+//                        }
+//                    }
+//                    
+//                    if(!lbExist){
+//                        addDetail(fsTransNo);
+//                        setDetail(paDetail.size()-1,"sRqrmtCde", (String) loRS.getString("sRqrmtCde"));
+//                        setDetail(paDetail.size()-1,"sDescript", (String) loRS.getString("sDescript"));
+//                    }
+//                }
+//                
+//                poJSON.put("result", "success");
+//                poJSON.put("message", "Requirements added successfully.");
+//            } catch (SQLException ex) {
+//                Logger.getLogger(Inquiry_Requirements.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+//        } else {
+//            poJSON = new JSONObject();
+//            poJSON.put("result", "error");
+//            poJSON.put("message", "No record loaded.");
+//            return poJSON;
+//        }
+//        
+//        return poJSON;
+//    }
+    
+    public JSONObject addRequirements(){
+        if(paRequirements == null){
+           paRequirements = new ArrayList<>();
+        }
+        
+        poJSON = new JSONObject();
+        if (paRequirements.size()<=0){
+            paRequirements.add(new Model_Inquiry_Requirements(poGRider));
+            paRequirements.get(0).newRecord();
+            poJSON.put("result", "success");
+            poJSON.put("message", "Inquiry Requirements add record.");
+        } else {
+            paRequirements.add(new Model_Inquiry_Requirements(poGRider));
+            paRequirements.get(paRequirements.size()-1).newRecord();
+            poJSON.put("result", "success");
+            poJSON.put("message", "Inquiry Requirements add record.");
+        }
+        return poJSON;
+    }
+    
     public JSONObject loadRequirements(String fsTransNo, String fsPaymode, String fsCustGrp) {
         poJSON = new JSONObject();
-        if(paDetail == null){
-           paDetail = new ArrayList<>();
-        }
+        paRequirements = new ArrayList<>();
         boolean lbExist = false;
-        String lsSQL =    " SELECT "                                                     
-                        + "    a.sRqrmtIDx "                                             
-                        + "  , a.cPayModex "                                             
-                        + "  , a.cCustGrpx "                                             
-                        + "  , a.sRqrmtCde "                                             
-                        + "  , b.sDescript "                                             
-                        + " FROM requirement_source_pergroup a "                         
-                        + " LEFT JOIN requirement_source b ON b.sRqrmtCde = a.sRqrmtCde " ;  
-        lsSQL = MiscUtil.addCondition(lsSQL, " a.cPayModex = " + SQLUtil.toSQL(fsPaymode)
-                                               + " AND a.cCustGrpx = " + SQLUtil.toSQL(fsCustGrp));  
+        int lnRow = 0;
+        String lsSQL =    " SELECT "                                                              
+                        + "    a.sRqrmtCde "                                                      
+                        + "  , a.sDescript "                                                      
+                        + "  , b.sRqrmtIDx "                                                      
+                        + "  , b.cPayModex "                                                      
+                        + "  , b.cCustGrpx "                                                      
+                        + " FROM requirement_source a "                                           
+                        + " LEFT JOIN requirement_source_pergroup b ON b.sRqrmtCde = a.sRqrmtCde " ;  
+        lsSQL = MiscUtil.addCondition(lsSQL, " b.cPayModex = " + SQLUtil.toSQL(fsPaymode)
+                                               + " AND b.cCustGrpx = " + SQLUtil.toSQL(fsCustGrp));  
 
         System.out.println("LOAD REQUIREMENTS: " + lsSQL);
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         if (MiscUtil.RecordCount(loRS) > 0){
             try {
                 while(loRS.next()){
+                    
+                    addRequirements();
+                    setRequirements(paRequirements.size()-1,"sRqrmtCde", (String) loRS.getString("sRqrmtCde"));
+                    setRequirements(paRequirements.size()-1,"sDescript", (String) loRS.getString("sDescript"));
+                    
                     for (int lnCtr = 0; lnCtr <= paDetail.size()-1;lnCtr++){
-                        if(paDetail.get(lnCtr).getRqrmtCde().equals((String) poJSON.get("sRqrmtCde"))){
-                           lbExist = true;
-                           break;
+                        if(paDetail.get(lnCtr).getRqrmtCde().equals( loRS.getString("sRqrmtCde"))){
+                            setRequirements(paRequirements.size()-1,"sReceived", paDetail.get(lnCtr).getReceived());
+                            setRequirements(paRequirements.size()-1,"sCompnyNm", paDetail.get(lnCtr).getCompnyNm());
+                            setRequirements(paRequirements.size()-1,"dReceived", paDetail.get(lnCtr).getReceivedDte());
+                            setRequirements(paRequirements.size()-1,"cSubmittd", paDetail.get(lnCtr).getSubmittd());
+                            lbExist = true;
+                            lnRow = lnCtr;
+                            break;
                         }
                     }
                     
                     if(!lbExist){
-                        addDetail(fsTransNo);
-                        setDetail(paDetail.size()-1,"sRqrmtCde", (String) loRS.getString("sRqrmtCde"));
-                        setDetail(paDetail.size()-1,"sDescript", (String) loRS.getString("sDescript"));
+                        setRequirements(paRequirements.size()-1,"sReceived", "");
+                        setRequirements(paRequirements.size()-1,"sCompnyNm", "");
+                        setRequirements(paRequirements.size()-1,"dReceived", "");
+                        setRequirements(paRequirements.size()-1,"cSubmittd", "");
                     }
                 }
                 
@@ -270,8 +353,23 @@ public class Inquiry_Requirements {
         return poJSON;
     }
     
-    public JSONObject searchEmployee(int fnRow) {
+    public ArrayList<Model_Inquiry_Requirements> getRequirementsList(){
+        if(paRequirements == null){
+           paRequirements = new ArrayList<>();
+        }
+        return paRequirements;
+    }
+    public void setRequirementsList(ArrayList<Model_Inquiry_Requirements> foObj){this.paRequirements = foObj;}
+    
+    public void setRequirements(int fnRow, int fnIndex, Object foValue){ paRequirements.get(fnRow).setValue(fnIndex, foValue);}
+    public void setRequirements(int fnRow, String fsIndex, Object foValue){ paRequirements.get(fnRow).setValue(fsIndex, foValue);}
+    public Object getRequirements(int fnRow, int fnIndex){return paRequirements.get(fnRow).getValue(fnIndex);}
+    public Object getRequirements(int fnRow, String fsIndex){return paRequirements.get(fnRow).getValue(fsIndex);}
+    
+    public JSONObject searchEmployee(String fsRqrmtCde, String fsDescript) { //, String fsTransNo
         poJSON = new JSONObject();
+        boolean lbExist = false;
+        int lnRow = 0;
         
         String lsSQL =   " SELECT "
                        + " a.sClientID "
@@ -292,12 +390,49 @@ public class Inquiry_Requirements {
                 0);
 
         if (poJSON != null) {
-            
             if(!"error".equals((String) poJSON.get("result"))){
-                setDetail(fnRow,"sReceived", (String) poJSON.get("sClientID"));
-                setDetail(fnRow,"sCompnyNm", (String) poJSON.get("sCompnyNm"));
-                setDetail(fnRow,"dReceived", poGRider.getServerDate());
-                setDetail(fnRow,"cSubmittd", "1");
+                
+                for (int lnCtr = 0; lnCtr <= paDetail.size()-1;lnCtr++){
+                    if(paDetail.get(lnCtr).getRqrmtCde().equals(fsRqrmtCde )){
+                       lbExist = true;
+                       lnRow = lnCtr;
+                       break;
+                    }
+                }
+                
+                if(lbExist){
+                    setDetail(lnRow,"sReceived", (String) poJSON.get("sClientID"));
+                    setDetail(lnRow,"sCompnyNm", (String) poJSON.get("sCompnyNm"));
+                    setDetail(lnRow,"dReceived", poGRider.getServerDate());
+                    setDetail(lnRow,"cSubmittd", "1");
+                } else {
+                    addDetail();
+                     if (paDetail.size()<=0){
+                         
+//                        paDetail.get(0).setRqrmtCde(fsRqrmtCde);
+//                        paDetail.get(0).setDescript(fsDescript);
+//                        paDetail.get(0).setReceived((String) poJSON.get("sClientID"));
+//                        paDetail.get(0).setCompnyNm((String) poJSON.get("sCompnyNm"));
+//                        paDetail.get(0).setReceivedDte(poGRider.getServerDate());
+//                        paDetail.get(0).setSubmittd("1");
+                        paDetail.get(0).setValue("sRqrmtCde", fsRqrmtCde);
+                        paDetail.get(0).setValue("sDescript", fsDescript);
+                        paDetail.get(0).setValue("sReceived",  (String) poJSON.get("sClientID"));
+                        paDetail.get(0).setValue("sCompnyNm",  (String) poJSON.get("sCompnyNm"));
+                        paDetail.get(0).setValue("dReceived", poGRider.getServerDate());
+                        paDetail.get(0).setValue("cSubmittd", "1");
+                     }else {
+                        setDetail(paDetail.size()-1,"sRqrmtCde", fsRqrmtCde);
+                        setDetail(paDetail.size()-1,"sDescript", fsDescript);
+                        setDetail(paDetail.size()-1,"sReceived", (String) poJSON.get("sClientID"));
+                        setDetail(paDetail.size()-1,"sCompnyNm", (String) poJSON.get("sCompnyNm"));
+                        setDetail(paDetail.size()-1,"dReceived", poGRider.getServerDate());
+                        setDetail(paDetail.size()-1,"cSubmittd", "1");
+                     }
+                    
+                    
+                    
+                }
                 
                 poJSON.put("result", "success");
                 poJSON.put("message", "Requirements added successfully.");
@@ -310,6 +445,31 @@ public class Inquiry_Requirements {
         }
         
         return poJSON;
+    }
+    
+    public void removeEmployee(String fsRqrmtCde) {
+        boolean lbExist = false;
+        int lnRow = 0;
+        
+        for (int lnCtr = 0; lnCtr <= paDetail.size()-1;lnCtr++){
+            if(paDetail.get(lnCtr).getRqrmtCde().equals(fsRqrmtCde )){
+               lbExist = true;
+               lnRow = lnCtr;
+               break;
+            }
+        }
+
+        if(lbExist){
+            
+            if(((String)getDetail(lnRow, "sTransNox")).isEmpty()){
+                setDetail(lnRow,"sReceived", "");
+                setDetail(lnRow,"sCompnyNm", "");
+                setDetail(lnRow,"cSubmittd", "");
+            } else {
+                setDetail(lnRow,"cSubmittd", "0");
+            }
+        } 
+        
     }
     
     

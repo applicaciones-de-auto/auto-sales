@@ -153,6 +153,9 @@ public class Inquiry implements GTransaction{
     public JSONObject updateTransaction() {
         poJSON = new JSONObject();  
         poJSON = poController.updateTransaction();
+        if("error".equals(poJSON.get("result"))){
+            return poJSON;
+        }
         pnEditMode = poController.getEditMode();
         return poJSON;
     }
@@ -358,19 +361,63 @@ public class Inquiry implements GTransaction{
         return poRequirements.loadRequirements(poController.getMasterModel().getTransNo(), poController.getMasterModel().getPayMode(), poController.getMasterModel().getCustGrp());
     }
     
-    public ArrayList getRequirementList(){return poRequirements.getDetailList();}
-    public void setRequirementList(ArrayList foObj){this.poRequirements.setDetailList(foObj);}
+    public ArrayList getRequirementList(){return poRequirements.getRequirementsList();}
+    public void setRequirementList(ArrayList foObj){this.poRequirements.setRequirementsList(foObj);}
     
-    public void setRequirement(int fnRow, int fnIndex, Object foValue){ poRequirements.setDetail(fnRow, fnIndex, foValue);}
-    public void setRequirement(int fnRow, String fsIndex, Object foValue){ poRequirements.setDetail(fnRow, fsIndex, foValue);}
-    public Object getRequirement(int fnRow, int fnIndex){return poRequirements.getDetail(fnRow, fnIndex);}
-    public Object getRequirement(int fnRow, String fsIndex){return poRequirements.getDetail(fnRow, fsIndex);}
+    public void setRequirement(int fnRow, int fnIndex, Object foValue){ poRequirements.setRequirements(fnRow, fnIndex, foValue);}
+    public void setRequirement(int fnRow, String fsIndex, Object foValue){ poRequirements.setRequirements(fnRow, fsIndex, foValue);}
+    public Object getRequirement(int fnRow, int fnIndex){return poRequirements.getRequirements(fnRow, fnIndex);}
+    public Object getRequirement(int fnRow, String fsIndex){return poRequirements.getRequirements(fnRow, fsIndex);}
     
-    public Object addRequirements(){ return poRequirements.addDetail(poController.getMasterModel().getTransNo());}
-    public Object removeRequirements(int fnRow){ return poRequirements.removeDetail(fnRow);}
     
-    public JSONObject searchEmployee(int fnRow) {
-        return poRequirements.searchEmployee(fnRow);
+//    public ArrayList getSubRequirementList(){return poRequirements.getDetailList();}
+//    public void setSubRequirementList(ArrayList foObj){this.poRequirements.setDetailList(foObj);}
+    
+//    public void setSubRequirement(int fnRow, int fnIndex, Object foValue){ poRequirements.setDetail(fnRow, fnIndex, foValue);}
+//    public void setSubRequirement(int fnRow, String fsIndex, Object foValue){ poRequirements.setDetail(fnRow, fsIndex, foValue);}
+//    public Object getSubRequirement(int fnRow, int fnIndex){return poRequirements.getDetail(fnRow, fnIndex);}
+//    public Object getSubRequirement(int fnRow, String fsIndex){return poRequirements.getDetail(fnRow, fsIndex);}
+    
+//    public Object addRequirements(){ return poRequirements.addDetail();} //poController.getMasterModel().getTransNo()
+    //public Object removeRequirements(int fnRow){ return poRequirements.removeDetail(fnRow);}
+    
+    public JSONObject searchEmployee(String fsRqrmtCde, String fsDescript) {
+        return poRequirements.searchEmployee(fsRqrmtCde,fsDescript); //,poController.getMasterModel().getTransNo()
+    }
+    
+    public void removeEmployee(String fsRqrmtCde) {
+        poRequirements.removeEmployee(fsRqrmtCde);
+        
+//        JSONObject lObj = new JSONObject();
+//        
+//        boolean lbExist = false;
+//        int lnRow = 0;
+//        
+//        for (int lnCtr = 0; lnCtr <= poRequirements.getDetailList().size()-1;lnCtr++){
+//            if(poRequirements.getDetailList().get(lnCtr).getRqrmtCde().equals(fsRqrmtCde )){
+//               lbExist = true;
+//               lnRow = lnCtr;
+//               break;
+//            }
+//        }
+//
+//        if(lbExist){
+//            if(((String) poRequirements.getDetail(lnRow, "sTransNox")).isEmpty()){
+//                poRequirements.setDetail(lnRow,"sReceived", "");
+//                poRequirements.setDetail(lnRow,"sCompnyNm", "");
+//                poRequirements.setDetail(lnRow,"dReceived", "");
+//                poRequirements.setDetail(lnRow,"cSubmittd", "0");
+//            }
+//        } 
+//        
+//        poRequirements.setRequirements(fnRow,"sReceived", "");
+//        poRequirements.setRequirements(fnRow,"sCompnyNm", "");
+//        poRequirements.setRequirements(fnRow,"dReceived", "");
+//        poRequirements.setRequirements(fnRow,"cSubmittd", "0");
+//        
+        
+        
+        
     }
     
     public ArrayList getReservationList(){return poReservation.getDetailList();}
@@ -381,7 +428,7 @@ public class Inquiry implements GTransaction{
     public Object getReservation(int fnRow, int fnIndex){return poReservation.getDetail(fnRow, fnIndex);}
     public Object getReservation(int fnRow, String fsIndex){return poReservation.getDetail(fnRow, fsIndex);}
     
-    public Object addReservation(){ return poReservation.addDetail(poController.getMasterModel().getTransNo(),poController.getMasterModel().getClientID());}
+    public Object addReservation(){ return poReservation.addDetail("VINQ",poController.getMasterModel().getTransNo(),poController.getMasterModel().getClientID());}
     public Object removeReservation(int fnRow){ return poReservation.removeDetail(fnRow);}
     
     public JSONObject validateEntry() {

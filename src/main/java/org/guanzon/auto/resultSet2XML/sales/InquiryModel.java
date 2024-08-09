@@ -58,7 +58,7 @@ public class InquiryModel {
                         + " , a.sActvtyID "                                                                        
                         + " , a.dLastUpdt "                                                                           
                         + " , a.sLockedBy "                                                                        
-                        + " , a.sLockedDt "                                                                        
+                        + " , a.dLockedDt "                                                                        
                         + " , a.sApproved "                                                                        
                         + " , a.sSerialID "                                                                        
                         + " , a.sInqryCde "                                                                        

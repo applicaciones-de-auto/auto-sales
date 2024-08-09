@@ -84,12 +84,13 @@ public class Inquiry_VehiclePriority {
                         + "  sTransNox "                                             
                         + ", nPriority "                                             
                         + ", sVhclIDxx "                                             
-                        + "  FROM customer_inquiry_vehicle_priority "  ;
-        lsSQL = MiscUtil.addCondition(lsSQL, " sTransNox = " + SQLUtil.toSQL(fsValue));
+                        + "  FROM customer_inquiry_vehicle_priority " ;
+        lsSQL = MiscUtil.addCondition(lsSQL, " sTransNox = " + SQLUtil.toSQL(fsValue))
+                                                + "  ORDER BY nPriority ASC " ;
+        System.out.println(lsSQL);
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
-        System.out.println(lsSQL);
-       try {
+        try {
             int lnctr = 0;
             if (MiscUtil.RecordCount(loRS) > 0) {
                 while(loRS.next()){

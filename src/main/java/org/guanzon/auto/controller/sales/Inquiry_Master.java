@@ -21,6 +21,7 @@ import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.iface.GTransaction;
+import org.guanzon.auto.general.LockTransaction;
 import org.guanzon.auto.general.SearchDialog;
 import org.guanzon.auto.model.sales.Model_Inquiry_Master;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
@@ -45,6 +46,7 @@ public class Inquiry_Master implements GTransaction {
     CachedRowSet poTestModel;
     
     Model_Inquiry_Master poModel;
+    LockTransaction poLockTrans;
     
     public Inquiry_Master(GRider foGRider, boolean fbWthParent, String fsBranchCd) {
         poGRider = foGRider;
@@ -171,8 +173,16 @@ public class Inquiry_Master implements GTransaction {
             return poJSON;
         }
         
-        poModel.setLockedBy(poGRider.getUserID());
-        poModel.setLockedDt(poGRider.getServerDate());
+        poLockTrans = new LockTransaction(poGRider);
+        
+        if(!poLockTrans.checkLockTransaction(poModel.getTable(), "sTransNox", poModel.getTransNo())){
+            poJSON.put("result", "error");
+            poJSON.put("message", poLockTrans.getMessage());
+            return poJSON;
+        } 
+        
+        poLockTrans.saveLockTransaction(poModel.getTable(),"sTransNox", poModel.getTransNo());
+        
         pnEditMode = EditMode.UPDATE;
         poJSON.put("result", "success");
         poJSON.put("message", "Update mode success.");
@@ -206,7 +216,7 @@ public class Inquiry_Master implements GTransaction {
         String lsSQL =    " SELECT "                                                                       
                         + "    a.sTransNox "                                                               
                         + "  , a.sBranchCd "                                                               
-                        + "  , a.dTransact "                                                               
+                        + "  , DATE(a.dTransact) AS dTransact"                                                               
                         + "  , a.sEmployID "                                                               
                         + "  , a.sClientID "                                                                
                         + "  , a.sContctID "                                                               
@@ -253,7 +263,7 @@ public class Inquiry_Master implements GTransaction {
                     lsColName,
                 "0.1D»0.2D»0.3D»0.4D»0.2D»0.3D", 
                     "INQUIRY",
-                    1);
+                    0);
             
         if (loJSON != null && !"error".equals((String) loJSON.get("result"))) {
         }else {
