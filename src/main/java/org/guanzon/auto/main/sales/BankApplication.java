@@ -3,165 +3,136 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.guanzon.auto.controller.sales;
+package org.guanzon.auto.main.sales;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.guanzon.appdriver.base.GRider;
-import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.iface.GTransaction;
-import org.guanzon.auto.general.CancelForm;
-import org.guanzon.auto.model.sales.Model_Inquiry_FollowUp;
-import org.guanzon.auto.validator.sales.ValidatorFactory;
-import org.guanzon.auto.validator.sales.ValidatorInterface;
+import org.guanzon.auto.controller.sales.Bank_Application;
 import org.json.simple.JSONObject;
 
 /**
  *
  * @author Arsiela
  */
-public class Inquiry_FollowUp implements GTransaction {
-    final String XML = "Model_Inquiry_FollowUp.xml";
+public class BankApplication  implements GTransaction{
+    final String XML = "Model_Bank_Application.xml";
     GRider poGRider;
     String psBranchCd;
     boolean pbWtParent;
     int pnEditMode;
     String psTransStat;
-    
     String psMessagex;
     public JSONObject poJSON;
     
-    Model_Inquiry_FollowUp poModel;
+    Bank_Application poController;
     
-    public Inquiry_FollowUp(GRider foGRider, boolean fbWthParent, String fsBranchCd) {
-        poGRider = foGRider;
-        pbWtParent = fbWthParent;
-        psBranchCd = fsBranchCd.isEmpty() ? foGRider.getBranchCode() : fsBranchCd;
+    public BankApplication(GRider foAppDrver, boolean fbWtParent, String fsBranchCd){
+        poController = new Bank_Application(foAppDrver,fbWtParent,fsBranchCd);
         
-        poModel = new Model_Inquiry_FollowUp(foGRider);
-        pnEditMode = EditMode.UNKNOWN;
+        poGRider = foAppDrver;
+        pbWtParent = fbWtParent;
+        psBranchCd = fsBranchCd.isEmpty() ? foAppDrver.getBranchCode() : fsBranchCd;
     }
-    
+
     @Override
     public int getEditMode() {
+        pnEditMode = poController.getEditMode();
         return pnEditMode;
     }
     
     @Override
-    public Model_Inquiry_FollowUp getMasterModel() {
-        return poModel;
-    }
-    
-    @Override
     public JSONObject setMaster(int fnCol, Object foData) {
-        JSONObject obj = new JSONObject();
-        obj.put("pnEditMode", pnEditMode);
-        if (pnEditMode != EditMode.UNKNOWN){
-            // Don't allow specific fields to assign values
-            if(!(fnCol == poModel.getColumn("sTransNox") ||
-                fnCol == poModel.getColumn("sModified") ||
-                fnCol == poModel.getColumn("dModified"))){
-                poModel.setValue(fnCol, foData);
-                obj.put(fnCol, pnEditMode);
-            }
-        }
-        return obj;
+        return poController.setMaster(fnCol, foData);
     }
 
     @Override
     public JSONObject setMaster(String fsCol, Object foData) {
-        return setMaster(poModel.getColumn(fsCol), foData);
+        return poController.setMaster(fsCol, foData);
     }
-    
+
     public Object getMaster(int fnCol) {
         if(pnEditMode == EditMode.UNKNOWN)
             return null;
         else 
-            return poModel.getValue(fnCol);
+            return poController.getMaster(fnCol);
     }
 
     public Object getMaster(String fsCol) {
-        return getMaster(poModel.getColumn(fsCol));
+        return poController.getMaster(fsCol);
     }
-
+    
     @Override
     public JSONObject newTransaction() {
         poJSON = new JSONObject();
         try{
-            pnEditMode = EditMode.ADDNEW;
-            org.json.simple.JSONObject obj;
-
-            poModel = new Model_Inquiry_FollowUp(poGRider);
-            Connection loConn = null;
-            loConn = setConnection();
-
-            poModel.setTransNo(MiscUtil.getNextCode(poModel.getTable(), "sTransNox", true, poGRider.getConnection(), poGRider.getBranchCode()+"BA"));
-            poModel.newRecord();
+            poJSON = poController.newTransaction();
             
-            if (poModel == null){
-                poJSON.put("result", "error");
-                poJSON.put("message", "initialized new record failed.");
-                return poJSON;
-            }else{
-                poJSON.put("result", "success");
-                poJSON.put("message", "initialized new record.");
-                pnEditMode = EditMode.ADDNEW;
+            if("success".equals(poJSON.get("result"))){
+                pnEditMode = poController.getEditMode();
+            } else {
+                pnEditMode = EditMode.UNKNOWN;
             }
+               
         }catch(NullPointerException e){
             poJSON.put("result", "error");
             poJSON.put("message", e.getMessage());
+            pnEditMode = EditMode.UNKNOWN;
         }
-        
         return poJSON;
     }
     
-    private Connection setConnection(){
-        Connection foConn;
-        if (pbWtParent){
-            foConn = (Connection) poGRider.getConnection();
-            if (foConn == null) foConn = (Connection) poGRider.doConnect();
-        }else foConn = (Connection) poGRider.doConnect();
-        return foConn;
-    }
-
     @Override
     public JSONObject openTransaction(String fsValue) {
-        pnEditMode = EditMode.READY;
         poJSON = new JSONObject();
         
-        poModel = new Model_Inquiry_FollowUp(poGRider);
-        poJSON = poModel.openRecord(fsValue);
+        poJSON = poController.openTransaction(fsValue);
+        if("success".equals(poJSON.get("result"))){
+            pnEditMode = poController.getEditMode();
+        } else {
+            pnEditMode = EditMode.UNKNOWN;
+        }
         
         return poJSON;
     }
 
     @Override
     public JSONObject updateTransaction() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        poJSON = new JSONObject();  
+        poJSON = poController.updateTransaction();
+        if("error".equals(poJSON.get("result"))){
+            return poJSON;
+        }
+        pnEditMode = poController.getEditMode();
+        return poJSON;
     }
 
     @Override
     public JSONObject saveTransaction() {
         poJSON = new JSONObject();  
         
-        ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Inquiry_FollowUp, poModel);
-        validator.setGRider(poGRider);
-        if (!validator.isEntryOkay()){
-            poJSON.put("result", "error");
-            poJSON.put("message", validator.getMessage());
-            return poJSON;
-        }
+        if (!pbWtParent) poGRider.beginTrans();
         
-        poJSON =  poModel.saveRecord();
-        if("error".equalsIgnoreCase((String)poJSON.get("result"))){
+        poJSON =  poController.saveTransaction();
+        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
-            return poJSON;
+            return checkData(poJSON);
         }
+        if (!pbWtParent) poGRider.commitTrans();
         
         return poJSON;
+    }
+    
+    private JSONObject checkData(JSONObject joValue){
+        if(pnEditMode == EditMode.ADDNEW ||pnEditMode == EditMode.READY || pnEditMode == EditMode.UPDATE){
+            if(joValue.containsKey("continue")){
+                if(true == (boolean)joValue.get("continue")){
+                    joValue.put("result", "success");
+                    joValue.put("message", "Record saved successfully.");
+                }
+            }
+        }
+        return joValue;
     }
 
     @Override
@@ -185,8 +156,8 @@ public class Inquiry_FollowUp implements GTransaction {
     }
 
     @Override
-    public JSONObject cancelTransaction(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public JSONObject cancelTransaction(String fsValue) {
+        return poController.cancelTransaction(fsValue);
     }
 
     @Override
@@ -207,6 +178,11 @@ public class Inquiry_FollowUp implements GTransaction {
     @Override
     public JSONObject searchMaster(int i, String string, boolean bln) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Bank_Application getMasterModel() {
+        return poController;
     }
 
     @Override

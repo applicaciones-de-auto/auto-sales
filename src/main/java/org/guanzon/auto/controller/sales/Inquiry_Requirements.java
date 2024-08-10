@@ -8,6 +8,7 @@ package org.guanzon.auto.controller.sales;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.guanzon.appdriver.agent.ShowDialogFX;
@@ -322,7 +323,7 @@ public class Inquiry_Requirements {
                         if(paDetail.get(lnCtr).getRqrmtCde().equals( loRS.getString("sRqrmtCde"))){
                             setRequirements(paRequirements.size()-1,"sReceived", paDetail.get(lnCtr).getReceived());
                             setRequirements(paRequirements.size()-1,"sCompnyNm", paDetail.get(lnCtr).getCompnyNm());
-                            setRequirements(paRequirements.size()-1,"dReceived", paDetail.get(lnCtr).getReceivedDte());
+                            setRequirements(paRequirements.size()-1,"dReceived", (Date) paDetail.get(lnCtr).getValue("dReceived")); //getReceivedDte
                             setRequirements(paRequirements.size()-1,"cSubmittd", paDetail.get(lnCtr).getSubmittd());
                             lbExist = true;
                             lnRow = lnCtr;
@@ -333,7 +334,7 @@ public class Inquiry_Requirements {
                     if(!lbExist){
                         setRequirements(paRequirements.size()-1,"sReceived", "");
                         setRequirements(paRequirements.size()-1,"sCompnyNm", "");
-                        setRequirements(paRequirements.size()-1,"dReceived", "");
+                        setRequirements(paRequirements.size()-1,"dReceived", SQLUtil.toDate("1900-01-01", SQLUtil.FORMAT_SHORT_DATE));
                         setRequirements(paRequirements.size()-1,"cSubmittd", "");
                     }
                 }
@@ -367,21 +368,21 @@ public class Inquiry_Requirements {
     public Object getRequirements(int fnRow, String fsIndex){return paRequirements.get(fnRow).getValue(fsIndex);}
     
     public JSONObject searchEmployee(String fsRqrmtCde, String fsDescript) { //, String fsTransNo
-        poJSON = new JSONObject();
+        JSONObject lObj = new JSONObject();
         boolean lbExist = false;
         int lnRow = 0;
         
         String lsSQL =   " SELECT "
-                       + " a.sClientID "
+                       + " a.sClientID AS sClientID "
                        + " , a.cRecdStat "
-                       + " , b.sCompnyNm "
+                       + " , b.sCompnyNm AS sCompnyNm"
                        + " FROM sales_executive a "
                        + " LEFT JOIN GGC_ISysDBF.Client_Master b ON b.sClientID = a.sClientID " ;  
                 
         lsSQL = MiscUtil.addCondition(lsSQL, "a.cRecdStat = '1' ");  
 
         System.out.println("SEARCH EMPLOYEE: " + lsSQL);
-        poJSON = ShowDialogFX.Search(poGRider,
+        lObj = ShowDialogFX.Search(poGRider,
                 lsSQL,
                 "",
                     "Employee Name",
@@ -389,8 +390,8 @@ public class Inquiry_Requirements {
                     "b.sCompnyNm",
                 0);
 
-        if (poJSON != null) {
-            if(!"error".equals((String) poJSON.get("result"))){
+        if (lObj != null) {
+            if(!"error".equals((String) lObj.get("result"))){
                 
                 for (int lnCtr = 0; lnCtr <= paDetail.size()-1;lnCtr++){
                     if(paDetail.get(lnCtr).getRqrmtCde().equals(fsRqrmtCde )){
@@ -401,50 +402,40 @@ public class Inquiry_Requirements {
                 }
                 
                 if(lbExist){
-                    setDetail(lnRow,"sReceived", (String) poJSON.get("sClientID"));
-                    setDetail(lnRow,"sCompnyNm", (String) poJSON.get("sCompnyNm"));
+                    setDetail(lnRow,"sReceived", (String) lObj.get("sClientID"));
+                    setDetail(lnRow,"sCompnyNm", (String) lObj.get("sCompnyNm"));
                     setDetail(lnRow,"dReceived", poGRider.getServerDate());
                     setDetail(lnRow,"cSubmittd", "1");
                 } else {
                     addDetail();
                      if (paDetail.size()<=0){
-                         
-//                        paDetail.get(0).setRqrmtCde(fsRqrmtCde);
-//                        paDetail.get(0).setDescript(fsDescript);
-//                        paDetail.get(0).setReceived((String) poJSON.get("sClientID"));
-//                        paDetail.get(0).setCompnyNm((String) poJSON.get("sCompnyNm"));
-//                        paDetail.get(0).setReceivedDte(poGRider.getServerDate());
-//                        paDetail.get(0).setSubmittd("1");
-                        paDetail.get(0).setValue("sRqrmtCde", fsRqrmtCde);
-                        paDetail.get(0).setValue("sDescript", fsDescript);
-                        paDetail.get(0).setValue("sReceived",  (String) poJSON.get("sClientID"));
-                        paDetail.get(0).setValue("sCompnyNm",  (String) poJSON.get("sCompnyNm"));
-                        paDetail.get(0).setValue("dReceived", poGRider.getServerDate());
-                        paDetail.get(0).setValue("cSubmittd", "1");
+                        setDetail(0,"sRqrmtCde", fsRqrmtCde);
+                        setDetail(0,"sDescript", fsDescript);
+                        setDetail(0,"sReceived", (String) lObj.get("sClientID"));
+                        setDetail(0,"sCompnyNm", (String) lObj.get("sCompnyNm"));
+                        setDetail(0,"dReceived", poGRider.getServerDate());
+                        setDetail(0,"cSubmittd", "1");
                      }else {
                         setDetail(paDetail.size()-1,"sRqrmtCde", fsRqrmtCde);
                         setDetail(paDetail.size()-1,"sDescript", fsDescript);
-                        setDetail(paDetail.size()-1,"sReceived", (String) poJSON.get("sClientID"));
-                        setDetail(paDetail.size()-1,"sCompnyNm", (String) poJSON.get("sCompnyNm"));
+                        setDetail(paDetail.size()-1,"sReceived", (String) lObj.get("sClientID"));
+                        setDetail(paDetail.size()-1,"sCompnyNm", (String) lObj.get("sCompnyNm"));
                         setDetail(paDetail.size()-1,"dReceived", poGRider.getServerDate());
                         setDetail(paDetail.size()-1,"cSubmittd", "1");
                      }
-                    
-                    
-                    
                 }
                 
-                poJSON.put("result", "success");
-                poJSON.put("message", "Requirements added successfully.");
+                lObj.put("result", "success");
+                lObj.put("message", "Requirements added successfully.");
             } 
         } else {
-            poJSON = new JSONObject();
-            poJSON.put("result", "error");
-            poJSON.put("message", "No record loaded.");
-            return poJSON;
+            lObj = new JSONObject();
+            lObj.put("result", "error");
+            lObj.put("message", "No record loaded.");
+            return lObj;
         }
         
-        return poJSON;
+        return lObj;
     }
     
     public void removeEmployee(String fsRqrmtCde) {
@@ -460,13 +451,18 @@ public class Inquiry_Requirements {
         }
 
         if(lbExist){
-            
-            if(((String)getDetail(lnRow, "sTransNox")).isEmpty()){
+            if(((String)getDetail(lnRow, "sTransNox")) != null){
+                if(((String)getDetail(lnRow, "sTransNox")).isEmpty()){
+                    setDetail(lnRow,"sReceived", "");
+                    setDetail(lnRow,"sCompnyNm", "");
+                    setDetail(lnRow,"cSubmittd", "");
+                } else {
+                    setDetail(lnRow,"cSubmittd", "0");
+                }
+            } else {
                 setDetail(lnRow,"sReceived", "");
                 setDetail(lnRow,"sCompnyNm", "");
                 setDetail(lnRow,"cSubmittd", "");
-            } else {
-                setDetail(lnRow,"cSubmittd", "0");
             }
         } 
         

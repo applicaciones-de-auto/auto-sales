@@ -8,10 +8,13 @@ package org.guanzon.auto.controller.sales;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
+import org.guanzon.auto.general.CancelForm;
 import org.guanzon.auto.model.sales.Model_Inquiry_Reservation;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
 import org.guanzon.auto.validator.sales.ValidatorInterface;
@@ -175,15 +178,40 @@ public class Inquiry_Reservation {
     public Object getDetail(int fnRow, String fsIndex){return paDetail.get(fnRow).getValue(fsIndex);}
     
     
-    public Object removeDetail(int fnRow){
+    public JSONObject removeDetail(int fnRow){
         JSONObject loJSON = new JSONObject();
         
-        if(paDetail.get(fnRow).getEntryBy() != null){
-            if(!paDetail.get(fnRow).getEntryBy().trim().isEmpty()){
+        if(paDetail.get(fnRow).getEntryBy()== null){
+            paDetail.remove(fnRow);
+        } else {
+            if(paDetail.get(fnRow).getEntryBy().trim().isEmpty()){
                 paDetail.remove(fnRow);
+            } else {
+                loJSON.put("result", "error");
+                loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already saved cannot be removed.\nReservation needs to be cancelled.");
+                return loJSON;
             }
         }
         
+        return loJSON;
+    }
+    
+    public JSONObject cancelReservation(int fnRow){
+        JSONObject loJSON = new JSONObject();
+        try {
+            CancelForm cancelform = new CancelForm();
+            if (!cancelform.loadCancelWindow(poGRider, paDetail.get(fnRow).getReferNo(), paDetail.get(fnRow).getTransNo(), "RESERVATION")) {
+                poJSON.put("result", "error");
+                poJSON.put("message", "Cancellation failed.");
+                return poJSON;
+            }
+            
+            paDetail.get(fnRow).setTranStat("0");
+            loJSON = paDetail.get(fnRow).saveRecord(); //paDetail.get(fnRow).getTransNo());
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(Inquiry_Reservation.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return loJSON;
     }
     

@@ -70,8 +70,10 @@ public class Activity_Master implements GRecord {
         obj.put("pnEditMode", pnEditMode);
         if (pnEditMode != EditMode.UNKNOWN){
             // Don't allow specific fields to assign values
-            if(!(fnCol == poModel.getColumn("sTransNox") ||
-                fnCol == poModel.getColumn("cRecdStat") ||
+            if(!(fnCol == poModel.getColumn("sActvtyID") ||
+                fnCol == poModel.getColumn("cTranStat") ||
+                fnCol == poModel.getColumn("sEntryByx") ||
+                fnCol == poModel.getColumn("dEntryDte") ||
                 fnCol == poModel.getColumn("sModified") ||
                 fnCol == poModel.getColumn("dModified"))){
                 poModel.setValue(fnCol, foData);

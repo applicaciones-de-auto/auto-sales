@@ -6,10 +6,14 @@
 package org.guanzon.auto.controller.sales;
 
 import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.iface.GTransaction;
+import org.guanzon.auto.general.CancelForm;
 import org.guanzon.auto.model.sales.Model_Bank_Application;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
 import org.guanzon.auto.validator.sales.ValidatorInterface;
@@ -50,6 +54,41 @@ public class Bank_Application implements GTransaction {
     public Model_Bank_Application getMasterModel() {
         return poModel;
     }
+    
+    
+
+    @Override
+    public JSONObject setMaster(int fnCol, Object foData) {
+        JSONObject obj = new JSONObject();
+        obj.put("pnEditMode", pnEditMode);
+        if (pnEditMode != EditMode.UNKNOWN){
+            // Don't allow specific fields to assign values
+            if(!(fnCol == poModel.getColumn("sTransNox") ||
+                fnCol == poModel.getColumn("cTranStat") ||
+                fnCol == poModel.getColumn("sModified") ||
+                fnCol == poModel.getColumn("dModified"))){
+                poModel.setValue(fnCol, foData);
+                obj.put(fnCol, pnEditMode);
+            }
+        }
+        return obj;
+    }
+
+    @Override
+    public JSONObject setMaster(String fsCol, Object foData) {
+        return setMaster(poModel.getColumn(fsCol), foData);
+    }
+    
+    public Object getMaster(int fnCol) {
+        if(pnEditMode == EditMode.UNKNOWN)
+            return null;
+        else 
+            return poModel.getValue(fnCol);
+    }
+
+    public Object getMaster(String fsCol) {
+        return getMaster(poModel.getColumn(fsCol));
+    }
 
     @Override
     public JSONObject newTransaction() {
@@ -63,7 +102,7 @@ public class Bank_Application implements GTransaction {
             loConn = setConnection();
 
             poModel.setTransNo(MiscUtil.getNextCode(poModel.getTable(), "sTransNox", true, poGRider.getConnection(), poGRider.getBranchCode()+"BA"));
-            poModel.setApplicNo(MiscUtil.getNextCode(poModel.getTable(), "sApplicNo", true, poGRider.getConnection(), poGRider.getBranchCode()));
+            //poModel.setApplicNo(MiscUtil.getNextCode(poModel.getTable(), "sApplicNo", true, poGRider.getConnection(), poGRider.getBranchCode()));
             poModel.newRecord();
             
             if (poModel == null){
@@ -131,10 +170,10 @@ public class Bank_Application implements GTransaction {
         }
         
         poJSON =  poModel.saveRecord();
-//        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
-//            if (!pbWtParent) poGRider.rollbackTrans();
-//            return checkData(poJSON);
-//        }
+        if("error".equalsIgnoreCase((String)poJSON.get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return poJSON;
+        }
         
         return poJSON;
     }
@@ -160,8 +199,51 @@ public class Bank_Application implements GTransaction {
     }
 
     @Override
-    public JSONObject cancelTransaction(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public JSONObject cancelTransaction(String fsValue) {
+        poJSON = new JSONObject();
+
+        if (poModel.getEditMode() == EditMode.UPDATE) {
+            try {
+                poJSON = poModel.setTranStat("3");
+                if ("error".equals((String) poJSON.get("result"))) {
+                    return poJSON;
+                }
+                
+                ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Inquiry_BankApplication, poModel);
+                validator.setGRider(poGRider);
+                if (!validator.isEntryOkay()){
+                    poJSON.put("result", "error");
+                    poJSON.put("message", validator.getMessage());
+                    return poJSON;
+                }
+
+                CancelForm cancelform = new CancelForm();
+                if (!cancelform.loadCancelWindow(poGRider, poModel.getApplicNo(), poModel.getTransNo(), "BANK APPLICATION")) {
+                    poJSON.put("result", "error");
+                    poJSON.put("message", "Cancellation failed.");
+                    return poJSON;
+                }
+                
+                poModel.setCancelld(poGRider.getUserID());
+                poModel.setCancelldDte(poGRider.getServerDate());
+                
+                poJSON = poModel.saveRecord();
+                if ("success".equals((String) poJSON.get("result"))) {
+                    poJSON.put("result", "success");
+                    poJSON.put("message", "Cancellation success.");
+                } else {
+                    poJSON.put("result", "error");
+                    poJSON.put("message", "Cancellation failed.");
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(Bank_Application.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else {
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No transaction loaded to update.");
+        }
+        return poJSON;
     }
 
     @Override
@@ -181,16 +263,6 @@ public class Bank_Application implements GTransaction {
 
     @Override
     public JSONObject searchMaster(int i, String string, boolean bln) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject setMaster(int i, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject setMaster(String string, Object o) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

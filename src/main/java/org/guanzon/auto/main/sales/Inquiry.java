@@ -165,10 +165,10 @@ public class Inquiry implements GTransaction{
         
         poJSON = new JSONObject();  
         
-//        poJSON = validateEntry();
-//        if("error".equalsIgnoreCase((String)poJSON.get("result"))){
-//            return poJSON;
-//        }
+        poJSON = validateEntry();
+        if("error".equalsIgnoreCase((String)poJSON.get("result"))){
+            return poJSON;
+        }
         
         if (!pbWtParent) poGRider.beginTrans();
         
@@ -311,6 +311,10 @@ public class Inquiry implements GTransaction{
         return poController.searchBranch(fsValue);
     }
     
+    public JSONObject searchAvlVhcl(String fsValue, boolean fbIsBrandNew) {
+        return poController.searchAvlVhcl(fsValue,fbIsBrandNew);
+    }
+    
     public JSONObject loadTestModel() {
         return poController.loadTestModel();
     }
@@ -430,6 +434,22 @@ public class Inquiry implements GTransaction{
     
     public Object addReservation(){ return poReservation.addDetail("VINQ",poController.getMasterModel().getTransNo(),poController.getMasterModel().getClientID());}
     public Object removeReservation(int fnRow){ return poReservation.removeDetail(fnRow);}
+    
+    public JSONObject validateEntry(int fnRow) {
+        return poReservation.cancelReservation(fnRow);
+    }
+    
+    public JSONObject loadReservationList() {
+        JSONObject loJSON = new JSONObject();
+        loJSON = poReservation.openDetail(poController.getMasterModel().getTransNo());
+        if(!"success".equals(poJSON.get("result"))){
+            if(true == (boolean) poJSON.get("continue")){
+                loJSON.put("result", "success");
+                loJSON.put("message", "Record loaded succesfully.");
+            }
+        }
+        return loJSON;
+    }
     
     public JSONObject validateEntry() {
         JSONObject jObj = new JSONObject();

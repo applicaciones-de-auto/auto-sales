@@ -38,9 +38,9 @@ public class InquiryModel {
         System.setProperty("sys.default.path.metadata", "D:/GGC_Maven_Systems/config/metadata/Model_Inquiry_Master.xml");
         
         
-        String lsSQL =    " SELECT "                                                                               
+        String lsSQL =     " SELECT "                                                                               
                         + "   a.sTransNox "                                                                            
-                        + " , a.sInqryIDx "                                                                        
+                        + " , a.sInqryIDx "                                                                       
                         + " , a.sBranchCd "                                                                        
                         + " , a.dTransact "                                                                        
                         + " , a.sEmployID "                                                                        
@@ -84,7 +84,12 @@ public class InquiryModel {
                         + " , m.sCompnyNm AS sSalesAgn "                                                           
                         + " , n.sPlatform "                                                                        
                         + " , o.sActTitle "                                                                        
-                        + " , p.sBranchNm "                                                                        
+                        + " , p.sBranchNm "                                                                                      
+                        + " , q.sFrameNox "                                                                                           
+                        + " , q.sEngineNo "                                                                                                        
+                        + " , q.sCSNoxxxx "                                                                                   
+                        + " , r.sPlateNox "                                                                                            
+                        + " , s.sDescript "                                                                      
                         + " FROM customer_inquiry a "                                                              
                         + " LEFT JOIN client_master b ON a.sClientID = b.sClientID   "                             
                         + " LEFT JOIN client_address c ON c.sClientID = a.sClientID AND c.cPrimaryx = 1 "          
@@ -100,7 +105,10 @@ public class InquiryModel {
                         + " LEFT JOIN client_master m ON m.sClientID = a.sAgentIDx    "                            
                         + " LEFT JOIN online_platforms n ON n.sTransNox = a.sSourceCD "                            
                         + " LEFT JOIN activity_master o ON o.sActvtyID = a.sActvtyID  "                            
-                        + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd           "   
+                        + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd           "                             
+                        + " LEFT JOIN vehicle_serial q ON q.sSerialID = a.sSerialID           "    
+                        + " LEFT JOIN vehicle_serial_registration r ON r.sSerialID = a.sSerialID "              
+                        + " LEFT JOIN vehicle_master s ON s.sVhclIDxx = q.sVhclIDxx "   
                         + " WHERE 0=1";
         
         
