@@ -2,12 +2,15 @@ org\guanzon\auto\resultSet2XML\sales\InquiryModel.class
 org\guanzon\auto\controller\sales\Activity_Member.class
 org\guanzon\auto\controller\sales\Activity_Location.class
 org\guanzon\auto\resultSet2XML\sales\InquiryRequirements.class
+org\guanzon\auto\resultSet2XML\sales\InquiryFollowUp.class
 org\guanzon\auto\resultSet2XML\sales\ActivityLocation.class
 org\guanzon\auto\controller\sales\Inquiry_VehiclePriority.class
 org\guanzon\auto\controller\sales\Inquiry_Reservation.class
 org\guanzon\auto\resultSet2XML\sales\InquiryReservation.class
 org\guanzon\auto\resultSet2XML\sales\InquiryPromo.class
+org\guanzon\auto\main\sales\FollowUp.class
 org\guanzon\auto\controller\sales\Inquiry_Master.class
+org\guanzon\auto\main\sales\BankApplication.class
 org\guanzon\auto\main\sales\VehicleSalesProposal.class
 org\guanzon\auto\controller\sales\Activity_Vehicle.class
 org\guanzon\auto\resultSet2XML\sales\ActivityVehicle.class
@@ -27,3 +30,4 @@ org\guanzon\auto\controller\sales\VehicleSalesProposal_Master.class
 org\guanzon\auto\main\sales\Activity.class
 org\guanzon\auto\resultSet2XML\sales\ActivityMember.class
 org\guanzon\auto\controller\sales\VehicleSalesProposal_Finance.class
+org\guanzon\auto\resultSet2XML\sales\BankApplication.class

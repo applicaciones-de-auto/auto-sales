@@ -8,7 +8,7 @@ package org.guanzon.auto.main.sales;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.iface.GTransaction;
-import org.guanzon.auto.controller.sales.Bank_Application;
+import org.guanzon.auto.controller.sales.Inquiry_FollowUp;
 import org.json.simple.JSONObject;
 
 /**
@@ -25,10 +25,10 @@ public class FollowUp implements GTransaction{
     String psMessagex;
     public JSONObject poJSON;
     
-    Bank_Application poController;
+    Inquiry_FollowUp poController;
     
     public FollowUp(GRider foAppDrver, boolean fbWtParent, String fsBranchCd){
-        poController = new Bank_Application(foAppDrver,fbWtParent,fsBranchCd);
+        poController = new Inquiry_FollowUp(foAppDrver,fbWtParent,fsBranchCd);
         
         poGRider = foAppDrver;
         pbWtParent = fbWtParent;
@@ -181,7 +181,7 @@ public class FollowUp implements GTransaction{
     }
 
     @Override
-    public Bank_Application getMasterModel() {
+    public Inquiry_FollowUp getMasterModel() {
         return poController;
     }
 

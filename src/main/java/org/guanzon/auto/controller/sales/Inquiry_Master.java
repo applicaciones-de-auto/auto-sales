@@ -45,6 +45,7 @@ public class Inquiry_Master implements GTransaction {
     public JSONObject poJSON;
     CachedRowSet poTestModel;
     CachedRowSet poBankApp;
+    CachedRowSet poFollowUp;
     
     Model_Inquiry_Master poModel;
     LockTransaction poLockTrans;
@@ -887,7 +888,7 @@ public class Inquiry_Master implements GTransaction {
         return getTestModelDetail(fnRow, MiscUtil.getColumnIndex(poTestModel, fsIndex));
     }
     
-    public JSONObject loadBankApplication(){
+    public JSONObject loadBankApplicationList(){
         JSONObject loJSON = new JSONObject();
         try {
             String lsSQL =    " SELECT "                                                 
@@ -923,7 +924,7 @@ public class Inquiry_Master implements GTransaction {
                 poBankApp.populate(loRS);
                 MiscUtil.close(loRS);
                 loJSON.put("result", "success");
-                loJSON.put("message", "Test Model load successfully.");
+                loJSON.put("message", "Bank Applications load successfully.");
             } catch (SQLException e) {
                 loJSON.put("result", "error");
                 loJSON.put("message", e.getMessage());
@@ -953,6 +954,74 @@ public class Inquiry_Master implements GTransaction {
     
     public Object getBankApplicationDetail(int fnRow, String fsIndex) throws SQLException{
         return getBankApplicationDetail(fnRow, MiscUtil.getColumnIndex(poBankApp, fsIndex));
+    }
+    
+    public JSONObject loadFollowUpList(){
+        JSONObject loJSON = new JSONObject();
+        try {
+            String lsSQL =    " SELECT "                                                 
+                            + "    a.sTransNox "                                         
+                            + "  , a.sApplicNo "                                         
+                            + "  , a.dAppliedx "                                         
+                            + "  , a.dApproved "                                         
+                            + "  , a.cPayModex "                                         
+                            + "  , a.sSourceCD "                                         
+                            + "  , a.sSourceNo "                                         
+                            + "  , a.sBrBankID "                                         
+                            + "  , a.sRemarksx "                                         
+                            + "  , a.cTranStat "                                         
+                            + "  , a.sCancelld "                                         
+                            + "  , a.dCancelld "                                         
+                            + "  , b.sBrBankNm "                                         
+                            + "  , c.sBankIDxx "                                         
+                            + "  , c.sBankName "                                                              
+                            + "  , CASE WHEN a.cTranStat = '0' THEN 'ON-GOING'"                           
+                            + " 	WHEN a.cTranStat = '1' THEN 'DECLINE' "                                   
+                            + " 	WHEN a.cTranStat = '2' THEN 'APPROVED'"                                      
+                            + " 	ELSE 'CANCELLED'  "                                                          
+                            + "    END AS sTranStat "                                         
+                            + " FROM bank_application a "                                
+                            + " LEFT JOIN banks_branches b ON b.sBrBankID = a.sBrBankID "
+                            + " LEFT JOIN banks c ON c.sBankIDxx = b.sBankIDxx ";
+            
+            System.out.println("LOAD BANK APPLICATIONS "+ lsSQL);
+            RowSetFactory factory = RowSetProvider.newFactory();
+            ResultSet loRS = poGRider.executeQuery(lsSQL);
+            try {
+                poFollowUp = factory.createCachedRowSet();
+                poFollowUp.populate(loRS);
+                MiscUtil.close(loRS);
+                loJSON.put("result", "success");
+                loJSON.put("message", "Follow Ups load successfully.");
+            } catch (SQLException e) {
+                loJSON.put("result", "error");
+                loJSON.put("message", e.getMessage());
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(Inquiry_Master.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return loJSON;
+    }
+    
+    public int getFollowUpCount() throws SQLException{
+        if (poFollowUp != null){
+            poFollowUp.last();
+            return poFollowUp.getRow();
+        }else{
+            return 0;
+        }
+    }
+    
+    public Object getFollowUpDetail(int fnRow, int fnIndex) throws SQLException{
+        if (fnIndex == 0) return null;
+        
+        poFollowUp.absolute(fnRow);
+        return poFollowUp.getObject(fnIndex);
+    }
+    
+    public Object getFollowUpDetail(int fnRow, String fsIndex) throws SQLException{
+        return getFollowUpDetail(fnRow, MiscUtil.getColumnIndex(poFollowUp, fsIndex));
     }
     
     

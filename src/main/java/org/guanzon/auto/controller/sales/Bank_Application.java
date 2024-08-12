@@ -204,7 +204,9 @@ public class Bank_Application implements GTransaction {
 
         if (poModel.getEditMode() == EditMode.UPDATE) {
             try {
-                poJSON = poModel.setTranStat("3");
+                String lsStat = poModel.getTransNo(); //Get Original Transtat
+                
+                poJSON = poModel.setTranStat("0");
                 if ("error".equals((String) poJSON.get("result"))) {
                     return poJSON;
                 }
@@ -215,6 +217,12 @@ public class Bank_Application implements GTransaction {
                     poJSON.put("result", "error");
                     poJSON.put("message", validator.getMessage());
                     return poJSON;
+                } else {
+                    //Revert
+                    poJSON = poModel.setTranStat(lsStat);
+                    if ("error".equals((String) poJSON.get("result"))) {
+                        return poJSON;
+                    }
                 }
 
                 CancelForm cancelform = new CancelForm();

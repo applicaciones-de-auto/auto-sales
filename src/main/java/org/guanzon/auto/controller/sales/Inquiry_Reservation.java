@@ -140,15 +140,12 @@ public class Inquiry_Reservation {
         }
         
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
-            if(lnCtr>0){
-                if(paDetail.get(lnCtr).getAmount() == null || paDetail.get(lnCtr).getAmount() == 0 || paDetail.get(lnCtr).getAmount() == 0.00){
-                    continue; //skip, instead of removing the actual detail
-//                    paDetail.remove(lnCtr);
-//                    lnCtr++;
-//                    if(lnCtr > lnSize){
-//                        break;
-//                    } 
-                }
+            if(paDetail.get(lnCtr).getAmount() == null ){
+                continue; //skip, instead of removing the actual detail
+            } else if(paDetail.get(lnCtr).getAmount() == 0){
+                continue; //skip, instead of removing the actual detail
+            } else if(paDetail.get(lnCtr).getAmount() == 0.00){
+                continue; //skip, instead of removing the actual detail
             }
             
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Inquiry_Reservation, paDetail.get(lnCtr));

@@ -435,7 +435,7 @@ public class Inquiry implements GTransaction{
     public Object addReservation(){ return poReservation.addDetail("VINQ",poController.getMasterModel().getTransNo(),poController.getMasterModel().getClientID());}
     public Object removeReservation(int fnRow){ return poReservation.removeDetail(fnRow);}
     
-    public JSONObject validateEntry(int fnRow) {
+    public JSONObject cancelReservation(int fnRow) {
         return poReservation.cancelReservation(fnRow);
     }
     

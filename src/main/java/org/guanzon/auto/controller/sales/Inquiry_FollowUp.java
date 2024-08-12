@@ -61,9 +61,9 @@ public class Inquiry_FollowUp implements GTransaction {
         obj.put("pnEditMode", pnEditMode);
         if (pnEditMode != EditMode.UNKNOWN){
             // Don't allow specific fields to assign values
-            if(!(fnCol == poModel.getColumn("sTransNox") ||
-                fnCol == poModel.getColumn("sModified") ||
-                fnCol == poModel.getColumn("dModified"))){
+            if(!(fnCol == poModel.getColumn("sReferNox") ||
+                fnCol == poModel.getColumn("sEntryByx") ||
+                fnCol == poModel.getColumn("dEntryDte"))){
                 poModel.setValue(fnCol, foData);
                 obj.put(fnCol, pnEditMode);
             }
@@ -98,7 +98,7 @@ public class Inquiry_FollowUp implements GTransaction {
             Connection loConn = null;
             loConn = setConnection();
 
-            poModel.setTransNo(MiscUtil.getNextCode(poModel.getTable(), "sTransNox", true, poGRider.getConnection(), poGRider.getBranchCode()+"BA"));
+            poModel.setReferNo(MiscUtil.getNextCode(poModel.getTable(), "sReferNox", true, poGRider.getConnection(), poGRider.getBranchCode()));
             poModel.newRecord();
             
             if (poModel == null){
