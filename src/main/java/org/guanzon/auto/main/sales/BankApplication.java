@@ -8,7 +8,9 @@ package org.guanzon.auto.main.sales;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.iface.GTransaction;
+import org.guanzon.auto.controller.parameter.Bank_Branches;
 import org.guanzon.auto.controller.sales.Bank_Application;
+import org.guanzon.auto.main.parameter.Bank;
 import org.json.simple.JSONObject;
 
 /**
@@ -26,9 +28,11 @@ public class BankApplication  implements GTransaction{
     public JSONObject poJSON;
     
     Bank_Application poController;
+    Bank_Branches poBankBranches;
     
     public BankApplication(GRider foAppDrver, boolean fbWtParent, String fsBranchCd){
         poController = new Bank_Application(foAppDrver,fbWtParent,fsBranchCd);
+        poBankBranches =  new Bank_Branches(foAppDrver,fbWtParent,fsBranchCd);
         
         poGRider = foAppDrver;
         pbWtParent = fbWtParent;
@@ -188,6 +192,21 @@ public class BankApplication  implements GTransaction{
     @Override
     public void setTransactionStatus(String string) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    public JSONObject searchBank(String fsValue, boolean fbByActive) {
+        poJSON = new JSONObject();  
+        poJSON = poBankBranches.searchRecord(fsValue, fbByActive);
+        if(!"error".equals(poJSON.get("result"))){
+            poController.setMaster("sBrBankID", poJSON.get("sBrBankID"));
+            poController.setMaster("sBrBankNm", poJSON.get("sBrBankNm"));
+            poController.setMaster("sBankType", poJSON.get("sBankType"));
+            poController.setMaster("sBankIDxx", poJSON.get("sBankIDxx"));
+            poController.setMaster("sBankName", poJSON.get("sBankName"));
+            poController.setMaster("sAddressx", poJSON.get("sAddressx"));
+        }
+        
+        return poJSON;
     }
     
 }

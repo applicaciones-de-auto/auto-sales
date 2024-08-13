@@ -451,6 +451,37 @@ public class Inquiry implements GTransaction{
         return loJSON;
     }
     
+//    public JSONObject loadSelectedReservation(int lnRow) {
+//        JSONObject loJSON = new JSONObject();
+//        
+//        for(int lnCtr = 0; fsTransNo.length() <= lnCtr; lnCtr++){
+//            loJSON = poReservation.openDetail(poController.getMasterModel().getTransNo());
+//            if(!"success".equals(poJSON.get("result"))){
+//                if(true == (boolean) poJSON.get("continue")){
+//                    loJSON.put("result", "success");
+//                    loJSON.put("message", "Record loaded succesfully.");
+//                }
+//            }
+//        }
+//        return loJSON;
+//    }
+    
+    public JSONObject loadBankApplicationList() {
+        return poController.loadBankApplicationList();
+    }
+    
+    public int getBankApplicationCount() throws SQLException{
+        return poController.getBankApplicationCount();
+    }
+    
+    public Object getBankApplicationDetail(int fnRow, int fnIndex) throws SQLException{
+        return poController.getBankApplicationDetail(fnRow, fnIndex);
+    }
+    
+    public Object getBankApplicationDetail(int fnRow, String fsIndex) throws SQLException{
+        return poController.getBankApplicationDetail(fnRow, fsIndex);
+    }
+    
     public JSONObject validateEntry() {
         JSONObject jObj = new JSONObject();
         

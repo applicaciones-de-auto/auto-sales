@@ -58,12 +58,14 @@ public class BankApplication {
                         + "  , c.sBankIDxx "                                         
                         + "  , c.sBankName "                                         
                         + "  , d.sTownName "                                         
-                        + "  , e.sProvName "                                         
+                        + "  , e.sProvName " 
+                        + "  , UPPER(CONCAT(b.sAddressx,' ', d.sTownName, ', ', e.sProvName)) sAddressx "                                      
+                        + "  , c.sBankType " 
                         + " FROM bank_application a "                                
                         + " LEFT JOIN banks_branches b ON b.sBrBankID = a.sBrBankID "
                         + " LEFT JOIN banks c ON c.sBankIDxx = b.sBankIDxx          "
                         + " LEFT JOIN towncity d ON d.sTownIDxx = b.sTownIDxx       "
-                        + " LEFT JOIN province e ON e.sProvIDxx = d.sProvIDxx       "
+                        + " LEFT JOIN province e ON e.sProvIDxx = d.sProvIDxx       " 
                         + " WHERE 0=1";
         
         

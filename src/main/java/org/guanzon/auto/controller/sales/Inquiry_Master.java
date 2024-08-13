@@ -462,7 +462,7 @@ public class Inquiry_Master implements GTransaction {
                                                     + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getContctID())
                                                     + " AND a.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%")) ;
         } else {
-            lsSQL = MiscUtil.addCondition(lsSQL, " a.cRecdStat = '1' "
+            lsSQL = MiscUtil.addCondition(lsSQL, " a.cRecdStat = '1' AND a.cClientTp = '0' "
                                                     + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getClientID())
                                                     + " AND a.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%")) ;
         }
@@ -906,12 +906,8 @@ public class Inquiry_Master implements GTransaction {
                             + "  , a.dCancelld "                                         
                             + "  , b.sBrBankNm "                                         
                             + "  , c.sBankIDxx "                                         
-                            + "  , c.sBankName "                                                              
-                            + "  , CASE WHEN a.cTranStat = '0' THEN 'ON-GOING'"                           
-                            + " 	WHEN a.cTranStat = '1' THEN 'DECLINE' "                                   
-                            + " 	WHEN a.cTranStat = '2' THEN 'APPROVED'"                                      
-                            + " 	ELSE 'CANCELLED'  "                                                          
-                            + "    END AS sTranStat "                                         
+                            + "  , c.sBankName "                                          
+                            + "  , c.sBankType "                                          
                             + " FROM bank_application a "                                
                             + " LEFT JOIN banks_branches b ON b.sBrBankID = a.sBrBankID "
                             + " LEFT JOIN banks c ON c.sBankIDxx = b.sBankIDxx ";

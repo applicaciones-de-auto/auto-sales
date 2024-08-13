@@ -206,10 +206,7 @@ public class Bank_Application implements GTransaction {
             try {
                 String lsStat = poModel.getTransNo(); //Get Original Transtat
                 
-                poJSON = poModel.setTranStat("0");
-                if ("error".equals((String) poJSON.get("result"))) {
-                    return poJSON;
-                }
+                poModel.setCancelld(poGRider.getUserID());
                 
                 ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Inquiry_BankApplication, poModel);
                 validator.setGRider(poGRider);
@@ -230,9 +227,10 @@ public class Bank_Application implements GTransaction {
                     poJSON.put("result", "error");
                     poJSON.put("message", "Cancellation failed.");
                     return poJSON;
+                } else {
+                   poModel.setCancelld("");
                 }
                 
-                poModel.setCancelld(poGRider.getUserID());
                 poModel.setCancelldDte(poGRider.getServerDate());
                 
                 poJSON = poModel.saveRecord();
