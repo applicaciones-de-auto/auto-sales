@@ -190,5 +190,8 @@ public class FollowUp implements GTransaction{
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
+    public JSONObject searchOnlinePlatform(String fsValue) {
+        return poController.searchOnlinePlatform(fsValue);
+    }
     
 }

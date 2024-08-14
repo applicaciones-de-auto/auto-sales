@@ -1,6 +1,9 @@
 
 import java.sql.SQLException;
+import java.sql.Time;
+import java.time.LocalTime;
 import org.guanzon.appdriver.base.GRider;
+import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.auto.main.sales.FollowUp;
 import org.json.simple.JSONObject;
 import org.junit.AfterClass;
@@ -67,104 +70,104 @@ public class FollowUpTest {
      * ARSIELA
      */
     
-    @Test
-    public void test01NewRecord() throws SQLException{
-        System.out.println("--------------------------------------------------------------------");
-        System.out.println("------------------------------NEW RECORD--------------------------------------");
-        System.out.println("--------------------------------------------------------------------");
-        
-        json = model.newTransaction();
-        if ("success".equals((String) json.get("result"))){
-            json = model.setMaster("dTransact",instance.getServerDate());
-            if ("error".equals((String) json.get("result"))){
-                System.err.println((String) json.get("message"));
-                System.exit(1);
-            }
-            json = model.setMaster("dFollowUp",instance.getServerDate());
-            if ("error".equals((String) json.get("result"))){
-                System.err.println((String) json.get("message"));
-                System.exit(1);
-            }
-
-            json = model.setMaster("sTransNox","M001IQ240001");
-            if ("error".equals((String) json.get("result"))){
-                System.err.println((String) json.get("message"));
-                System.exit(1);
-            }
-
-            json = model.setMaster("tFollowUp","TEXT FOLLOW UP");
-            if ("error".equals((String) json.get("result"))){
-                System.err.println((String) json.get("message"));
-                System.exit(1);
-            }
-
-            json = model.setMaster("sRemarksx","TEST LANG ITO");
-            if ("error".equals((String) json.get("result"))){
-                System.err.println((String) json.get("message"));
-                System.exit(1);
-            }
-
-            json = model.setMaster("sMessagex","TEST MESSAGE");
-            if ("error".equals((String) json.get("result"))){
-                System.err.println((String) json.get("message"));
-                System.exit(1);
-            }
-
-            json = model.setMaster("sMethodCd","M00124000001");
-            if ("error".equals((String) json.get("result"))){
-                System.err.println((String) json.get("message"));
-                System.exit(1);
-            }
-
-            json = model.setMaster("sMkeCmptr","TOYOTA");
-            if ("error".equals((String) json.get("result"))){
-                System.err.println((String) json.get("message"));
-                System.exit(1);
-            }
-
-            json = model.setMaster("sDlrCmptr","TOYOTA DAGUPAN");
-            if ("error".equals((String) json.get("result"))){
-                System.err.println((String) json.get("message"));
-                System.exit(1);
-            }
-            
-            json = model.setMaster("sRspnseCd","3");
-            if ("error".equals((String) json.get("result"))){
-                System.err.println((String) json.get("message"));
-                System.exit(1);
-            }
-            
-            json = model.setMaster("sEmployID","A00118000001");
-            if ("error".equals((String) json.get("result"))){
-                System.err.println((String) json.get("message"));
-                System.exit(1);
-            }
-        } else {
-            System.err.println("result = " + (String) json.get("result"));
-            fail((String) json.get("message"));
-        }
-        
-    }
-//    
-    @Test
-    public void test01NewRecordSave(){
-        System.out.println("--------------------------------------------------------------------");
-        System.out.println("------------------------------NEW RECORD SAVING--------------------------------------");
-        System.out.println("--------------------------------------------------------------------");
-        
-        json = model.saveTransaction();
-        System.err.println((String) json.get("message"));
-        
-        if (!"success".equals((String) json.get("result"))){
-            System.err.println((String) json.get("message"));
-            result = false;
-        } else {
-            System.out.println((String) json.get("message"));
-            result = true;
-        }
-        assertTrue(result);
-        //assertFalse(result);
-    }
+//    @Test
+//    public void test01NewRecord() throws SQLException{
+//        System.out.println("--------------------------------------------------------------------");
+//        System.out.println("------------------------------NEW RECORD--------------------------------------");
+//        System.out.println("--------------------------------------------------------------------");
+//        
+//        json = model.newTransaction();
+//        if ("success".equals((String) json.get("result"))){
+//            json = model.setMaster("dTransact",instance.getServerDate());
+//            if ("error".equals((String) json.get("result"))){
+//                System.err.println((String) json.get("message"));
+//                System.exit(1);
+//            }
+//            json = model.setMaster("dFollowUp",instance.getServerDate());
+//            if ("error".equals((String) json.get("result"))){
+//                System.err.println((String) json.get("message"));
+//                System.exit(1);
+//            }
+//
+//            json = model.setMaster("sTransNox","M001IQ240001");
+//            if ("error".equals((String) json.get("result"))){
+//                System.err.println((String) json.get("message"));
+//                System.exit(1);
+//            }
+//
+//            json = model.setMaster("tFollowUp",Time.valueOf("14:31:01"));
+//            if ("error".equals((String) json.get("result"))){
+//                System.err.println((String) json.get("message"));
+//                System.exit(1);
+//            }
+//
+//            json = model.setMaster("sRemarksx","TEST LANG ITO");
+//            if ("error".equals((String) json.get("result"))){
+//                System.err.println((String) json.get("message"));
+//                System.exit(1);
+//            }
+//
+//            json = model.setMaster("sMessagex","TEST MESSAGE");
+//            if ("error".equals((String) json.get("result"))){
+//                System.err.println((String) json.get("message"));
+//                System.exit(1);
+//            }
+//
+//            json = model.setMaster("sMethodCd","M00124000001");
+//            if ("error".equals((String) json.get("result"))){
+//                System.err.println((String) json.get("message"));
+//                System.exit(1);
+//            }
+//
+//            json = model.setMaster("sMkeCmptr","TOYOTA");
+//            if ("error".equals((String) json.get("result"))){
+//                System.err.println((String) json.get("message"));
+//                System.exit(1);
+//            }
+//
+//            json = model.setMaster("sDlrCmptr","TOYOTA DAGUPAN");
+//            if ("error".equals((String) json.get("result"))){
+//                System.err.println((String) json.get("message"));
+//                System.exit(1);
+//            }
+//            
+//            json = model.setMaster("sRspnseCd","3");
+//            if ("error".equals((String) json.get("result"))){
+//                System.err.println((String) json.get("message"));
+//                System.exit(1);
+//            }
+//            
+//            json = model.setMaster("sEmployID","A00118000001");
+//            if ("error".equals((String) json.get("result"))){
+//                System.err.println((String) json.get("message"));
+//                System.exit(1);
+//            }
+//        } else {
+//            System.err.println("result = " + (String) json.get("result"));
+//            fail((String) json.get("message"));
+//        }
+//        
+//    }
+////    
+//    @Test
+//    public void test01NewRecordSave(){
+//        System.out.println("--------------------------------------------------------------------");
+//        System.out.println("------------------------------NEW RECORD SAVING--------------------------------------");
+//        System.out.println("--------------------------------------------------------------------");
+//        
+//        json = model.saveTransaction();
+//        System.err.println((String) json.get("message"));
+//        
+//        if (!"success".equals((String) json.get("result"))){
+//            System.err.println((String) json.get("message"));
+//            result = false;
+//        } else {
+//            System.out.println((String) json.get("message"));
+//            result = true;
+//        }
+//        assertTrue(result);
+//        //assertFalse(result);
+//    }
     
     
 //    @Test

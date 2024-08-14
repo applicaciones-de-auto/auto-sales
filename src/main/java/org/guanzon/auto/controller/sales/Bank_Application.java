@@ -204,7 +204,7 @@ public class Bank_Application implements GTransaction {
 
         if (poModel.getEditMode() == EditMode.UPDATE) {
             try {
-                String lsStat = poModel.getTransNo(); //Get Original Transtat
+//                String lsStat = poModel.getTranStat(); //Get Original Transtat
                 
                 poModel.setCancelld(poGRider.getUserID());
                 
@@ -214,22 +214,24 @@ public class Bank_Application implements GTransaction {
                     poJSON.put("result", "error");
                     poJSON.put("message", validator.getMessage());
                     return poJSON;
-                } else {
-                    //Revert
-                    poJSON = poModel.setTranStat(lsStat);
-                    if ("error".equals((String) poJSON.get("result"))) {
-                        return poJSON;
-                    }
-                }
+                } 
+//                else {
+//                    //Revert
+//                    poJSON = poModel.setTranStat(lsStat);
+//                    if ("error".equals((String) poJSON.get("result"))) {
+//                        return poJSON;
+//                    }
+//                }
 
                 CancelForm cancelform = new CancelForm();
                 if (!cancelform.loadCancelWindow(poGRider, poModel.getApplicNo(), poModel.getTransNo(), "BANK APPLICATION")) {
                     poJSON.put("result", "error");
                     poJSON.put("message", "Cancellation failed.");
                     return poJSON;
-                } else {
-                   poModel.setCancelld("");
-                }
+                } 
+//                else {
+//                   poModel.setCancelld("");
+//                }
                 
                 poModel.setCancelldDte(poGRider.getServerDate());
                 

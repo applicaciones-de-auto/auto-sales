@@ -482,6 +482,22 @@ public class Inquiry implements GTransaction{
         return poController.getBankApplicationDetail(fnRow, fsIndex);
     }
     
+    public JSONObject loadFollowUpList() {
+        return poController.loadBankApplicationList();
+    }
+    
+    public int getFollowUpCount() throws SQLException{
+        return poController.getFollowUpCount();
+    }
+    
+    public Object getFollowUpDetail(int fnRow, int fnIndex) throws SQLException{
+        return poController.getFollowUpDetail(fnRow, fnIndex);
+    }
+    
+    public Object getFollowUpDetail(int fnRow, String fsIndex) throws SQLException{
+        return poController.getFollowUpDetail(fnRow, fsIndex);
+    }
+    
     public JSONObject validateEntry() {
         JSONObject jObj = new JSONObject();
         

@@ -912,6 +912,8 @@ public class Inquiry_Master implements GTransaction {
                             + " LEFT JOIN banks_branches b ON b.sBrBankID = a.sBrBankID "
                             + " LEFT JOIN banks c ON c.sBankIDxx = b.sBankIDxx ";
             
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.sSourceNo = " + SQLUtil.toSQL(poModel.getTransNo()) 
+                                                    + " ORDER BY a.sTransNox DESC ");
             System.out.println("LOAD BANK APPLICATIONS "+ lsSQL);
             RowSetFactory factory = RowSetProvider.newFactory();
             ResultSet loRS = poGRider.executeQuery(lsSQL);
@@ -955,32 +957,32 @@ public class Inquiry_Master implements GTransaction {
     public JSONObject loadFollowUpList(){
         JSONObject loJSON = new JSONObject();
         try {
-            String lsSQL =    " SELECT "                                                 
-                            + "    a.sTransNox "                                         
-                            + "  , a.sApplicNo "                                         
-                            + "  , a.dAppliedx "                                         
-                            + "  , a.dApproved "                                         
-                            + "  , a.cPayModex "                                         
-                            + "  , a.sSourceCD "                                         
-                            + "  , a.sSourceNo "                                         
-                            + "  , a.sBrBankID "                                         
-                            + "  , a.sRemarksx "                                         
-                            + "  , a.cTranStat "                                         
-                            + "  , a.sCancelld "                                         
-                            + "  , a.dCancelld "                                         
-                            + "  , b.sBrBankNm "                                         
-                            + "  , c.sBankIDxx "                                         
-                            + "  , c.sBankName "                                                              
-                            + "  , CASE WHEN a.cTranStat = '0' THEN 'ON-GOING'"                           
-                            + " 	WHEN a.cTranStat = '1' THEN 'DECLINE' "                                   
-                            + " 	WHEN a.cTranStat = '2' THEN 'APPROVED'"                                      
-                            + " 	ELSE 'CANCELLED'  "                                                          
-                            + "    END AS sTranStat "                                         
-                            + " FROM bank_application a "                                
-                            + " LEFT JOIN banks_branches b ON b.sBrBankID = a.sBrBankID "
-                            + " LEFT JOIN banks c ON c.sBankIDxx = b.sBankIDxx ";
+            String lsSQL =    " SELECT "                                                    
+                            + "    a.sTransNox "                                            
+                            + "  , a.sReferNox "                                            
+                            + "  , a.dTransact "                                            
+                            + "  , a.sRemarksx "                                            
+                            + "  , a.sMessagex "                                            
+                            + "  , a.sMethodCd "                                            
+                            + "  , a.sSclMedia "                                            
+                            + "  , a.dFollowUp "                                            
+                            + "  , a.tFollowUp "                                            
+                            + "  , a.sGdsCmptr "                                            
+                            + "  , a.sMkeCmptr "                                            
+                            + "  , a.sDlrCmptr "                                            
+                            + "  , a.sRspnseCd "                                            
+                            + "  , a.sEmployID "                                              
+                            + "  , b.sPlatform "
+                            + "  , c.sCompnyNm "   
+                            + "  , d.sDisValue "                                            
+                            + " FROM customer_inquiry_followup  a "                         
+                            + " LEFT JOIN online_platforms b ON b.sTransNox = a.sSclMedia "
+                            + " LEFT JOIN GGC_ISysDBF.Client_Master c ON c.sClientID = a.sEmployID "
+                            + " LEFT JOIN xxxform_typelist d ON d.sDataValx = a.sRspnseCd ";
             
-            System.out.println("LOAD BANK APPLICATIONS "+ lsSQL);
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.sTransNox = " + SQLUtil.toSQL(poModel.getTransNo()) 
+                                                    + " ORDER BY a.dTransact ASC ");
+            System.out.println("LOAD LOAD FOLLOW UPS "+ lsSQL);
             RowSetFactory factory = RowSetProvider.newFactory();
             ResultSet loRS = poGRider.executeQuery(lsSQL);
             try {

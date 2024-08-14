@@ -9,8 +9,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.guanzon.appdriver.agent.ShowDialogFX;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
+import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.general.CancelForm;
@@ -98,8 +100,8 @@ public class Inquiry_FollowUp implements GTransaction {
             Connection loConn = null;
             loConn = setConnection();
 
-            poModel.setReferNo(MiscUtil.getNextCode(poModel.getTable(), "sReferNox", true, poGRider.getConnection(), poGRider.getBranchCode()));
             poModel.newRecord();
+            poModel.setReferNo(MiscUtil.getNextCode(poModel.getTable(), "sReferNox", true, poGRider.getConnection(), poGRider.getBranchCode()));
             
             if (poModel == null){
                 poJSON.put("result", "error");
@@ -212,6 +214,46 @@ public class Inquiry_FollowUp implements GTransaction {
     @Override
     public void setTransactionStatus(String string) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    public JSONObject searchOnlinePlatform(String fsValue) {
+        JSONObject loJSON = new JSONObject();
+        
+        String lsSQL =  "  SELECT " 
+                       + "   sTransNox " 
+                       + " , sPlatform " 
+                       + " , sWebSitex " 
+                       + " FROM online_platforms " ;  
+                
+        lsSQL = MiscUtil.addCondition(lsSQL, "sPlatform LIKE " + SQLUtil.toSQL(fsValue + "%"));  
+
+        System.out.println("SEARCH ONLINE PLATFORMS: " + lsSQL);
+        loJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                    "Platfrom",
+                    "sPlatform",
+                    "sPlatform",
+                0);
+
+        if (loJSON != null) {
+            if(!"error".equals((String) loJSON.get("result"))){
+                poModel.setSclMedia((String) loJSON.get("sTransNox"));
+                poModel.setPlatform((String) loJSON.get("sPlatform"));
+            } else {
+                poModel.setSclMedia("");
+                poModel.setPlatform("");
+            }
+        } else {
+            poModel.setSclMedia("");
+            poModel.setPlatform("");
+            loJSON = new JSONObject();
+            loJSON.put("result", "error");
+            loJSON.put("message", "No record loaded.");
+            return loJSON;
+        }
+        
+        return loJSON;
     }
     
 }
