@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite tests="2" failures="1" name="FollowUpTest" time="0.14" errors="0" skipped="0">
+<testsuite tests="2" failures="1" name="FollowUpTest" time="0.112" errors="0" skipped="0">
   <properties>
     <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
     <property name="sun.boot.library.path" value="C:\Program Files\Java\jdk1.8.0_131\jre\bin"/>
@@ -65,8 +65,8 @@
     <property name="sun.desktop" value="windows"/>
     <property name="sun.cpu.isalist" value="amd64"/>
   </properties>
-  <testcase classname="FollowUpTest" name="test01NewRecord" time="0.124"/>
-  <testcase classname="FollowUpTest" name="test01NewRecordSave" time="0.016">
+  <testcase classname="FollowUpTest" name="test01NewRecord" time="0.105"/>
+  <testcase classname="FollowUpTest" name="test01NewRecordSave" time="0.007">
     <failure type="java.lang.AssertionError">java.lang.AssertionError
 	at org.junit.Assert.fail(Assert.java:87)
 	at org.junit.Assert.assertTrue(Assert.java:42)
@@ -110,6 +110,11 @@
     <system-out>--------------------------------------------------------------------
 ------------------------------NEW RECORD SAVING--------------------------------------
 --------------------------------------------------------------------
+lnHr : 14
+lnCol1 : :
+lnMin : 31
+lnCol2 : :
+lnSs : 1
 </system-out>
     <system-err>Follow Up date cannot be the same with next follow up date.
 Follow Up date cannot be the same with next follow up date.

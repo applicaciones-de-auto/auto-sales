@@ -483,7 +483,7 @@ public class Inquiry implements GTransaction{
     }
     
     public JSONObject loadFollowUpList() {
-        return poController.loadBankApplicationList();
+        return poController.loadFollowUpList();
     }
     
     public int getFollowUpCount() throws SQLException{

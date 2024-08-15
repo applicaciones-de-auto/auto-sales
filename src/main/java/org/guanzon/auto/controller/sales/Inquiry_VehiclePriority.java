@@ -24,7 +24,7 @@ import org.json.simple.JSONObject;
  * @author Arsiela
  */
 public class Inquiry_VehiclePriority {
-    final String XML = "Model_Inquiry_Promo.xml";
+    final String XML = "Model_Inquiry_VehiclePriority.xml";
     GRider poGRider;
     String psBranchCd;
     boolean pbWtParent;

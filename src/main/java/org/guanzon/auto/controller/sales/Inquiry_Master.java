@@ -974,15 +974,15 @@ public class Inquiry_Master implements GTransaction {
                             + "  , a.sEmployID "                                              
                             + "  , b.sPlatform "
                             + "  , c.sCompnyNm "   
-                            + "  , d.sDisValue "                                            
+                            //+ "  , d.sDisValue "                                            
                             + " FROM customer_inquiry_followup  a "                         
                             + " LEFT JOIN online_platforms b ON b.sTransNox = a.sSclMedia "
-                            + " LEFT JOIN GGC_ISysDBF.Client_Master c ON c.sClientID = a.sEmployID "
-                            + " LEFT JOIN xxxform_typelist d ON d.sDataValx = a.sRspnseCd ";
+                            + " LEFT JOIN GGC_ISysDBF.Client_Master c ON c.sClientID = a.sEmployID ";
+                            //+ " LEFT JOIN xxxform_typelist d ON d.sDataValx = a.sRspnseCd ";
             
             lsSQL = MiscUtil.addCondition(lsSQL,  " a.sTransNox = " + SQLUtil.toSQL(poModel.getTransNo()) 
                                                     + " ORDER BY a.dTransact ASC ");
-            System.out.println("LOAD LOAD FOLLOW UPS "+ lsSQL);
+            System.out.println("LOAD FOLLOW UPS "+ lsSQL);
             RowSetFactory factory = RowSetProvider.newFactory();
             ResultSet loRS = poGRider.executeQuery(lsSQL);
             try {
