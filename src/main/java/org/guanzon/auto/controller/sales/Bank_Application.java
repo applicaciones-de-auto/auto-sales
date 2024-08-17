@@ -7,10 +7,15 @@ package org.guanzon.auto.controller.sales;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
+import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.general.CancelForm;
@@ -207,7 +212,9 @@ public class Bank_Application implements GTransaction {
 //                String lsStat = poModel.getTranStat(); //Get Original Transtat
                 
                 poModel.setCancelld(poGRider.getUserID());
-                
+                System.out.println(SQLUtil.toDate(xsDateShort(poGRider.getServerDate()), SQLUtil.FORMAT_SHORT_DATE));
+                poModel.setCancelldDte(poGRider.getServerDate());
+                System.out.println("getmaster dCancelld : " + getMaster("dCancelld"));
                 ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Inquiry_BankApplication, poModel);
                 validator.setGRider(poGRider);
                 if (!validator.isEntryOkay()){
@@ -215,13 +222,6 @@ public class Bank_Application implements GTransaction {
                     poJSON.put("message", validator.getMessage());
                     return poJSON;
                 } 
-//                else {
-//                    //Revert
-//                    poJSON = poModel.setTranStat(lsStat);
-//                    if ("error".equals((String) poJSON.get("result"))) {
-//                        return poJSON;
-//                    }
-//                }
 
                 CancelForm cancelform = new CancelForm();
                 if (!cancelform.loadCancelWindow(poGRider, poModel.getApplicNo(), poModel.getTransNo(), "BANK APPLICATION")) {
@@ -229,13 +229,8 @@ public class Bank_Application implements GTransaction {
                     poJSON.put("message", "Cancellation failed.");
                     return poJSON;
                 } 
-//                else {
-//                   poModel.setCancelld("");
-//                }
-                
-                poModel.setCancelldDte(poGRider.getServerDate());
-                
-                poJSON = poModel.saveRecord();
+
+                poJSON = poModel.cancelTransaction();
                 if ("success".equals((String) poJSON.get("result"))) {
                     poJSON.put("result", "success");
                     poJSON.put("message", "Cancellation success.");
@@ -254,6 +249,19 @@ public class Bank_Application implements GTransaction {
         return poJSON;
     }
 
+    /*Convert Date to String*/
+    private LocalDate strToDate(String val) {
+        DateTimeFormatter date_formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate localDate = LocalDate.parse(val, date_formatter);
+        return localDate;
+    }
+    
+    private static String xsDateShort(Date fdValue) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String date = sdf.format(fdValue);
+        return date;
+    }
+    
     @Override
     public JSONObject searchWithCondition(String string) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

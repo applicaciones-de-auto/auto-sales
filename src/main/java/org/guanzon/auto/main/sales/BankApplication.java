@@ -204,6 +204,13 @@ public class BankApplication  implements GTransaction{
             poController.setMaster("sBankIDxx", poJSON.get("sBankIDxx"));
             poController.setMaster("sBankName", poJSON.get("sBankName"));
             poController.setMaster("sAddressx", poJSON.get("xAddressx"));
+        } else {
+            poController.setMaster("sBrBankID", "");
+            poController.setMaster("sBrBankNm", "");
+            poController.setMaster("sBankType", "");
+            poController.setMaster("sBankIDxx", "");
+            poController.setMaster("sBankName", "");
+            poController.setMaster("sAddressx", "");
         }
         
         return poJSON;
