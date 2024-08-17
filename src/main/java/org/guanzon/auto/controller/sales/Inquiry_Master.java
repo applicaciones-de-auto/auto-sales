@@ -353,7 +353,11 @@ public class Inquiry_Master implements GTransaction {
                        + " FROM sales_executive a "
                        + " LEFT JOIN GGC_ISysDBF.Client_Master b ON b.sClientID = a.sClientID " ;  
                 
-        lsSQL = MiscUtil.addCondition(lsSQL, "a.cRecdStat = '1' AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%"));  
+        lsSQL = MiscUtil.addCondition(lsSQL, "a.cRecdStat = '1' " 
+                                                + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getAgentID())
+                                                + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getClientID())
+                                                + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getContctID())
+                                                + " AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%"));  
 
         System.out.println("SEARCH SALES EXECUTIVE: " + lsSQL);
         loJSON = ShowDialogFX.Search(poGRider,
@@ -400,7 +404,11 @@ public class Inquiry_Master implements GTransaction {
                        + " FROM sales_agent a "
                        + " LEFT JOIN client_master b ON b.sClientID = a.sClientID " ;  
                 
-        lsSQL = MiscUtil.addCondition(lsSQL, "a.cRecdStat = '1' AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%"));  
+        lsSQL = MiscUtil.addCondition(lsSQL, " a.cRecdStat = '1' "
+                                                + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getContctID())
+                                                + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getClientID())
+                                                + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getEmployID())
+                                                + " AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%"));  
 
         System.out.println("SEARCH SALES AGENT: " + lsSQL);
         loJSON = ShowDialogFX.Search(poGRider,
@@ -460,10 +468,14 @@ public class Inquiry_Master implements GTransaction {
         if(fbInqClient){
             lsSQL = MiscUtil.addCondition(lsSQL, " a.cRecdStat = '1' "
                                                     + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getContctID())
+                                                    + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getAgentID())
+                                                    + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getEmployID())
                                                     + " AND a.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%")) ;
         } else {
             lsSQL = MiscUtil.addCondition(lsSQL, " a.cRecdStat = '1' AND a.cClientTp = '0' "
                                                     + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getClientID())
+                                                    + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getAgentID())
+                                                    + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getEmployID())
                                                     + " AND a.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%")) ;
         }
         
@@ -698,8 +710,19 @@ public class Inquiry_Master implements GTransaction {
         return loJSON;
     }
     
-    public JSONObject searchAvlVhcl(String fsValue, boolean fbIsBrandNew) {
+    public JSONObject searchAvlVhcl(String fsValue) {
         JSONObject loJSON = new JSONObject();
+        
+        if(poModel.getIsVhclNw() == null){
+            loJSON.put("result", "error");
+            loJSON.put("message", "Vehicle Category is not set.");
+        } else {
+            if(poModel.getIsVhclNw().trim().isEmpty()){
+                loJSON.put("result", "error");
+                loJSON.put("message", "Vehicle Category is not set.");
+            }
+        }
+        
         String lsHeader = "Vehicle Serial ID»CS No.»Plate No.»Engine No»Frame No»Vehicle Description";
         String lsColName = "sSerialID»sCSNoxxxx»sPlateNox»sEngineNo»sFrameNox»sDescript"; 
         String lsColCrit = "a.sSerialID»a.sCSNoxxxx»b.sPlateNox»a.sEngineNo»a.sFrameNox»c.sDescript";
@@ -716,16 +739,18 @@ public class Inquiry_Master implements GTransaction {
                         + " FROM vehicle_serial a "                                                
                         + " LEFT JOIN vehicle_serial_registration b ON b.sSerialID = a.sSerialID " 
                         + " LEFT JOIN vehicle_master c ON c.sVhclIDxx = a.sVhclIDxx"
-                        + " WHERE a.cSoldStat = '1' ";
+                        + " WHERE a.cSoldStat = '1' "
+                        + " AND a.cVhclNewx = " + SQLUtil.toSQL(poModel.getIsVhclNw())  //(TRIM(a.sClientID) = '' OR a.sClientID = NULL) AND 
+                        + " AND ( a.sCSNoxxxx LIKE " + SQLUtil.toSQL(fsValue + "%") 
+                        + " OR b.sPlateNox LIKE " + SQLUtil.toSQL(fsValue + "%") + " ) " ;
+//        if(fbIsBrandNew){
+//            lsSQL = lsSQL + " AND a.cVhclNewx = '0' " ;
+//        } else {
+//            lsSQL = lsSQL + " AND a.cVhclNewx = '1' ";
+//        }
         
-        if(fbIsBrandNew){
-            lsSQL = lsSQL + " AND a.cVhclNewx = '0' ";
-        } else {
-            lsSQL = lsSQL + " AND a.cVhclNewx = '1' ";
-        }
-        
-        lsSQL = lsSQL +  " AND ( a.sCSNoxxxx LIKE " + SQLUtil.toSQL(fsValue + "%") 
-                      + " OR b.sPlateNox LIKE " + SQLUtil.toSQL(fsValue + "%") + " ) " ;
+//        lsSQL = lsSQL +  " AND ( a.sCSNoxxxx LIKE " + SQLUtil.toSQL(fsValue + "%") 
+//                      + " OR b.sPlateNox LIKE " + SQLUtil.toSQL(fsValue + "%") + " ) " ;
         
         System.out.println("SEARCH AVAILABLE VEHICLE: " + lsSQL);
         loJSON = ShowDialogFX.Search(poGRider,
@@ -737,28 +762,28 @@ public class Inquiry_Master implements GTransaction {
                      1);
 
         if (loJSON != null) {
-            if(!"error".equals((String) loJSON.get("result"))){
-                poModel.setSerialID((String) loJSON.get("sSerialID"));
-                poModel.setFrameNo((String) loJSON.get("sFrameNox"));
-                poModel.setEngineNo((String) loJSON.get("sEngineNo"));
-                poModel.setCSNo((String) loJSON.get("sCSNoxxxx"));
-                poModel.setPlateNo((String) loJSON.get("sPlateNox"));
-                poModel.setDescript((String) loJSON.get("sDescript"));
-            } else {
-                poModel.setSerialID("");
-                poModel.setFrameNo("");
-                poModel.setEngineNo("");
-                poModel.setCSNo("");
-                poModel.setPlateNo("");
-                poModel.setDescript("");
-            }
+//            if(!"error".equals((String) loJSON.get("result"))){
+//                poModel.setSerialID((String) loJSON.get("sSerialID"));
+//                poModel.setFrameNo((String) loJSON.get("sFrameNox"));
+//                poModel.setEngineNo((String) loJSON.get("sEngineNo"));
+//                poModel.setCSNo((String) loJSON.get("sCSNoxxxx"));
+//                poModel.setPlateNo((String) loJSON.get("sPlateNox"));
+//                poModel.setDescript((String) loJSON.get("sDescript"));
+//            } else {
+//                poModel.setSerialID("");
+//                poModel.setFrameNo("");
+//                poModel.setEngineNo("");
+//                poModel.setCSNo("");
+//                poModel.setPlateNo("");
+//                poModel.setDescript("");
+//            }
         } else {
-            poModel.setSerialID("");
-            poModel.setFrameNo("");
-            poModel.setEngineNo("");
-            poModel.setCSNo("");
-            poModel.setPlateNo("");
-            poModel.setDescript("");
+//            poModel.setSerialID("");
+//            poModel.setFrameNo("");
+//            poModel.setEngineNo("");
+//            poModel.setCSNo("");
+//            poModel.setPlateNo("");
+//            poModel.setDescript("");
             loJSON = new JSONObject();
             loJSON.put("result", "error");
             loJSON.put("message", "No record loaded.");
@@ -768,6 +793,208 @@ public class Inquiry_Master implements GTransaction {
         return loJSON;
     }
     
+    public JSONObject checkVhclAvailability(String fsValue){
+        JSONObject loJSON = new JSONObject();
+        try {
+            //TODO
+            //1. CHECK FOR: DR EXIST
+            String lsCSPlateNo = "";
+            String lsID = "";
+            String lsDesc = "";
+            String lsSQL =    " SELECT "                                                              
+                            + "   a.sTransNox "                                                       
+                            + " , a.dTransact "                                                       
+                            + " , a.sClientID "                                                       
+                            + " , a.sSerialID "                                                       
+                            + " , a.sReferNox "                                                       
+                            + " , b.sCompnyNm "                                                       
+                            + " , c.sCSNoxxxx "                                                       
+                            + " , c.sFrameNox "                                                       
+                            + " , c.sEngineNo "                                                       
+                            + " , d.sPlateNox "                                                       
+                            + " FROM udr_master a "                                                   
+                            + " LEFT JOIN client_master b ON b.sClientID = a.sClientID  "             
+                            + " LEFT JOIN vehicle_serial c ON c.sSerialID = a.sSerialID "             
+                            + " LEFT JOIN vehicle_serial_registration d ON d.sSerialID = a.sSerialID "
+                            + " WHERE a.cTranStat <> '0' "
+                            + " AND a.sSerialID = " + SQLUtil.toSQL(fsValue);
+            System.out.println("CHECK FOR: DR EXIST: " + lsSQL);
+            ResultSet loRS = poGRider.executeQuery(lsSQL);
+            if (MiscUtil.RecordCount(loRS) > 0){
+                while(loRS.next()){
+                    lsDesc = loRS.getString("sCompnyNm");
+                    lsID = loRS.getString("sReferNox");
+
+                    if(loRS.getString("sPlateNox") != null){
+                        lsCSPlateNo = loRS.getString("sPlateNox");
+                    } else {
+                        lsCSPlateNo = loRS.getString("sCSNoxxxx");
+                    }
+
+                }
+                loJSON.put("result", "error");
+                loJSON.put("message", "Plate No./CS No. " + lsCSPlateNo + " has been SOLD already. See Unit Delivery Receipt No. " + lsID + ".");
+                return loJSON;
+            }
+            
+            //2. CHECK FOR: VSP EXIST
+            lsCSPlateNo = "";
+            lsID = "";
+            lsDesc = "";
+            lsSQL =    " SELECT "                                                              
+                        + "   a.sTransNox "                                                       
+                        + " , a.dTransact "                                                       
+                        + " , a.sClientID "                                                       
+                        + " , a.sSerialID "                                                       
+                        + " , a.sVSPNOxxx "                                                         
+                        + " , a.cIsVhclNw "                                                      
+                        + " , b.sCompnyNm "                                                       
+                        + " , c.sCSNoxxxx "                                                       
+                        + " , c.sFrameNox "                                                       
+                        + " , c.sEngineNo "                                                       
+                        + " , d.sPlateNox "                                                      
+                        + " FROM vsp_master a "                                                   
+                        + " LEFT JOIN client_master b ON b.sClientID = a.sClientID  "             
+                        + " LEFT JOIN vehicle_serial c ON c.sSerialID = a.sSerialID "             
+                        + " LEFT JOIN vehicle_serial_registration d ON d.sSerialID = a.sSerialID "
+                        + " WHERE a.cTranStat <> '0' "
+                        + " AND a.sSerialID = " + SQLUtil.toSQL(fsValue)
+                        + " AND a.cIsVhclNw = " + SQLUtil.toSQL(poModel.getIsVhclNw()) ;
+            System.out.println("CHECK FOR: VSP EXIST: " + lsSQL);
+            loRS = poGRider.executeQuery(lsSQL);
+            if (MiscUtil.RecordCount(loRS) > 0){
+                while(loRS.next()){
+                    lsDesc = loRS.getString("sCompnyNm");
+                    lsID = loRS.getString("sVSPNOxxx");
+
+                    if(loRS.getString("sPlateNox") != null){
+                        lsCSPlateNo = loRS.getString("sPlateNox");
+                    } else {
+                        lsCSPlateNo = loRS.getString("sCSNoxxxx");
+                    }
+
+                }
+                loJSON.put("result", "error");
+                loJSON.put("message", "Plate No./CS No. " + lsCSPlateNo + " has been SOLD already. SEE VSP No. " + lsID + ".");
+                return loJSON;
+            }
+            
+            //3. CHECK FOR: RESERVE UNIT
+            lsCSPlateNo = "";
+            lsID = "";
+            lsDesc = "";
+            lsSQL =    " SELECT "                                                              
+                        + "   a.sTransNox "                                                       
+                        + " , a.dTransact "                                                       
+                        + " , a.sClientID "                                                       
+                        + " , a.sSerialID "                                                       
+                        + " , a.sInqryIDx "                                                         
+                        + " , a.cIsVhclNw "                                                      
+                        + " , b.sCompnyNm "                                                       
+                        + " , c.sCSNoxxxx "                                                       
+                        + " , c.sFrameNox "                                                       
+                        + " , c.sEngineNo "                                                       
+                        + " , d.sPlateNox "                                                      
+                        + " FROM customer_inquiry a "                                                   
+                        + " LEFT JOIN client_master b ON b.sClientID = a.sClientID  "             
+                        + " LEFT JOIN vehicle_serial c ON c.sSerialID = a.sSerialID "             
+                        + " LEFT JOIN vehicle_serial_registration d ON d.sSerialID = a.sSerialID "
+                        + " WHERE a.sSerialID = " + SQLUtil.toSQL(fsValue)
+                        + " AND a.cIsVhclNw = " + SQLUtil.toSQL(poModel.getIsVhclNw())
+                        + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getClientID()) 
+                        + " AND a.cTranStat <> '5' AND a.cTranStat <> '2' AND a.cTranStat <> '4' " ;
+            System.out.println("CHECK FOR: RESERVATION EXIST: " + lsSQL);
+            loRS = poGRider.executeQuery(lsSQL);
+            if (MiscUtil.RecordCount(loRS) > 0){
+                while(loRS.next()){
+                    lsDesc = loRS.getString("sCompnyNm");
+
+                    if(loRS.getString("sPlateNox") != null){
+                        lsCSPlateNo = loRS.getString("sPlateNox");
+                    } else {
+                        lsCSPlateNo = loRS.getString("sCSNoxxxx");
+                    }
+
+                }
+                loJSON.put("result", "error");
+                loJSON.put("message",  "Plate No./CS No. " + lsCSPlateNo+ " is already RESERVED for Customer " + lsDesc + ".");
+                return loJSON;
+            }
+            
+            //4. CHECK FOR: VEHICLE CUSTOMER OWNERSHIP
+            lsCSPlateNo = "";
+            lsID = "";
+            lsDesc = "";
+            lsSQL =       " SELECT "                                                              
+                        + "   a.sClientID "                                                       
+                        + " , a.sSerialID "                                                       
+                        + " , a.sCSNoxxxx "                                                       
+                        + " , a.sFrameNox "                                                       
+                        + " , a.sEngineNo "                                                       
+                        + " , b.sCompnyNm "                                                       
+                        + " , c.sPlateNox "                                                       
+                        + " FROM vehicle_serial a "                                               
+                        + " LEFT JOIN client_master b ON b.sClientID = a.sClientID "              
+                        + " LEFT JOIN vehicle_serial_registration c ON c.sSerialID = a.sSerialID "
+                        + " WHERE a.sSerialID = " + SQLUtil.toSQL(fsValue)
+                        + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getClientID()) ;
+            System.out.println("CHECK FOR: VEHICLE CUSTOMER OWNERSHIP: " + lsSQL);
+            loRS = poGRider.executeQuery(lsSQL);
+            if (MiscUtil.RecordCount(loRS) > 0){
+                while(loRS.next()){
+                    lsDesc = loRS.getString("sCompnyNm");
+
+                    if(loRS.getString("sPlateNox") != null){
+                        lsCSPlateNo = loRS.getString("sPlateNox");
+                    } else {
+                        lsCSPlateNo = loRS.getString("sCSNoxxxx");
+                    }
+
+                }
+                loJSON.put("result", "error");
+                loJSON.put("message",  "Plate No./CS No. " + lsCSPlateNo+" has been named after " + lsDesc + ". Please verify.");
+                return loJSON;
+            }
+            
+            //5. CHECK FOR: AVAILABILITY BY VEHICLE STATUS
+//            lsCSPlateNo = "";
+//            lsID = "";
+//            lsDesc = "";
+//            lsSQL =   " SELECT "                                                              
+//                    + "   a.sClientID "                                                       
+//                    + " , a.sSerialID "                                                       
+//                    + " , a.sCSNoxxxx "                                                       
+//                    + " , a.sFrameNox "                                                       
+//                    + " , a.sEngineNo "                                                        
+//                    + " , a.cSoldStat "                                                      
+//                    + " , b.sPlateNox "                                                       
+//                    + " FROM vehicle_serial a "                                               
+//                    + " LEFT JOIN vehicle_serial_registration b ON b.sSerialID = a.sSerialID "
+//                    + " WHERE a.sSerialID = " + SQLUtil.toSQL(fsValue);
+//            System.out.println("CHECK FOR: AVAILABILITY BY VEHICLE STATUS: " + lsSQL);
+//            loRS = poGRider.executeQuery(lsSQL);
+//            if (MiscUtil.RecordCount(loRS) > 0){
+//                while(loRS.next()){
+//                    lsID = loRS.getString("cSoldStat");
+//                    
+//                    if(loRS.getString("sPlateNox") != null){
+//                        lsCSPlateNo = loRS.getString("sPlateNox");
+//                    } else {
+//                        lsCSPlateNo = loRS.getString("sCSNoxxxx");
+//                    }
+//
+//                }
+//                loJSON.put("result", "error");
+//                loJSON.put("message",  "Plate No./CS No. " + lsCSPlateNo+" has been named after " + lsDesc + ". Please verify.");
+//                return loJSON;
+//            }
+        
+        } catch (SQLException ex) {
+            Logger.getLogger(Inquiry_Master.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return loJSON;
+    }
 //    public JSONObject loadTestModel() {
 //        poJSON = new JSONObject();
 //        
@@ -839,11 +1066,11 @@ public class Inquiry_Master implements GTransaction {
                     + " FROM vehicle_model a "                                 
                     + " LEFT JOIN vehicle_make b ON b.sMakeIDxx = a.sMakeIDxx ";
             if (MiscUtil.RecordCount(loRS) > 0){
-                lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' "
+                lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' AND (a.sBodyType <> '4' AND a.sBodyType <> '5') "  
                                                         + " AND b.sMakeDesc = (SELECT sValuexxx FROM xxxstandard_sets WHERE sDescript = 'mainproduct') "
                                                         + " GROUP BY a.sModelDsc ORDER BY a.sModelDsc DESC ");
             } else {
-                lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' "
+                lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' AND (a.sBodyType <> '4' AND a.sBodyType <> '5') "
                                                         //+ " AND b.sMakeDesc = (SELECT sValuexxx FROM xxxstandard_sets WHERE sDescript = 'affiliated_make') "
                                                         + " GROUP BY a.sModelDsc ORDER BY a.sModelDsc DESC ");
             }

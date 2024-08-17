@@ -311,8 +311,25 @@ public class Inquiry implements GTransaction{
         return poController.searchBranch(fsValue);
     }
     
-    public JSONObject searchAvlVhcl(String fsValue, boolean fbIsBrandNew) {
-        return poController.searchAvlVhcl(fsValue,fbIsBrandNew);
+    public JSONObject searchAvlVhcl(String fsValue) {
+        JSONObject loJSON = new JSONObject();
+        loJSON = poController.searchAvlVhcl(fsValue);
+        if(!"error".equals(loJSON.get("result"))){
+            poController.getMasterModel().setSerialID((String) loJSON.get("sSerialID"));
+            poController.getMasterModel().setFrameNo((String) loJSON.get("sFrameNox"));
+            poController.getMasterModel().setEngineNo((String) loJSON.get("sEngineNo"));
+            poController.getMasterModel().setCSNo((String) loJSON.get("sCSNoxxxx"));
+            poController.getMasterModel().setPlateNo((String) loJSON.get("sPlateNox"));
+            poController.getMasterModel().setDescript((String) loJSON.get("sDescript"));
+        } else {
+            poController.getMasterModel().setSerialID("");
+            poController.getMasterModel().setFrameNo("");
+            poController.getMasterModel().setEngineNo("");
+            poController.getMasterModel().setCSNo("");
+            poController.getMasterModel().setPlateNo("");
+            poController.getMasterModel().setDescript("");
+        }
+        return loJSON ;
     }
     
     public JSONObject loadTestModel() {

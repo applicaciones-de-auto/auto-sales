@@ -241,9 +241,11 @@ public class Inquiry_VehiclePriority {
                 + " , a.cRecdStat "                                      
                 + " , b.sMakeDesc "                                      
                 + " FROM vehicle_master a"                                
-                + " LEFT JOIN vehicle_make b ON b.sMakeIDxx = a.sMakeIDxx" ; 
+                + " LEFT JOIN vehicle_make b ON b.sMakeIDxx = a.sMakeIDxx" 
+                + " LEFT JOIN vehicle_model c ON c.sModelIDx = a.sModelIDx" ; 
         if (MiscUtil.RecordCount(loRS) > 0){
-            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' AND b.sMakeDesc = (SELECT sValuexxx FROM xxxstandard_sets WHERE sDescript = 'mainproduct') ");
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' AND (c.sBodyType <> '4' AND c.sBodyType <> '5')  "
+                                                + " AND b.sMakeDesc = (SELECT sValuexxx FROM xxxstandard_sets WHERE sDescript = 'mainproduct') ");
         } else {
             lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' ");
         }
