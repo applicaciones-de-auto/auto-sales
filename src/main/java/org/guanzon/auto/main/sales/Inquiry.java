@@ -534,4 +534,8 @@ public class Inquiry implements GTransaction{
         
         return jObj;
     }
+    
+    public JSONObject checkExistingTransaction(boolean fbisClient) {
+        return poController.checkExistingTransaction(fbisClient);
+    }
 }
