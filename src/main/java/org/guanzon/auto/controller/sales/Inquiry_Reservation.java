@@ -7,6 +7,7 @@ package org.guanzon.auto.controller.sales;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -139,12 +140,22 @@ public class Inquiry_Reservation {
             return obj;
         }
         
+        obj = validateReservationSum();
+        if("error".equals((String) obj.get("result"))){
+            obj.put("continue", false);
+            return obj;
+        }
+        
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
             if(paDetail.get(lnCtr).getAmount() == null ){
                 continue; //skip, instead of removing the actual detail
-            } else if(paDetail.get(lnCtr).getAmount() == 0){
+            }
+            
+            if(paDetail.get(lnCtr).getAmount() <= 0){
                 continue; //skip, instead of removing the actual detail
-            } else if(paDetail.get(lnCtr).getAmount() == 0.00){
+            }
+            
+            if(paDetail.get(lnCtr).getAmount() <= 0.00){
                 continue; //skip, instead of removing the actual detail
             }
             
@@ -159,6 +170,55 @@ public class Inquiry_Reservation {
         }    
         
         return obj;
+    }
+    
+    
+    private JSONObject validateReservationSum(){
+        JSONObject loJSON = new JSONObject();
+        
+        String lsValue = "0.00";
+        try {
+            String lsStandardSets = "SELECT sValuexxx FROM xxxstandard_sets WHERE sDescript = 'vhclreservation_max_amt'";
+            System.out.println("CHECK STANDARD SETS FROM vhclreservation_max_amt : " + lsStandardSets);
+            ResultSet loRS = poGRider.executeQuery(lsStandardSets);
+            //Check for existing inquiry with same SE
+            if (MiscUtil.RecordCount(loRS) > 0){
+                    while(loRS.next()){
+                        lsValue = loRS.getString("sValuexxx");
+                    }
+
+                    MiscUtil.close(loRS);
+            }else {
+                loJSON.put("result", "error");
+                loJSON.put("message", "Notify System Administrator to config Standard set for `vhclreservation_max_amt`.");
+                return loJSON;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(Inquiry_Reservation.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        //sum reservation amount should not be greater than the setted maximum amount on vehicle advances
+        double ldblRsvSum = 0.00;
+        for (int lnCtr = 0; lnCtr <= paDetail.size() -1; lnCtr++){
+            if(!paDetail.get(lnCtr).getTranStat().equals("0")){
+                ldblRsvSum = ldblRsvSum + paDetail.get(lnCtr).getAmount();
+            }
+        }
+        
+        if(ldblRsvSum <= 0 || ldblRsvSum <= 0.00){
+            loJSON.put("result", "error");
+            loJSON.put("message", "Invalid reservation amount");
+            return loJSON;
+        }
+        
+        DecimalFormat lDcmFmt = new DecimalFormat("#,##0.00");
+        if(ldblRsvSum > Double.parseDouble(lsValue)){
+            loJSON.put("result", "error");
+            loJSON.put("message", "Reservation cannot be exceed from the amount of " + lDcmFmt.format(Double.parseDouble(lsValue)) + ".");
+            return loJSON;
+        }
+        
+        return loJSON;
     }
     
     public ArrayList<Model_Inquiry_Reservation> getDetailList(){
@@ -185,7 +245,7 @@ public class Inquiry_Reservation {
                 paDetail.remove(fnRow);
             } else {
                 loJSON.put("result", "error");
-                loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already saved cannot be removed.\nReservation needs to be cancelled.");
+                loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already saved.\n\nCancel reservation instead.");
                 return loJSON;
             }
         }
@@ -196,6 +256,19 @@ public class Inquiry_Reservation {
     public JSONObject cancelReservation(int fnRow){
         JSONObject loJSON = new JSONObject();
         try {
+            
+            if(paDetail.get(fnRow).getTranStat().equals("2")){
+                loJSON.put("result", "error");
+                loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already approved.\n\nCancellation aborted.");
+                return loJSON;
+            }
+            
+            if(paDetail.get(fnRow).getTranStat().equals("0")){
+                loJSON.put("result", "error");
+                loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already cancelled.");
+                return loJSON;
+            }
+            
             CancelForm cancelform = new CancelForm();
             if (!cancelform.loadCancelWindow(poGRider, paDetail.get(fnRow).getReferNo(), paDetail.get(fnRow).getTransNo(), "RESERVATION")) {
                 poJSON.put("result", "error");
