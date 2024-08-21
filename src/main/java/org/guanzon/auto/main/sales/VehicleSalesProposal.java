@@ -5,7 +5,6 @@
  */
 package org.guanzon.auto.main.sales;
 
-import java.util.ArrayList;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.iface.GTransaction;
@@ -13,9 +12,6 @@ import org.guanzon.auto.controller.sales.VehicleSalesProposal_Finance;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Labor;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Master;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Parts;
-import org.guanzon.auto.model.sales.Model_VehicleSalesProposal_Finance;
-import org.guanzon.auto.model.sales.Model_VehicleSalesProposal_Labor;
-import org.guanzon.auto.model.sales.Model_VehicleSalesProposal_Parts;
 import org.json.simple.JSONObject;
 
 /**
@@ -23,70 +19,83 @@ import org.json.simple.JSONObject;
  * @author Arsiela
  */
 public class VehicleSalesProposal implements GTransaction{
-
     GRider poGRider;
-    boolean pbWthParent;
+    String psBranchCd;
+    boolean pbWtParent;
     int pnEditMode;
-    String psTranStatus;
+    String psTransStat;
+    String psMessagex;
+    public JSONObject poJSON;
 
-    VehicleSalesProposal_Master poMaster;
+    VehicleSalesProposal_Master poController;
     VehicleSalesProposal_Finance poVSPFinance;
     VehicleSalesProposal_Labor poVSPLabor;
     VehicleSalesProposal_Parts poVSPParts;
-    JSONObject poJSON;
     
-    public VehicleSalesProposal(GRider foGRider, boolean fbWthParent) {
-        poGRider = foGRider;
-        pbWthParent = fbWthParent;
+    public VehicleSalesProposal(GRider foAppDrver, boolean fbWtParent, String fsBranchCd){
+        poController = new VehicleSalesProposal_Master(foAppDrver,fbWtParent,fsBranchCd);
+        
+        poGRider = foAppDrver;
+        pbWtParent = fbWtParent;
+        psBranchCd = fsBranchCd.isEmpty() ? foAppDrver.getBranchCode() : fsBranchCd;
+    }
 
-        poMaster = new VehicleSalesProposal_Master(foGRider, fbWthParent);
-        pnEditMode = EditMode.UNKNOWN;
+    @Override
+    public int getEditMode() {
+        pnEditMode = poController.getEditMode();
+        return pnEditMode;
+    }
+    
+    @Override
+    public JSONObject setMaster(int fnCol, Object foData) {
+        return poController.setMaster(fnCol, foData);
+    }
+
+    @Override
+    public JSONObject setMaster(String fsCol, Object foData) {
+        return poController.setMaster(fsCol, foData);
+    }
+
+    public Object getMaster(int fnCol) {
+        if(pnEditMode == EditMode.UNKNOWN)
+            return null;
+        else 
+            return poController.getMaster(fnCol);
+    }
+
+    public Object getMaster(String fsCol) {
+        return poController.getMaster(fsCol);
     }
 
     @Override
     public JSONObject newTransaction() {
-       poJSON = new JSONObject();
+        poJSON = new JSONObject();
         try{
-            pnEditMode = EditMode.ADDNEW;
-            org.json.simple.JSONObject obj;
-
-            poMaster.newTransaction();
+            poJSON = poController.newTransaction();
             
-            if (poMaster == null){
-                poJSON.put("result", "error");
-                poJSON.put("message", "initialized new transaction failed.");
-                return poJSON;
-            }else{
-                addVSPFinance();
-                addVSPLabor();
-                addVSPParts();
-                        
-                poJSON.put("result", "success");
-                poJSON.put("message", "initialized new transaction.");
-                pnEditMode = EditMode.ADDNEW;
+            if("success".equals(poJSON.get("result"))){
+                pnEditMode = poController.getEditMode();
+            } else {
+                pnEditMode = EditMode.UNKNOWN;
             }
                
         }catch(NullPointerException e){
             poJSON.put("result", "error");
             poJSON.put("message", e.getMessage());
+            pnEditMode = EditMode.UNKNOWN;
         }
-        
         return poJSON;
     }
 
     @Override
     public JSONObject openTransaction(String fsValue) {
-        pnEditMode = EditMode.READY;
         poJSON = new JSONObject();
         
-        try {
-            poJSON = poMaster.openTransaction(fsValue);
-            poJSON = poVSPFinance.openVSPFinance(fsValue);
-            poJSON = poVSPLabor.openVSPLabor(fsValue);
-            poJSON = poVSPParts.openVSPParts(fsValue);
-        }catch(NullPointerException e){
-            poJSON.put("result", "error");
-            poJSON.put("message", e.getMessage());
+        poJSON = poController.openTransaction(fsValue);
+        if("success".equals(poJSON.get("result"))){
+            pnEditMode = poController.getEditMode();
+        } else {
+            pnEditMode = EditMode.UNKNOWN;
         }
         
         return poJSON;
@@ -94,55 +103,55 @@ public class VehicleSalesProposal implements GTransaction{
 
     @Override
     public JSONObject updateTransaction() {
-        poJSON = new JSONObject();
-        if (pnEditMode != EditMode.READY && pnEditMode != EditMode.UPDATE){
-            poJSON.put("result", "error");
-            poJSON.put("message", "Invalid edit mode.");
+        poJSON = new JSONObject();  
+        poJSON = poController.updateTransaction();
+        if("error".equals(poJSON.get("result"))){
             return poJSON;
         }
-        pnEditMode = EditMode.UPDATE;
-        poJSON.put("result", "success");
-        poJSON.put("message", "Update mode success.");
+        pnEditMode = poController.getEditMode();
         return poJSON;
     }
 
     @Override
     public JSONObject saveTransaction() {
         poJSON = new JSONObject();  
-//        ValidatorInterface validator = ValidatorFactory.make(types,  ValidatorFactory.TYPE.Client_Master, poClient);
-//        if (!validator.isEntryOkay()){
-//            poJSON.put("result", "error");
-//            poJSON.put("message", validator.getMessage());
+        
+//        poJSON = validateEntry();
+//        if("error".equalsIgnoreCase((String)poJSON.get("result"))){
 //            return poJSON;
 //        }
         
-        if (!pbWthParent) poGRider.beginTrans();
-        poJSON =  poMaster.saveTransaction();
+        if (!pbWtParent) poGRider.beginTrans();
+        
+        poJSON =  poController.saveTransaction();
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
-            if (!pbWthParent) poGRider.rollbackTrans();
+            if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
         }
         
-        poJSON = poVSPFinance.saveVSPFinance(poMaster.getTransNox());
-        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
-            if (!pbWthParent) poGRider.rollbackTrans();
-            return checkData(poJSON);
+        if (!pbWtParent) poGRider.commitTrans();
+        
+        return poJSON;
+    }
+    
+    private JSONObject checkData(JSONObject joValue){
+        if(pnEditMode == EditMode.ADDNEW ||pnEditMode == EditMode.READY || pnEditMode == EditMode.UPDATE){
+            if(joValue.containsKey("continue")){
+                if(true == (boolean)joValue.get("continue")){
+                    joValue.put("result", "success");
+                    joValue.put("message", "Record saved successfully.");
+                }
+            }
         }
-        
-        poJSON = poVSPLabor.saveVSPLabor(poMaster.getTransNox());
-        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
-            if (!pbWthParent) poGRider.rollbackTrans();
-            return checkData(poJSON);
+        return joValue;
+    }
+    
+    public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
+        poJSON = new JSONObject();  
+        poJSON = poController.searchTransaction(fsValue, fbByCode);
+        if(!"error".equals(poJSON.get("result"))){
+            poJSON = openTransaction((String) poJSON.get("sTransNox"));
         }
-        
-        poJSON = poVSPParts.saveVSPParts(poMaster.getTransNox());
-        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
-            if (!pbWthParent) poGRider.rollbackTrans();
-            return checkData(poJSON);
-        }
-        
-        if (!pbWthParent) poGRider.commitTrans();
-        
         return poJSON;
     }
 
@@ -192,90 +201,12 @@ public class VehicleSalesProposal implements GTransaction{
     }
 
     @Override
-    public Object getMasterModel() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject setMaster(int i, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject setMaster(String string, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public int getEditMode() {
-        return pnEditMode;
+    public VehicleSalesProposal_Master getMasterModel() {
+        return poController;
     }
 
     @Override
     public void setTransactionStatus(String string) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
-    public JSONObject addVSPFinance(){
-        return poVSPFinance.addVSPFinance(poMaster.getTransNox());
-    }
-    
-    public Model_VehicleSalesProposal_Finance getVSPFinance(int fnIndex){
-        return poVSPFinance.getVSPFinance(fnIndex);
-    }
-    
-    public ArrayList<Model_VehicleSalesProposal_Finance> getVSPFinanceList(){
-        return poVSPFinance.getVSPFinanceList();
-    }
-    
-    public void setVSPFinance(int fnRow, int fnIndex, Object foValue){ poVSPFinance.setVSPFinance(fnRow, fnIndex, foValue); }
-    public void setVSPFinance(int fnRow, String fsIndex, Object foValue){  poVSPFinance.setVSPFinance(fnRow, fsIndex, foValue);}
-    public Object getVSPFinance(int fnRow, int fnIndex){return poVSPFinance.getVSPFinance( fnRow, fnIndex);}
-    public Object getVSPFinance(int fnRow, String fsIndex){return poVSPFinance.getVSPFinance( fnRow, fsIndex);}
-    
-    public JSONObject addVSPLabor(){
-        return poVSPLabor.addVSPLabor(poMaster.getTransNox());
-    }
-    
-    public Model_VehicleSalesProposal_Labor getVSPLabor(int fnIndex){
-        return poVSPLabor.getVSPLabor(fnIndex);
-    }
-    
-    public ArrayList<Model_VehicleSalesProposal_Labor> getVSPLaborList(){
-        return poVSPLabor.getVSPLaborList();
-    }
-
-    public void setVSPLabor(int fnRow, int fnIndex, Object foValue){ poVSPLabor.setVSPLabor(fnRow, fnIndex, foValue); }
-    public void setVSPLabor(int fnRow, String fsIndex, Object foValue){  poVSPLabor.setVSPLabor(fnRow, fsIndex, foValue);}
-    public Object getVSPLabor(int fnRow, int fnIndex){return poVSPLabor.getVSPLabor( fnRow, fnIndex);}
-    public Object getVSPLabor(int fnRow, String fsIndex){return poVSPLabor.getVSPLabor( fnRow, fsIndex);}
-    
-    public JSONObject addVSPParts(){
-        return poVSPParts.addVSPParts(poMaster.getTransNox());
-    }
-    
-    public Model_VehicleSalesProposal_Parts getVSPParts(int fnIndex){
-        return poVSPParts.getVSPParts(fnIndex);
-    }
-    
-    public ArrayList<Model_VehicleSalesProposal_Parts> getVSPPartsList(){
-        return poVSPParts.getVSPPartsList();
-    }
-
-    public void setVSPParts(int fnRow, int fnIndex, Object foValue){ poVSPParts.setVSPParts(fnRow, fnIndex, foValue); }
-    public void setVSPParts(int fnRow, String fsIndex, Object foValue){  poVSPParts.setVSPParts(fnRow, fsIndex, foValue);}
-    public Object getVSPParts(int fnRow, int fnIndex){return poVSPParts.getVSPParts( fnRow, fnIndex);}
-    public Object getVSPParts(int fnRow, String fsIndex){return poVSPParts.getVSPParts( fnRow, fsIndex);}
-    
-    private JSONObject checkData(JSONObject joValue){
-        if(pnEditMode == EditMode.READY || pnEditMode == EditMode.UPDATE){
-            if(joValue.containsKey("continue")){
-                if(true == (boolean)joValue.get("continue")){
-                    joValue.put("result", "success");
-                    joValue.put("message", "Record saved successfully.");
-                }
-            }
-        }
-        return joValue;
     }
 }
