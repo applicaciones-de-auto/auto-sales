@@ -5,7 +5,6 @@
  */
 package org.guanzon.auto.controller.sales;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -13,10 +12,9 @@ import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
-import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.model.sales.Model_VehicleSalesProposal_Finance;
-import org.guanzon.auto.model.sales.Model_VehicleSalesProposal_Master;
-import org.guanzon.auto.model.sales.Model_VehicleSalesProposal_Parts;
+import org.guanzon.auto.validator.sales.ValidatorFactory;
+import org.guanzon.auto.validator.sales.ValidatorInterface;
 import org.json.simple.JSONObject;
 
 /**
@@ -32,48 +30,68 @@ public class VehicleSalesProposal_Finance {
     
     int pnEditMode;
     String psMessagex;
-    
-    ArrayList<Model_VehicleSalesProposal_Finance> paVSPFinance;
-    
     public JSONObject poJSON;
+    
+    ArrayList<Model_VehicleSalesProposal_Finance> paDetail;
 
-    public JSONObject addVSPFinance(String fsValue) {
+    public VehicleSalesProposal_Finance(GRider foAppDrver){
+        poGRider = foAppDrver;
+    }
+    
+    public int getEditMode() {
+        return pnEditMode;
+    }
+
+    public Model_VehicleSalesProposal_Finance getVSPFinance(int fnIndex){
+        if (fnIndex > paDetail.size() - 1 || fnIndex < 0) return null;
+        
+        return paDetail.get(fnIndex);
+    }
+    
+    public JSONObject addDetail(String fsTransNo){
+        if(paDetail == null){
+           paDetail = new ArrayList<>();
+        }
+        
         poJSON = new JSONObject();
-        if (paVSPFinance.isEmpty()){
-            paVSPFinance.add(new Model_VehicleSalesProposal_Finance(poGRider));
-            paVSPFinance.get(0).newRecord();
-            paVSPFinance.get(0).setTransactionNo(fsValue);
+        if (paDetail.size()<=0){
+            paDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
+            paDetail.get(0).newRecord();
+            
+            paDetail.get(0).setValue("sTransNox", fsTransNo);
             poJSON.put("result", "success");
             poJSON.put("message", "VSP Finance add record.");
         } else {
-            //ValidatorInterface validator = ValidatorFactory.make(types,  ValidatorFactory.TYPE.Client_Social_Media, paSocMed.get(paSocMed.size()-1));
-//            if (!validator.isEntryOkay()){
-//                poJSON.put("result", "error");
-//                poJSON.put("message", validator.getMessage());
-//                return poJSON;
-//            }
-            paVSPFinance.add(new Model_VehicleSalesProposal_Finance( poGRider));
-            paVSPFinance.get(paVSPFinance.size()-1).newRecord();
-            paVSPFinance.get(paVSPFinance.size()-1).setTransactionNo(fsValue);
+            paDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
+            paDetail.get(paDetail.size()-1).newRecord();
+
+            paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
             poJSON.put("result", "success");
             poJSON.put("message", "VSP Finance add record.");
         }
         return poJSON;
     }
     
-    public JSONObject openVSPFinance (String fsValue) {
-        
-        String lsSQL = MiscUtil.addCondition(getSQL(), "sTransNox = " + SQLUtil.toSQL(fsValue));
-        ResultSet loRS = poGRider.executeQuery(lsSQL);
-        
+    public JSONObject openDetail(String fsValue){
+        paDetail = new ArrayList<>();
+//        paRemDetail = new ArrayList<>();
+        poJSON = new JSONObject();
+        String lsSQL =    "  SELECT "                                                  
+                        + "    sTransNox "
+                        + "  , cFinPromo "
+                        + "  , sBankIDxx "
+                        + "  , sBankname "                                            
+                        + "  FROM vsp_finance " ;
+        lsSQL = MiscUtil.addCondition(lsSQL, " sTransNox = " + SQLUtil.toSQL(fsValue));
         System.out.println(lsSQL);
+        ResultSet loRS = poGRider.executeQuery(lsSQL);
        try {
             int lnctr = 0;
             if (MiscUtil.RecordCount(loRS) > 0) {
-                paVSPFinance = new ArrayList<>();
+                paDetail = new ArrayList<>();
                 while(loRS.next()){
-                        paVSPFinance.add(new Model_VehicleSalesProposal_Finance(poGRider));
-                        paVSPFinance.get(paVSPFinance.size() - 1).openRecord(loRS.getString("sTransNox"));
+                        paDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
+                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"));
                         
                         pnEditMode = EditMode.UPDATE;
                         lnctr++;
@@ -83,8 +101,8 @@ public class VehicleSalesProposal_Finance {
                 
                 System.out.println("lnctr = " + lnctr);
             }else{
-                paVSPFinance = new ArrayList<>();
-                addVSPFinance(fsValue);
+//                paDetail = new ArrayList<>();
+//                addDetail(fsValue);
                 poJSON.put("result", "error");
                 poJSON.put("continue", true);
                 poJSON.put("message", "No record selected.");
@@ -97,87 +115,73 @@ public class VehicleSalesProposal_Finance {
         return poJSON;
     }
     
-    public JSONObject saveVSPFinance (String fsValue) {
-        poJSON = new JSONObject();
+    public JSONObject saveDetail(String fsTransNo){
+        JSONObject obj = new JSONObject();
         
         int lnCtr;
-        String lsSQL;
-        
-        for (lnCtr = 0; lnCtr <= paVSPFinance.size() -1; lnCtr++){
-            paVSPFinance.get(lnCtr).setTransactionNo(fsValue);
-            if(lnCtr>0){
-                if(paVSPFinance.get(lnCtr).getValue("sBankIDxx").toString().isEmpty()){
-                    paVSPFinance.remove(lnCtr);
-                }
-            }
-            
-//            ValidatorInterface validator = ValidatorFactory.make(types,  ValidatorFactory.TYPE.Client_Social_Media, paSocMed.get(lnCtr));
-//            if (!validator.isEntryOkay()){
-//                poJSON.put("result", "error");
-//                poJSON.put("message", validator.getMessage());
-//                return poJSON;
+//        if(paRemDetail != null){
+//            int lnRemSize = paRemDetail.size() -1;
+//            if(lnRemSize >= 0){
+//                for(lnCtr = 0; lnCtr <= lnRemSize; lnCtr++){
+//                    obj = paRemDetail.get(lnCtr).deleteRecord();
+//                    if("error".equals((String) obj.get("result"))){
+//                        return obj;
+//                    }
+//                }
 //            }
+//        }
+        
+        if(paDetail == null){
+            obj.put("result", "error");
+            obj.put("continue", true);
+            return obj;
+        }
+        
+        int lnSize = paDetail.size() -1;
+        if(lnSize < 0){
+            obj.put("result", "error");
+            obj.put("continue", true);
+            return obj;
+        }
+        
+        for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
+            //if(lnCtr>0){
+                if(paDetail.get(lnCtr).getTransNo().isEmpty()){
+                    continue; //skip, instead of removing the actual detail
+//                    paDetail.remove(lnCtr);
+//                    lnCtr++;
+//                    if(lnCtr > lnSize){
+//                        break;
+//                    } 
+                }
+            //}
             
-            poJSON = paVSPFinance.get(lnCtr).saveRecord();
+            paDetail.get(lnCtr).setTransNo(fsTransNo);
+            
+            ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.VehicleSalesProposal_Finance, paDetail.get(lnCtr));
+            validator.setGRider(poGRider);
+            if (!validator.isEntryOkay()){
+                obj.put("result", "error");
+                obj.put("message", validator.getMessage());
+                return obj;
+            }
+            obj = paDetail.get(lnCtr).saveRecord();
         }    
         
-        return poJSON;
+        return obj;
     }
     
-    public Model_VehicleSalesProposal_Finance getVSPFinance(int fnIndex){
-        if (fnIndex > paVSPFinance.size() - 1 || fnIndex < 0) return null;
-        
-        return paVSPFinance.get(fnIndex);
-    }
-    
-    public ArrayList<Model_VehicleSalesProposal_Finance> getVSPFinanceList(){return paVSPFinance;}
-    public void setVSPFinanceList(ArrayList<Model_VehicleSalesProposal_Finance> foObj){this.paVSPFinance = foObj;}
-    
-    public void setVSPFinance(int fnRow, int fnIndex, Object foValue){ paVSPFinance.get(fnRow).setValue(fnIndex, foValue);}
-    public void setVSPFinance(int fnRow, String fsIndex, Object foValue){ paVSPFinance.get(fnRow).setValue(fsIndex, foValue);}
-    public Object getVSPFinance(int fnRow, int fnIndex){return paVSPFinance.get(fnRow).getValue(fnIndex);}
-    public Object getVSPFinance(int fnRow, String fsIndex){return paVSPFinance.get(fnRow).getValue(fsIndex);}
-
-    private Connection setConnection(){
-        Connection foConn;
-        
-        if (pbWtParent){
-            foConn = (Connection) poGRider.getConnection();
-            if (foConn == null) foConn = (Connection) poGRider.doConnect();
-        }else foConn = (Connection) poGRider.doConnect();
-        
-        return foConn;
-    }
-    
-    private JSONObject checkData(JSONObject joValue){
-        if(pnEditMode == EditMode.READY || pnEditMode == EditMode.UPDATE){
-            if(joValue.containsKey("continue")){
-                if(true == (boolean)joValue.get("continue")){
-                    joValue.put("result", "success");
-                    joValue.put("message", "Record saved successfully.");
-                }
-            }
+    public ArrayList<Model_VehicleSalesProposal_Finance> getDetailList(){
+        if(paDetail == null){
+           paDetail = new ArrayList<>();
         }
-        return joValue;
+        return paDetail;
     }
+    public void setDetailList(ArrayList<Model_VehicleSalesProposal_Finance> foObj){this.paDetail = foObj;}
     
-    public String getSQL(){
-        return " SELECT " +
-            "  IFNULL(a.sTransNox, '') as sTransNox" + //1
-            "  , a.cFinPromo" + //2
-            "  , IFNULL(a.sBankIDxx, '') AS sBankIDxx" + //3
-            "  , IFNULL(a.sBankname, '') AS sBankname" + //4
-            "  , a.nFinAmtxx" + //5
-            "  , a.nAcctTerm" + //6
-            "  , a.nAcctRate" + //7
-            "  , a.nRebatesx" + //8
-            "  , a.nMonAmort" + //9
-            "  , a.nPNValuex" + //10
-            "  , a.nBnkPaidx" + //11
-            "  , a.nGrsMonth" + //12
-            "  , a.nNtDwnPmt" + //13
-            "  , a.nDiscount" + //14
-              /*dTimeStmp*/
-            " FROM vsp_finance a"  ;
-    }
+    public void setDetail(int fnRow, int fnIndex, Object foValue){ paDetail.get(fnRow).setValue(fnIndex, foValue);}
+    public void setDetail(int fnRow, String fsIndex, Object foValue){ paDetail.get(fnRow).setValue(fsIndex, foValue);}
+    public Object getDetail(int fnRow, int fnIndex){return paDetail.get(fnRow).getValue(fnIndex);}
+    public Object getDetail(int fnRow, String fsIndex){return paDetail.get(fnRow).getValue(fsIndex);}
+    
 }

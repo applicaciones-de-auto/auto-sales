@@ -6,16 +6,17 @@
 package org.guanzon.auto.controller.sales;
 
 import java.sql.Connection;
-import org.guanzon.appdriver.agent.ShowDialogFX;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
-import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.appdriver.iface.GTransaction;
+import org.guanzon.auto.general.CancelForm;
 import org.guanzon.auto.general.LockTransaction;
 import org.guanzon.auto.general.SearchDialog;
-import org.guanzon.auto.model.sales.Model_Inquiry_Master;
 import org.guanzon.auto.model.sales.Model_VehicleSalesProposal_Master;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
 import org.guanzon.auto.validator.sales.ValidatorInterface;
@@ -209,13 +210,31 @@ public class VehicleSalesProposal_Master implements GTransaction{
 
         if (poModel.getEditMode() == EditMode.READY
                 || poModel.getEditMode() == EditMode.UPDATE) {
-            poJSON = poModel.setTranStat(TransactionStatus.STATE_CANCELLED);
-
-            if ("error".equals((String) poJSON.get("result"))) {
-                return poJSON;
+            try {
+                poJSON = poModel.setTranStat(TransactionStatus.STATE_CANCELLED);
+                if ("error".equals((String) poJSON.get("result"))) {
+                    return poJSON;
+                }
+                
+                ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.VehicleSalesProposal_Master, poModel);
+                validator.setGRider(poGRider);
+                if (!validator.isEntryOkay()){
+                    poJSON.put("result", "error");
+                    poJSON.put("message", validator.getMessage());
+                    return poJSON;
+                }
+                
+                CancelForm cancelform = new CancelForm();
+                if (!cancelform.loadCancelWindow(poGRider, poModel.getTransNo(), poModel.getVSPNO(), "VSP")) {
+                    poJSON.put("result", "error");
+                    poJSON.put("message", "Cancellation failed.");
+                    return poJSON;
+                }
+                
+                poJSON = poModel.saveRecord();
+            } catch (SQLException ex) {
+                Logger.getLogger(VehicleSalesProposal_Master.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-            poJSON = poModel.saveRecord();
         } else {
             poJSON = new JSONObject();
             poJSON.put("result", "error");
@@ -226,7 +245,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
     
     public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
         String lsHeader = "VSP Date»VSP No»Customer»CS No»Plate No»Cancelled";
-        String lsColName = "dTransact»sVSPNOxxx»sCompnyNm»sCSNoxxxx»sPlateNox»cTrStatus";
+        String lsColName = "dTransact»sVSPNOxxx»sCompnyNm»sCSNoxxxx»sPlateNox»sTrStatus";
         String lsSQL = poModel.getSQL();
         System.out.println(lsSQL);
         JSONObject loJSON = SearchDialog.jsonSearch(
@@ -294,4 +313,5 @@ public class VehicleSalesProposal_Master implements GTransaction{
     public JSONObject voidTransaction(String string) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+    
 }
