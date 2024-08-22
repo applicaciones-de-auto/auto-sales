@@ -8,17 +8,15 @@ package org.guanzon.auto.main.sales;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.iface.GTransaction;
-import org.guanzon.auto.controller.sales.VehicleSalesProposal_Finance;
-import org.guanzon.auto.controller.sales.VehicleSalesProposal_Labor;
-import org.guanzon.auto.controller.sales.VehicleSalesProposal_Master;
-import org.guanzon.auto.controller.sales.VehicleSalesProposal_Parts;
+import org.guanzon.auto.controller.sales.Inquiry_FollowUp;
 import org.json.simple.JSONObject;
 
 /**
  *
  * @author Arsiela
  */
-public class VehicleSalesProposal implements GTransaction{
+public class FollowUp implements GTransaction{
+    final String XML = "Model_Inquiry_FollowUp.xml";
     GRider poGRider;
     String psBranchCd;
     boolean pbWtParent;
@@ -26,14 +24,11 @@ public class VehicleSalesProposal implements GTransaction{
     String psTransStat;
     String psMessagex;
     public JSONObject poJSON;
-
-    VehicleSalesProposal_Master poController;
-    VehicleSalesProposal_Finance poVSPFinance;
-    VehicleSalesProposal_Labor poVSPLabor;
-    VehicleSalesProposal_Parts poVSPParts;
     
-    public VehicleSalesProposal(GRider foAppDrver, boolean fbWtParent, String fsBranchCd){
-        poController = new VehicleSalesProposal_Master(foAppDrver,fbWtParent,fsBranchCd);
+    Inquiry_FollowUp poController;
+    
+    public FollowUp(GRider foAppDrver, boolean fbWtParent, String fsBranchCd){
+        poController = new Inquiry_FollowUp(foAppDrver,fbWtParent,fsBranchCd);
         
         poGRider = foAppDrver;
         pbWtParent = fbWtParent;
@@ -66,7 +61,7 @@ public class VehicleSalesProposal implements GTransaction{
     public Object getMaster(String fsCol) {
         return poController.getMaster(fsCol);
     }
-
+    
     @Override
     public JSONObject newTransaction() {
         poJSON = new JSONObject();
@@ -86,7 +81,7 @@ public class VehicleSalesProposal implements GTransaction{
         }
         return poJSON;
     }
-
+    
     @Override
     public JSONObject openTransaction(String fsValue) {
         poJSON = new JSONObject();
@@ -116,11 +111,6 @@ public class VehicleSalesProposal implements GTransaction{
     public JSONObject saveTransaction() {
         poJSON = new JSONObject();  
         
-//        poJSON = validateEntry();
-//        if("error".equalsIgnoreCase((String)poJSON.get("result"))){
-//            return poJSON;
-//        }
-        
         if (!pbWtParent) poGRider.beginTrans();
         
         poJSON =  poController.saveTransaction();
@@ -128,7 +118,6 @@ public class VehicleSalesProposal implements GTransaction{
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
         }
-        
         if (!pbWtParent) poGRider.commitTrans();
         
         return poJSON;
@@ -144,15 +133,6 @@ public class VehicleSalesProposal implements GTransaction{
             }
         }
         return joValue;
-    }
-    
-    public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
-        poJSON = new JSONObject();  
-        poJSON = poController.searchTransaction(fsValue, fbByCode);
-        if(!"error".equals(poJSON.get("result"))){
-            poJSON = openTransaction((String) poJSON.get("sTransNox"));
-        }
-        return poJSON;
     }
 
     @Override
@@ -176,8 +156,8 @@ public class VehicleSalesProposal implements GTransaction{
     }
 
     @Override
-    public JSONObject cancelTransaction(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public JSONObject cancelTransaction(String fsValue) {
+        return poController.cancelTransaction(fsValue);
     }
 
     @Override
@@ -201,7 +181,7 @@ public class VehicleSalesProposal implements GTransaction{
     }
 
     @Override
-    public VehicleSalesProposal_Master getMasterModel() {
+    public Inquiry_FollowUp getMasterModel() {
         return poController;
     }
 
@@ -209,4 +189,9 @@ public class VehicleSalesProposal implements GTransaction{
     public void setTransactionStatus(String string) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+    
+    public JSONObject searchOnlinePlatform(String fsValue) {
+        return poController.searchOnlinePlatform(fsValue);
+    }
+    
 }

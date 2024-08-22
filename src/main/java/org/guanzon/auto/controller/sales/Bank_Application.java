@@ -6,17 +6,20 @@
 package org.guanzon.auto.controller.sales;
 
 import java.sql.Connection;
-import org.guanzon.appdriver.agent.ShowDialogFX;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
-import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.appdriver.iface.GTransaction;
-import org.guanzon.auto.general.LockTransaction;
-import org.guanzon.auto.general.SearchDialog;
-import org.guanzon.auto.model.sales.Model_Inquiry_Master;
-import org.guanzon.auto.model.sales.Model_VehicleSalesProposal_Master;
+import org.guanzon.auto.general.CancelForm;
+import org.guanzon.auto.model.sales.Model_Bank_Application;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
 import org.guanzon.auto.validator.sales.ValidatorInterface;
 import org.json.simple.JSONObject;
@@ -25,7 +28,8 @@ import org.json.simple.JSONObject;
  *
  * @author Arsiela
  */
-public class VehicleSalesProposal_Master implements GTransaction{
+public class Bank_Application implements GTransaction {
+    final String XML = "Model_Bank_Application.xml";
     GRider poGRider;
     String psBranchCd;
     boolean pbWtParent;
@@ -34,28 +38,29 @@ public class VehicleSalesProposal_Master implements GTransaction{
     
     String psMessagex;
     public JSONObject poJSON;
-
-    Model_VehicleSalesProposal_Master poModel;
-    LockTransaction poLockTrans;
-
-    public VehicleSalesProposal_Master(GRider foGRider, boolean fbWthParent, String fsBranchCd) {
+    
+    Model_Bank_Application poModel;
+    
+    public Bank_Application(GRider foGRider, boolean fbWthParent, String fsBranchCd) {
         poGRider = foGRider;
         pbWtParent = fbWthParent;
         psBranchCd = fsBranchCd.isEmpty() ? foGRider.getBranchCode() : fsBranchCd;
-
-        poModel = new Model_VehicleSalesProposal_Master(foGRider);
+        
+        poModel = new Model_Bank_Application(foGRider);
         pnEditMode = EditMode.UNKNOWN;
     }
-
+    
     @Override
     public int getEditMode() {
         return pnEditMode;
     }
     
     @Override
-    public Model_VehicleSalesProposal_Master getMasterModel() {
+    public Model_Bank_Application getMasterModel() {
         return poModel;
     }
+    
+    
 
     @Override
     public JSONObject setMaster(int fnCol, Object foData) {
@@ -65,8 +70,6 @@ public class VehicleSalesProposal_Master implements GTransaction{
             // Don't allow specific fields to assign values
             if(!(fnCol == poModel.getColumn("sTransNox") ||
                 fnCol == poModel.getColumn("cTranStat") ||
-                fnCol == poModel.getColumn("sEntryByx") ||
-                fnCol == poModel.getColumn("dEntryDte") ||
                 fnCol == poModel.getColumn("sModified") ||
                 fnCol == poModel.getColumn("dModified"))){
                 poModel.setValue(fnCol, foData);
@@ -92,7 +95,6 @@ public class VehicleSalesProposal_Master implements GTransaction{
         return getMaster(poModel.getColumn(fsCol));
     }
 
-
     @Override
     public JSONObject newTransaction() {
         poJSON = new JSONObject();
@@ -100,12 +102,12 @@ public class VehicleSalesProposal_Master implements GTransaction{
             pnEditMode = EditMode.ADDNEW;
             org.json.simple.JSONObject obj;
 
-            poModel = new Model_VehicleSalesProposal_Master(poGRider);
+            poModel = new Model_Bank_Application(poGRider);
             Connection loConn = null;
             loConn = setConnection();
 
-            poModel.setTransNo(MiscUtil.getNextCode(poModel.getTable(), "sTransNox", true, poGRider.getConnection(), poGRider.getBranchCode()+"VSP"));
-            poModel.setVSPNO(MiscUtil.getNextCode(poModel.getTable(), "sVSPNOxxx", true, poGRider.getConnection(), poGRider.getBranchCode()));
+            poModel.setTransNo(MiscUtil.getNextCode(poModel.getTable(), "sTransNox", true, poGRider.getConnection(), poGRider.getBranchCode()+"BA"));
+            //poModel.setApplicNo(MiscUtil.getNextCode(poModel.getTable(), "sApplicNo", true, poGRider.getConnection(), poGRider.getBranchCode()));
             poModel.newRecord();
             
             if (poModel == null){
@@ -139,22 +141,10 @@ public class VehicleSalesProposal_Master implements GTransaction{
         pnEditMode = EditMode.READY;
         poJSON = new JSONObject();
         
-        poModel = new Model_VehicleSalesProposal_Master(poGRider);
+        poModel = new Model_Bank_Application(poGRider);
         poJSON = poModel.openRecord(fsValue);
         
         return poJSON;
-    }
-    
-    private JSONObject checkData(JSONObject joValue){
-        if(pnEditMode == EditMode.READY || pnEditMode == EditMode.UPDATE){
-            if(joValue.containsKey("continue")){
-                if(true == (boolean)joValue.get("continue")){
-                    joValue.put("result", "success");
-                    joValue.put("message", "Record saved successfully.");
-                }
-            }
-        }
-        return joValue;
     }
 
     @Override
@@ -166,16 +156,6 @@ public class VehicleSalesProposal_Master implements GTransaction{
             return poJSON;
         }
         
-        poLockTrans = new LockTransaction(poGRider);
-        
-        if(!poLockTrans.checkLockTransaction(poModel.getTable(), "sTransNox", poModel.getTransNo())){
-            poJSON.put("result", "error");
-            poJSON.put("message", poLockTrans.getMessage());
-            return poJSON;
-        } 
-        
-        poLockTrans.saveLockTransaction(poModel.getTable(),"sTransNox", poModel.getTransNo());
-        
         pnEditMode = EditMode.UPDATE;
         poJSON.put("result", "success");
         poJSON.put("message", "Update mode success.");
@@ -186,7 +166,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
     public JSONObject saveTransaction() {
         poJSON = new JSONObject();  
         
-        ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.VehicleSalesProposal_Master, poModel);
+        ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Inquiry_BankApplication, poModel);
         validator.setGRider(poGRider);
         if (!validator.isEntryOkay()){
             poJSON.put("result", "error");
@@ -195,70 +175,103 @@ public class VehicleSalesProposal_Master implements GTransaction{
         }
         
         poJSON =  poModel.saveRecord();
-        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
+        if("error".equalsIgnoreCase((String)poJSON.get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
-            return checkData(poJSON);
+            return poJSON;
         }
         
         return poJSON;
     }
 
     @Override
-    public JSONObject cancelTransaction(String fsTransNox) {
+    public JSONObject deleteTransaction(String string) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public JSONObject closeTransaction(String string) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public JSONObject postTransaction(String string) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public JSONObject voidTransaction(String string) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public JSONObject cancelTransaction(String fsValue) {
         poJSON = new JSONObject();
 
-        if (poModel.getEditMode() == EditMode.READY
-                || poModel.getEditMode() == EditMode.UPDATE) {
-            poJSON = poModel.setTranStat(TransactionStatus.STATE_CANCELLED);
+        if (poModel.getEditMode() == EditMode.UPDATE) {
+            try {
+//                String lsStat = poModel.getTranStat(); //Get Original Transtat
+                
+                poModel.setCancelld(poGRider.getUserID());
+                System.out.println(SQLUtil.toDate(xsDateShort(poGRider.getServerDate()), SQLUtil.FORMAT_SHORT_DATE));
+                poModel.setCancelldDte(poGRider.getServerDate());
+                System.out.println("getmaster dCancelld : " + getMaster("dCancelld"));
+                ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Inquiry_BankApplication, poModel);
+                validator.setGRider(poGRider);
+                if (!validator.isEntryOkay()){
+                    poJSON.put("result", "error");
+                    poJSON.put("message", validator.getMessage());
+                    return poJSON;
+                } 
 
-            if ("error".equals((String) poJSON.get("result"))) {
-                return poJSON;
+                CancelForm cancelform = new CancelForm();
+                if (!cancelform.loadCancelWindow(poGRider, poModel.getApplicNo(), poModel.getTransNo(), "BANK APPLICATION")) {
+                    poJSON.put("result", "error");
+                    poJSON.put("message", "Cancellation failed.");
+                    return poJSON;
+                } 
+
+                poJSON = poModel.cancelTransaction();
+                if ("success".equals((String) poJSON.get("result"))) {
+                    poJSON.put("result", "success");
+                    poJSON.put("message", "Cancellation success.");
+                } else {
+                    poJSON.put("result", "error");
+                    poJSON.put("message", "Cancellation failed.");
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(Bank_Application.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-            poJSON = poModel.saveRecord();
         } else {
             poJSON = new JSONObject();
             poJSON.put("result", "error");
-            poJSON.put("message", "No record loaded to update.");
+            poJSON.put("message", "No transaction loaded to update.");
         }
         return poJSON;
     }
-    
-    public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
-        String lsHeader = "VSP Date»VSP No»Customer»CS No»Plate No»Cancelled";
-        String lsColName = "dTransact»sVSPNOxxx»sCompnyNm»sCSNoxxxx»sPlateNox»cTrStatus";
-        String lsSQL = poModel.getSQL();
-        System.out.println(lsSQL);
-        JSONObject loJSON = SearchDialog.jsonSearch(
-                    poGRider,
-                    lsSQL,
-                    "",
-                    lsHeader,
-                    lsColName,
-                "0.1D»0.2D»0.3D»0.2D»0.2D»0.3D", 
-                    "VSP",
-                    0);
-            
-        if (loJSON != null && !"error".equals((String) loJSON.get("result"))) {
-        }else {
-            loJSON = new JSONObject();
-            loJSON.put("result", "error");
-            loJSON.put("message", "No Transaction loaded.");
-            return loJSON;
-        }
-        return loJSON;
-    }
 
+    /*Convert Date to String*/
+    private LocalDate strToDate(String val) {
+        DateTimeFormatter date_formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate localDate = LocalDate.parse(val, date_formatter);
+        return localDate;
+    }
+    
+    private static String xsDateShort(Date fdValue) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String date = sdf.format(fdValue);
+        return date;
+    }
+    
     @Override
     public JSONObject searchWithCondition(String string) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public JSONObject searchTransaction(String fsColumn, String string, boolean bln) {
+    public JSONObject searchTransaction(String string, String string1, boolean bln) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
     @Override
     public JSONObject searchMaster(String string, String string1, boolean bln) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -274,24 +287,4 @@ public class VehicleSalesProposal_Master implements GTransaction{
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
-
-    @Override
-    public JSONObject closeTransaction(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject deleteTransaction(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject postTransaction(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONObject voidTransaction(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
 }

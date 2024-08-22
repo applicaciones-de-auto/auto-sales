@@ -24,7 +24,7 @@ import org.json.simple.JSONObject;
  * @author Arsiela
  */
 public class Inquiry_VehiclePriority {
-    final String XML = "Model_Inquiry_Promo.xml";
+    final String XML = "Model_Inquiry_VehiclePriority.xml";
     GRider poGRider;
     String psBranchCd;
     boolean pbWtParent;
@@ -84,12 +84,13 @@ public class Inquiry_VehiclePriority {
                         + "  sTransNox "                                             
                         + ", nPriority "                                             
                         + ", sVhclIDxx "                                             
-                        + "  FROM customer_inquiry_vehicle_priority "  ;
-        lsSQL = MiscUtil.addCondition(lsSQL, " sTransNox = " + SQLUtil.toSQL(fsValue));
+                        + "  FROM customer_inquiry_vehicle_priority " ;
+        lsSQL = MiscUtil.addCondition(lsSQL, " sTransNox = " + SQLUtil.toSQL(fsValue))
+                                                + "  ORDER BY nPriority ASC " ;
+        System.out.println(lsSQL);
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
-        System.out.println(lsSQL);
-       try {
+        try {
             int lnctr = 0;
             if (MiscUtil.RecordCount(loRS) > 0) {
                 while(loRS.next()){
@@ -106,7 +107,6 @@ public class Inquiry_VehiclePriority {
 //                paDetail = new ArrayList<>();
 //                addDetail(fsValue);
                 poJSON.put("result", "error");
-                poJSON.put("continue", true);
                 poJSON.put("message", "No record selected.");
             }
             MiscUtil.close(loRS);
@@ -147,15 +147,16 @@ public class Inquiry_VehiclePriority {
         }
         
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
-            if(lnCtr>0){
+            //if(lnCtr>0){
                 if(paDetail.get(lnCtr).getVhclID().isEmpty()){
-                    paDetail.remove(lnCtr);
-                    lnCtr++;
-                    if(lnCtr > lnSize){
-                        break;
-                    } 
+                    continue; //skip, instead of removing the actual detail
+//                    paDetail.remove(lnCtr);
+//                    lnCtr++;
+//                    if(lnCtr > lnSize){
+//                        break;
+//                    } 
                 }
-            }
+            //}
             
             paDetail.get(lnCtr).setTransNo(fsTransNo);
             
@@ -189,10 +190,8 @@ public class Inquiry_VehiclePriority {
     public Object removeDetail(int fnRow){
         JSONObject loJSON = new JSONObject();
         
-        if(paDetail.get(fnRow).getEntryBy() == null){
-            RemoveDetail(fnRow);
-        } else {
-            if(paDetail.get(fnRow).getEntryBy().trim().isEmpty()){
+        if(paDetail.get(fnRow).getEntryBy() != null){
+            if(!paDetail.get(fnRow).getEntryBy().trim().isEmpty()){
                 RemoveDetail(fnRow);
             }
         }
@@ -242,9 +241,11 @@ public class Inquiry_VehiclePriority {
                 + " , a.cRecdStat "                                      
                 + " , b.sMakeDesc "                                      
                 + " FROM vehicle_master a"                                
-                + " LEFT JOIN vehicle_make b ON b.sMakeIDxx = a.sMakeIDxx" ; 
+                + " LEFT JOIN vehicle_make b ON b.sMakeIDxx = a.sMakeIDxx" 
+                + " LEFT JOIN vehicle_model c ON c.sModelIDx = a.sModelIDx" ; 
         if (MiscUtil.RecordCount(loRS) > 0){
-            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' AND b.sMakeDesc = (SELECT sValuexxx FROM xxxstandard_sets WHERE sDescript = 'mainproduct') ");
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' AND (c.sBodyType <> '4' AND c.sBodyType <> '5')  "
+                                                + " AND b.sMakeDesc = (SELECT sValuexxx FROM xxxstandard_sets WHERE sDescript = 'mainproduct') ");
         } else {
             lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' ");
         }

@@ -9,6 +9,9 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,6 +24,7 @@ import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.iface.GTransaction;
+import org.guanzon.auto.general.LockTransaction;
 import org.guanzon.auto.general.SearchDialog;
 import org.guanzon.auto.model.sales.Model_Inquiry_Master;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
@@ -43,8 +47,11 @@ public class Inquiry_Master implements GTransaction {
     String psMessagex;
     public JSONObject poJSON;
     CachedRowSet poTestModel;
+    CachedRowSet poBankApp;
+    CachedRowSet poFollowUp;
     
     Model_Inquiry_Master poModel;
+    LockTransaction poLockTrans;
     
     public Inquiry_Master(GRider foGRider, boolean fbWthParent, String fsBranchCd) {
         poGRider = foGRider;
@@ -72,7 +79,9 @@ public class Inquiry_Master implements GTransaction {
         if (pnEditMode != EditMode.UNKNOWN){
             // Don't allow specific fields to assign values
             if(!(fnCol == poModel.getColumn("sTransNox") ||
-                fnCol == poModel.getColumn("cRecdStat") ||
+                fnCol == poModel.getColumn("cTranStat") ||
+                fnCol == poModel.getColumn("sEntryByx") ||
+                fnCol == poModel.getColumn("dEntryDte") ||
                 fnCol == poModel.getColumn("sModified") ||
                 fnCol == poModel.getColumn("dModified"))){
                 poModel.setValue(fnCol, foData);
@@ -110,6 +119,7 @@ public class Inquiry_Master implements GTransaction {
             loConn = setConnection();
 
             poModel.setTransNo(MiscUtil.getNextCode(poModel.getTable(), "sTransNox", true, poGRider.getConnection(), poGRider.getBranchCode()+"IQ"));
+            poModel.setInqryID(MiscUtil.getNextCode(poModel.getTable(), "sInqryIDx", true, poGRider.getConnection(), poGRider.getBranchCode()));
             poModel.newRecord();
             
             if (poModel == null){
@@ -170,8 +180,16 @@ public class Inquiry_Master implements GTransaction {
             return poJSON;
         }
         
-        poModel.setLockedBy(poGRider.getUserID());
-        poModel.setLockedDt(poGRider.getServerDate());
+        poLockTrans = new LockTransaction(poGRider);
+        
+        if(!poLockTrans.checkLockTransaction(poModel.getTable(), "sTransNox", poModel.getTransNo())){
+            poJSON.put("result", "error");
+            poJSON.put("message", poLockTrans.getMessage());
+            return poJSON;
+        } 
+        
+        poLockTrans.saveLockTransaction(poModel.getTable(),"sTransNox", poModel.getTransNo());
+        
         pnEditMode = EditMode.UPDATE;
         poJSON.put("result", "success");
         poJSON.put("message", "Update mode success.");
@@ -201,11 +219,12 @@ public class Inquiry_Master implements GTransaction {
 
     public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
         String lsHeader = "Inquiry Date»Inquiry ID»Customer Name»Customer Address»Inquiry Status»Branch";
-        String lsColName = "dTransact»sTransNox»sCompnyNm»sAddressx»sTranStat»sBranchNm";
+        String lsColName = "dTransact»sInqryIDx»sCompnyNm»sAddressx»sTranStat»sBranchNm";
         String lsSQL =    " SELECT "                                                                       
                         + "    a.sTransNox "                                                               
+                        + "  , a.sInqryIDx "                                                                
                         + "  , a.sBranchCd "                                                               
-                        + "  , a.dTransact "                                                               
+                        + "  , DATE(a.dTransact) AS dTransact"                                                               
                         + "  , a.sEmployID "                                                               
                         + "  , a.sClientID "                                                                
                         + "  , a.sContctID "                                                               
@@ -215,9 +234,8 @@ public class Inquiry_Master implements GTransaction {
                         + "  , CASE WHEN a.cTranStat = '0' THEN 'FOR FOLLOW-UP'"                           
                         + " 	WHEN a.cTranStat = '1' THEN 'ON PROCESS' "                                   
                         + " 	WHEN a.cTranStat = '2' THEN 'LOST SALE'  "                                   
-                        + " 	WHEN a.cTranStat = '3' THEN 'VSP'        "                                   
-                        + " 	WHEN a.cTranStat = '4' THEN 'SOLD'       "                                   
-                        + " 	WHEN a.cTranStat = '5' THEN 'RETIRED'    "                                   
+                        + " 	WHEN a.cTranStat = '3' THEN 'WITH VSP'   "                                   
+                        + " 	WHEN a.cTranStat = '4' THEN 'SOLD'       "                                     
                         + " 	ELSE 'CANCELLED'  "                                                          
                         + "    END AS sTranStat "                                                          
                         + "  , b.sCompnyNm      "                                                          
@@ -252,7 +270,7 @@ public class Inquiry_Master implements GTransaction {
                     lsColName,
                 "0.1D»0.2D»0.3D»0.4D»0.2D»0.3D", 
                     "INQUIRY",
-                    1);
+                    0);
             
         if (loJSON != null && !"error".equals((String) loJSON.get("result"))) {
         }else {
@@ -315,22 +333,22 @@ public class Inquiry_Master implements GTransaction {
     }
     
     public JSONObject lostSale(String fsValue) {
-        poJSON = new JSONObject();
+        JSONObject loJSON = new JSONObject();
         
-        poJSON = poModel.lostSale(fsValue);
-        if ("success".equals((String) poJSON.get("result"))) {
-            poJSON.put("result", "success");
-            poJSON.put("message", "Lost Sale success.");
+        loJSON = poModel.lostSale(fsValue);
+        if ("success".equals((String) loJSON.get("result"))) {
+            loJSON.put("result", "success");
+            loJSON.put("message", "Lost Sale success.");
         } else {
-            poJSON.put("result", "error");
-            poJSON.put("message", "Lost Sale failed.");
+            loJSON.put("result", "error");
+            loJSON.put("message", "Lost Sale failed.");
             }
         
-        return poJSON;
+        return loJSON;
     }
     
     public JSONObject searchSalesExecutive(String fsValue) {
-        poJSON = new JSONObject();
+        JSONObject loJSON = new JSONObject();
         
         String lsSQL =   " SELECT "
                        + " a.sClientID "
@@ -339,10 +357,14 @@ public class Inquiry_Master implements GTransaction {
                        + " FROM sales_executive a "
                        + " LEFT JOIN GGC_ISysDBF.Client_Master b ON b.sClientID = a.sClientID " ;  
                 
-        lsSQL = MiscUtil.addCondition(lsSQL, "a.cRecdStat = '1' AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%"));  
+        lsSQL = MiscUtil.addCondition(lsSQL, "a.cRecdStat = '1' " 
+                                                + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getAgentID())
+                                                + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getClientID())
+                                                + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getContctID())
+                                                + " AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%"));  
 
         System.out.println("SEARCH SALES EXECUTIVE: " + lsSQL);
-        poJSON = ShowDialogFX.Search(poGRider,
+        loJSON = ShowDialogFX.Search(poGRider,
                 lsSQL,
                 fsValue,
                     "Employee Name",
@@ -350,10 +372,10 @@ public class Inquiry_Master implements GTransaction {
                     "b.sCompnyNm",
                 0);
 
-        if (poJSON != null) {
-            if(!"error".equals((String) poJSON.get("result"))){
-                poModel.setEmployID((String) poJSON.get("sClientID"));
-                poModel.setSalesExe((String) poJSON.get("sCompnyNm"));
+        if (loJSON != null) {
+            if(!"error".equals((String) loJSON.get("result"))){
+                poModel.setEmployID((String) loJSON.get("sClientID"));
+                poModel.setSalesExe((String) loJSON.get("sCompnyNm"));
             } else {
                 poModel.setEmployID("");
                 poModel.setSalesExe("");
@@ -361,22 +383,22 @@ public class Inquiry_Master implements GTransaction {
         } else {
             poModel.setEmployID("");
             poModel.setSalesExe("");
-            poJSON = new JSONObject();
-            poJSON.put("result", "error");
-            poJSON.put("message", "No record loaded.");
-            return poJSON;
+            loJSON = new JSONObject();
+            loJSON.put("result", "error");
+            loJSON.put("message", "No record loaded.");
+            return loJSON;
         }
         
-        return poJSON;
+        return loJSON;
     }
     
     public JSONObject searchReferralAgent(String fsValue) {
-        poJSON = new JSONObject();
+        JSONObject loJSON = new JSONObject();
         
         if(!poModel.getSourceCD().equals("3")){
-            poJSON.put("result", "error");
-            poJSON.put("message", "Invalid Inquiry type.");
-            return poJSON;
+            loJSON.put("result", "error");
+            loJSON.put("message", "Invalid Inquiry type.");
+            return loJSON;
         }
         
         String lsSQL =   " SELECT "
@@ -386,10 +408,14 @@ public class Inquiry_Master implements GTransaction {
                        + " FROM sales_agent a "
                        + " LEFT JOIN client_master b ON b.sClientID = a.sClientID " ;  
                 
-        lsSQL = MiscUtil.addCondition(lsSQL, "a.cRecdStat = '1' AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%"));  
+        lsSQL = MiscUtil.addCondition(lsSQL, " a.cRecdStat = '1' "
+                                                + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getContctID())
+                                                + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getClientID())
+                                                + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getEmployID())
+                                                + " AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%"));  
 
         System.out.println("SEARCH SALES AGENT: " + lsSQL);
-        poJSON = ShowDialogFX.Search(poGRider,
+        loJSON = ShowDialogFX.Search(poGRider,
                 lsSQL,
                 fsValue,
                     "Agent Name",
@@ -397,10 +423,10 @@ public class Inquiry_Master implements GTransaction {
                     "b.sCompnyNm",
                 0);
 
-        if (poJSON != null) {
-            if(!"error".equals((String) poJSON.get("result"))){
-                poModel.setAgentID((String) poJSON.get("sClientID"));
-                poModel.setSalesAgn((String) poJSON.get("sCompnyNm"));
+        if (loJSON != null) {
+            if(!"error".equals((String) loJSON.get("result"))){
+                poModel.setAgentID((String) loJSON.get("sClientID"));
+                poModel.setSalesAgn((String) loJSON.get("sCompnyNm"));
             } else {
                 poModel.setAgentID("");
                 poModel.setSalesAgn("");
@@ -408,13 +434,13 @@ public class Inquiry_Master implements GTransaction {
         } else {
             poModel.setAgentID("");
             poModel.setSalesAgn("");
-            poJSON = new JSONObject();
-            poJSON.put("result", "error");
-            poJSON.put("message", "No record loaded.");
-            return poJSON;
+            loJSON = new JSONObject();
+            loJSON.put("result", "error");
+            loJSON.put("message", "No record loaded.");
+            return loJSON;
         }
         
-        return poJSON;
+        return loJSON;
     }
     
     public JSONObject searchClient(String fsValue, boolean fbInqClient) {
@@ -446,10 +472,14 @@ public class Inquiry_Master implements GTransaction {
         if(fbInqClient){
             lsSQL = MiscUtil.addCondition(lsSQL, " a.cRecdStat = '1' "
                                                     + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getContctID())
+                                                    + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getAgentID())
+                                                    + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getEmployID())
                                                     + " AND a.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%")) ;
         } else {
-            lsSQL = MiscUtil.addCondition(lsSQL, " a.cRecdStat = '1' "
+            lsSQL = MiscUtil.addCondition(lsSQL, " a.cRecdStat = '1' AND a.cClientTp = '0' "
                                                     + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getClientID())
+                                                    + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getAgentID())
+                                                    + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getEmployID())
                                                     + " AND a.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%")) ;
         }
         
@@ -465,7 +495,7 @@ public class Inquiry_Master implements GTransaction {
                                         1);
         
         if (loJSON != null) {
-            if(!"error".equals((String) poJSON.get("result"))){
+            if(!"error".equals((String) loJSON.get("result"))){
                 if(fbInqClient){
                     poModel.setClientID((String) loJSON.get("sClientID"));
                     poModel.setClientNm((String) loJSON.get("sCompnyNm"));
@@ -513,13 +543,217 @@ public class Inquiry_Master implements GTransaction {
         return loJSON;
     }
     
+    
+    public JSONObject checkExistingTransaction(boolean fbisClient){
+        JSONObject loJSON = new JSONObject();
+        
+        try {
+            String lsTransNo = "";
+            String lsID = "";
+            String lsDesc = "";
+            String lsStat = "";
+            String lsEmpl = "";
+            String lsSQL = "";
+            String lsWhere = "";
+            String lsInqdate = "1900-01-01";
+            String lsInqRsv = "";
+            String lsEmpID = "";
+            ResultSet loRS;
+            
+            if(poModel.getClientID() == null){
+                return loJSON;
+            }
+            
+            if(poModel.getEmployID()!= null){
+                if(!poModel.getEmployID().trim().isEmpty()){
+                    lsEmpID = poModel.getEmployID();
+                }
+            }
+            
+            if(getEditMode() == EditMode.ADDNEW){
+                lsSQL =   " SELECT "                                                                       
+                        + "    a.sTransNox "                                                               
+                        + "  , a.sBranchCd "                                                               
+                        + "  , a.dTransact "                                                               
+                        + "  , a.sInqryIDx "                                                               
+                        + "  , a.sEmployID "                                                               
+                        + "  , a.sClientID "                                                               
+                        + "  , a.sContctID "                                                               
+                        + "  , a.sAgentIDx "                                                               
+                        + "  , a.dTargetDt "                                                               
+                        + "  , a.cTranStat "                                                               
+                        + "  , CASE "
+                        + "     WHEN a.cTranStat = '0' THEN 'FOR FOLLOW-UP'"                           
+                        + " 	WHEN a.cTranStat = '1' THEN 'ON PROCESS' "                                   
+                        + " 	WHEN a.cTranStat = '2' THEN 'LOST SALE'  "                                   
+                        + " 	WHEN a.cTranStat = '3' THEN 'WITH VSP'   "                                   
+                        + " 	WHEN a.cTranStat = '4' THEN 'SOLD'       "                                     
+                        + " 	ELSE 'CANCELLED'  "                                                          
+                        + "    END AS sTranStat "                                                          
+                        + "  , b.sCompnyNm      "                                                          
+                        + "  , b.cClientTp      "                                                          
+                        + "  , IFNULL(CONCAT( IFNULL(CONCAT(d.sHouseNox,' ') , ''), "                      
+                        + " 	IFNULL(CONCAT(d.sAddressx,' ') , ''),  "                                     
+                        + " 	IFNULL(CONCAT(e.sBrgyName,' '), ''),   "                                     
+                        + " 	IFNULL(CONCAT(f.sTownName, ', '),''),  "                                     
+                        + " 	IFNULL(CONCAT(g.sProvName),'') )	, '') AS sAddressx "                       
+                        + "  , l.sCompnyNm AS sSalesExe "                                                  
+                        + "  , m.sCompnyNm AS sSalesAgn "                                                  
+                        + "  , p.sBranchNm  "                                                              
+                        + " FROM customer_inquiry a "                                                      
+                        + " LEFT JOIN client_master b ON a.sClientID = b.sClientID "                       
+                        + " LEFT JOIN client_address c ON c.sClientID = a.sClientID AND c.cPrimaryx = 1  " 
+                        + " LEFT JOIN addresses d ON d.sAddrssID = c.sAddrssID "                           
+                        + " LEFT JOIN barangay e ON e.sBrgyIDxx = d.sBrgyIDxx  "                           
+                        + " LEFT JOIN towncity f ON f.sTownIDxx = d.sTownIDxx  "                           
+                        + " LEFT JOIN province g ON g.sProvIDxx = f.sProvIDxx   "                           
+                        + " LEFT JOIN client_master k ON k.sClientID = a.sContctID  "                       
+                        + " LEFT JOIN ggc_isysdbf.client_master l ON l.sClientID = a.sEmployID "            
+                        + " LEFT JOIN client_master m ON m.sClientID = a.sAgentIDx "                        
+                        + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd "                        
+                        + " WHERE a.cTranStat <> '5' " ;
+                
+                //Check for Client existing Inquiry
+                if(fbisClient){
+                    lsWhere = MiscUtil.addCondition(lsSQL, " a.sClientID = " + SQLUtil.toSQL(poModel.getClientID())
+                                                            + " AND a.sTransNox <> " + SQLUtil.toSQL(poModel.getTransNo()) 
+                                                            + " AND (a.cTranStat = '0' OR a.cTranStat = '1' OR a.cTranStat = '3')"  
+                                                            );
+
+                    System.out.println("EXISTING CUSTOMER CHECK: " + lsSQL);
+                    loRS = poGRider.executeQuery(lsWhere);
+                    if (MiscUtil.RecordCount(loRS) > 0){
+                        while(loRS.next()){
+                            lsID = loRS.getString("sInqryIDx");
+                            lsTransNo = loRS.getString("sTransNox");
+                            lsInqdate = xsDateShort(loRS.getDate("dTransact"));
+                            lsStat = loRS.getString("sTranStat");
+                        }
+                        MiscUtil.close(loRS);
+
+                        loJSON.put("result", "error");
+                        loJSON.put("sTransNox",lsTransNo);
+                        loJSON.put("message", "An existing inquiry with the same customer."
+                                                + "\n\n<Inquiry ID : " + lsID + ">"
+                                                + "\n<Inquiry Date: " + lsInqdate + ">"
+                                                + "\n<Inquiry Status: " + lsStat + ">"
+                                                + "\n\nDo you want to open Record?");
+                        return loJSON;
+
+                    } 
+                } else {
+                    if(!lsEmpID.trim().isEmpty()){
+                        /* 1.
+                        * Will not allow SE to create new inquiry for client with an existing for-followup, on process and with vsp inquiry with the same SE.
+                        */
+                        lsWhere = MiscUtil.addCondition(lsSQL, " a.sClientID = " + SQLUtil.toSQL(poModel.getClientID())
+                                                                + " AND a.sEmployID = " + SQLUtil.toSQL(lsEmpID) 
+                                                                + " AND a.sTransNox <> " + SQLUtil.toSQL(poModel.getTransNo()) 
+                                                                + " AND (a.cTranStat = '0' OR a.cTranStat = '1' OR a.cTranStat = '3')"  
+                                                                );
+
+                        System.out.println("EXISTING CUSTOMER WITH THE SAME SE CHECK: " + lsSQL);
+                        loRS = poGRider.executeQuery(lsWhere);
+                        //Check for existing inquiry with same SE
+                        if (MiscUtil.RecordCount(loRS) > 0){
+                            while(loRS.next()){
+                                lsID = loRS.getString("sInqryIDx");
+                                lsTransNo = loRS.getString("sTransNox");
+                                lsInqdate = xsDateShort(loRS.getDate("dTransact"));
+                                lsStat = loRS.getString("sTranStat");
+                            }
+                            MiscUtil.close(loRS);
+
+                            loJSON.put("result", "error");
+                            loJSON.put("sTransNox",lsTransNo);
+                            loJSON.put("message", "An existing inquiry with the same customer."
+                                                    + "\nPlease update this one instead of creating a new inquiry record."
+                                                    + "\n\n<Inquiry ID : " + lsID + ">"
+                                                    + "\n<Inquiry Date: " + lsInqdate + ">"
+                                                    + "\n<Inquiry Status: " + lsStat + ">"
+                                                    + "\n\nDo you want to open Record?");
+                            return loJSON;
+
+                        } 
+
+                        // 2.
+                        //if same cust code is to be used by another SE, validate the status of the existing inquiry (check reservations, etc). 
+                        //Allow to be re-used if status is for follow up and Lost/Cancelled  only
+                        lsWhere = MiscUtil.addCondition(lsSQL, " a.sClientID = " + SQLUtil.toSQL(poModel.getClientID()) 
+                                                            + " AND a.sEmployID <> " + SQLUtil.toSQL(lsEmpID) 
+                                                            + " AND a.sTransNox <> " + SQLUtil.toSQL(poModel.getTransNo()) 
+                                                            + " AND (a.cTranStat = '1' OR a.cTranStat = '3')" 
+                                                            );
+
+                        System.out.println("EXISTING INQUIRY ON PROCESS AND WITH VSP WITH SAME CUSTOMER CHECK: " + lsWhere);
+                        loRS = poGRider.executeQuery(lsWhere);
+                        //Check for existing inquiry with same SE
+                        if (MiscUtil.RecordCount(loRS) > 0){
+                            while(loRS.next()){
+                                lsID = loRS.getString("sInqryIDx");
+                                lsTransNo =  loRS.getString("sTransNox");
+                                lsInqdate = xsDateShort(loRS.getDate("dTransact"));
+                                lsDesc = loRS.getString("sCompnyNm");
+                                lsEmpl = loRS.getString("sSalesExe");
+                                lsStat = loRS.getString("sTranStat");
+                            }
+                            MiscUtil.close(loRS);
+
+                            //Check for existing reservation
+                            lsInqRsv = " SELECT "
+                                    + "   sTransNox "
+                                    + " , dTransact "
+                                    + " , sReferNox "
+                                    + " , sClientID "
+                                    + " , nAmountxx "
+                                    + " , sSourceNo "
+                                    + " FROM customer_inquiry_reservation"
+                                    + " WHERE cTranStat = '2' "
+                                    + " AND sSourceNo = " + SQLUtil.toSQL(lsTransNo) ;
+                            System.out.println("EXISTING INQUIRY RESERVATION CHECK: " + lsInqRsv);
+                            loRS = poGRider.executeQuery(lsInqRsv);
+                            if (MiscUtil.RecordCount(loRS) > 0){
+                                MiscUtil.close(loRS);
+
+                                loJSON.put("result", "error");
+                                loJSON.put("sTransNox",lsTransNo);
+                                loJSON.put("message", "Found an existing inquiry record for " + lsDesc.toUpperCase() + " with vehicle reservation."
+                                                        + "\n\n<Sales Executive: " + lsEmpl.toUpperCase() + ">"
+                                                        + "\n<Inquiry ID: " + lsID + ">"
+                                                        + "\n<Inquiry Date: " + lsInqdate + ">"
+                                                        + "\n<Inquiry Status: " + lsStat + ">"
+                                                        + "\n\nDo you want to open Record?");
+                                return loJSON;
+                            }
+
+                            loJSON.put("result", "error");
+                            loJSON.put("sTransNox",lsTransNo);
+                            loJSON.put("message", "Found an existing inquiry record for " + lsDesc.toUpperCase() 
+                                                    + "\n\n<Sales Executive: " + lsEmpl.toUpperCase() + ">"
+                                                    + "\n<Inquiry ID: " + lsID + ">"
+                                                    + "\n<Inquiry Date: " + lsInqdate + ">"
+                                                    + "\n<Inquiry Status: " + lsStat + ">"
+                                                    + "\n\nDo you want to open Record?");
+                            return loJSON;
+                        } 
+                    }
+                }
+            }
+        
+        } catch (SQLException ex) {
+            Logger.getLogger(Inquiry_Master.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return loJSON;
+    }
+    
     public JSONObject searchOnlinePlatform(String fsValue) {
-        poJSON = new JSONObject();
+        JSONObject loJSON = new JSONObject();
         
         if(!poModel.getSourceCD().equals("1")){
-            poJSON.put("result", "error");
-            poJSON.put("message", "Invalid Inquiry type.");
-            return poJSON;
+            loJSON.put("result", "error");
+            loJSON.put("message", "Invalid Inquiry type.");
+            return loJSON;
         }
         
         String lsSQL =  "  SELECT " 
@@ -531,7 +765,7 @@ public class Inquiry_Master implements GTransaction {
         lsSQL = MiscUtil.addCondition(lsSQL, "sPlatform LIKE " + SQLUtil.toSQL(fsValue + "%"));  
 
         System.out.println("SEARCH ONLINE PLATFORMS: " + lsSQL);
-        poJSON = ShowDialogFX.Search(poGRider,
+        loJSON = ShowDialogFX.Search(poGRider,
                 lsSQL,
                 fsValue,
                     "Platfrom",
@@ -539,10 +773,10 @@ public class Inquiry_Master implements GTransaction {
                     "sPlatform",
                 0);
 
-        if (poJSON != null) {
-            if(!"error".equals((String) poJSON.get("result"))){
-                poModel.setSourceNo((String) poJSON.get("sTransNox"));
-                poModel.setPlatform((String) poJSON.get("sPlatform"));
+        if (loJSON != null) {
+            if(!"error".equals((String) loJSON.get("result"))){
+                poModel.setSourceNo((String) loJSON.get("sTransNox"));
+                poModel.setPlatform((String) loJSON.get("sPlatform"));
             } else {
                 poModel.setSourceNo("");
                 poModel.setPlatform("");
@@ -550,17 +784,17 @@ public class Inquiry_Master implements GTransaction {
         } else {
             poModel.setSourceNo("");
             poModel.setPlatform("");
-            poJSON = new JSONObject();
-            poJSON.put("result", "error");
-            poJSON.put("message", "No record loaded.");
-            return poJSON;
+            loJSON = new JSONObject();
+            loJSON.put("result", "error");
+            loJSON.put("message", "No record loaded.");
+            return loJSON;
         }
         
-        return poJSON;
+        return loJSON;
     }
     
     public JSONObject searchActivity(String fsValue) {
-        poJSON = new JSONObject();
+        JSONObject loJSON = new JSONObject();
         String lsHeader = "Actvitiy Date From»Actvitiy Date To»Activity ID»Activity No»Activity Title";
         String lsColName = "dDateFrom»dDateThru»sActvtyID»sActNoxxx»sActTitle"; 
         String lsCriteria = "dDateFrom»dDateThru»sActvtyID»sActNoxxx»sActTitle";
@@ -577,9 +811,9 @@ public class Inquiry_Master implements GTransaction {
         }
         
         if(lsEventType.trim().isEmpty()){
-            poJSON.put("result", "error");
-            poJSON.put("message", "Invalid Inquiry type.");
-            return poJSON;
+            loJSON.put("result", "error");
+            loJSON.put("message", "Invalid Inquiry type.");
+            return loJSON;
         }
         
         String lsSQL =    " SELECT "                                                                   
@@ -600,7 +834,7 @@ public class Inquiry_Master implements GTransaction {
                                                 + " AND a.dDateThru >=" + SQLUtil.toSQL(xsDateShort(poModel.getTransactDte())));  
 
         System.out.println("SEARCH ACTIVITY: " + lsSQL);
-        poJSON = ShowDialogFX.Search(poGRider,
+        loJSON = ShowDialogFX.Search(poGRider,
                 lsSQL,
                 fsValue,
                     lsHeader,
@@ -608,10 +842,10 @@ public class Inquiry_Master implements GTransaction {
                     lsCriteria,
                 0);
 
-        if (poJSON != null) {
-            if(!"error".equals((String) poJSON.get("result"))){
-                poModel.setActvtyID((String) poJSON.get("sActvtyID"));
-                poModel.setActTitle((String) poJSON.get("sActTitle"));
+        if (loJSON != null) {
+            if(!"error".equals((String) loJSON.get("result"))){
+                poModel.setActvtyID((String) loJSON.get("sActvtyID"));
+                poModel.setActTitle((String) loJSON.get("sActTitle"));
             } else {
                 poModel.setActvtyID("");
                 poModel.setActTitle("");
@@ -619,13 +853,13 @@ public class Inquiry_Master implements GTransaction {
         } else {
             poModel.setActvtyID("");
             poModel.setActTitle("");
-            poJSON = new JSONObject();
-            poJSON.put("result", "error");
-            poJSON.put("message", "No record loaded.");
-            return poJSON;
+            loJSON = new JSONObject();
+            loJSON.put("result", "error");
+            loJSON.put("message", "No record loaded.");
+            return loJSON;
         }
         
-        return poJSON;
+        return loJSON;
     }
     
     public static String xsDateShort(Date fdValue) {
@@ -642,8 +876,15 @@ public class Inquiry_Master implements GTransaction {
         return lsResult;
     }
     
+    /*Convert Date to String*/
+    private LocalDate strToDate(String val) {
+        DateTimeFormatter date_formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate localDate = LocalDate.parse(val, date_formatter);
+        return localDate;
+    }
+    
     public JSONObject searchBranch(String fsValue) {
-        poJSON = new JSONObject();
+        JSONObject loJSON = new JSONObject();
         
         String lsSQL =   " SELECT "
                 + " IFNULL(a.sBranchCd, '') sBranchCd "
@@ -656,7 +897,7 @@ public class Inquiry_Master implements GTransaction {
                 + " AND sBranchNm LIKE " + SQLUtil.toSQL(fsValue + "%");
 
         System.out.println("SEARCH BRANCH: " + lsSQL);
-        poJSON = ShowDialogFX.Search(poGRider,
+        loJSON = ShowDialogFX.Search(poGRider,
                 lsSQL,
                 fsValue,
                     "Branch Code»Branch Name",
@@ -664,10 +905,10 @@ public class Inquiry_Master implements GTransaction {
                     "sBranchCd»sBranchNm",
                 1);
 
-        if (poJSON != null) {
-            if(!"error".equals((String) poJSON.get("result"))){
-                poModel.setBranchCd((String) poJSON.get("sBranchCd"));
-                poModel.setBranchNm((String) poJSON.get("sBranchNm"));
+        if (loJSON != null) {
+            if(!"error".equals((String) loJSON.get("result"))){
+                poModel.setBranchCd((String) loJSON.get("sBranchCd"));
+                poModel.setBranchNm((String) loJSON.get("sBranchNm"));
             } else {
                 poModel.setBranchCd("");
                 poModel.setBranchNm("");
@@ -675,15 +916,300 @@ public class Inquiry_Master implements GTransaction {
         } else {
             poModel.setBranchCd("");
             poModel.setBranchNm("");
-            poJSON = new JSONObject();
-            poJSON.put("result", "error");
-            poJSON.put("message", "No record loaded.");
-            return poJSON;
+            loJSON = new JSONObject();
+            loJSON.put("result", "error");
+            loJSON.put("message", "No record loaded.");
+            return loJSON;
         }
         
-        return poJSON;
+        return loJSON;
     }
     
+    public JSONObject searchAvlVhcl(String fsValue) {
+        JSONObject loJSON = new JSONObject();
+        
+        if(poModel.getIsVhclNw() == null){
+            loJSON.put("result", "error");
+            loJSON.put("message", "Vehicle Category is not set.");
+        } else {
+            if(poModel.getIsVhclNw().trim().isEmpty()){
+                loJSON.put("result", "error");
+                loJSON.put("message", "Vehicle Category is not set.");
+            }
+        }
+        
+        String lsHeader = "Vehicle Serial ID»CS No.»Plate No.»Engine No»Frame No»Vehicle Description";
+        String lsColName = "sSerialID»sCSNoxxxx»sPlateNox»sEngineNo»sFrameNox»sDescript"; 
+        String lsColCrit = "a.sSerialID»a.sCSNoxxxx»b.sPlateNox»a.sEngineNo»a.sFrameNox»c.sDescript";
+        
+        String lsSQL =    " SELECT "                                                               
+                        + "    a.sSerialID "                                                       
+                        + "  , a.sFrameNox "                                                       
+                        + "  , a.sEngineNo "                                                       
+                        + "  , a.sCSNoxxxx "                                                        
+                        + "  , a.cVhclNewx "                                                        
+                        + "  , a.cSoldStat "                                                      
+                        + "  , b.sPlateNox "                                                       
+                        + "  , c.sDescript "                                                       
+                        + " FROM vehicle_serial a "                                                
+                        + " LEFT JOIN vehicle_serial_registration b ON b.sSerialID = a.sSerialID " 
+                        + " LEFT JOIN vehicle_master c ON c.sVhclIDxx = a.sVhclIDxx"
+                        + " WHERE a.cSoldStat = '1' "
+                        + " AND a.cVhclNewx = " + SQLUtil.toSQL(poModel.getIsVhclNw())  //(TRIM(a.sClientID) = '' OR a.sClientID = NULL) AND 
+                        + " AND ( a.sCSNoxxxx LIKE " + SQLUtil.toSQL(fsValue + "%") 
+                        + " OR b.sPlateNox LIKE " + SQLUtil.toSQL(fsValue + "%") + " ) " ;
+//        if(fbIsBrandNew){
+//            lsSQL = lsSQL + " AND a.cVhclNewx = '0' " ;
+//        } else {
+//            lsSQL = lsSQL + " AND a.cVhclNewx = '1' ";
+//        }
+        
+//        lsSQL = lsSQL +  " AND ( a.sCSNoxxxx LIKE " + SQLUtil.toSQL(fsValue + "%") 
+//                      + " OR b.sPlateNox LIKE " + SQLUtil.toSQL(fsValue + "%") + " ) " ;
+        
+        System.out.println("SEARCH AVAILABLE VEHICLE: " + lsSQL);
+        loJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                    lsHeader,
+                    lsColName,
+                    lsColCrit,
+                     1);
+
+        if (loJSON != null) {
+//            if(!"error".equals((String) loJSON.get("result"))){
+//                poModel.setSerialID((String) loJSON.get("sSerialID"));
+//                poModel.setFrameNo((String) loJSON.get("sFrameNox"));
+//                poModel.setEngineNo((String) loJSON.get("sEngineNo"));
+//                poModel.setCSNo((String) loJSON.get("sCSNoxxxx"));
+//                poModel.setPlateNo((String) loJSON.get("sPlateNox"));
+//                poModel.setDescript((String) loJSON.get("sDescript"));
+//            } else {
+//                poModel.setSerialID("");
+//                poModel.setFrameNo("");
+//                poModel.setEngineNo("");
+//                poModel.setCSNo("");
+//                poModel.setPlateNo("");
+//                poModel.setDescript("");
+//            }
+        } else {
+//            poModel.setSerialID("");
+//            poModel.setFrameNo("");
+//            poModel.setEngineNo("");
+//            poModel.setCSNo("");
+//            poModel.setPlateNo("");
+//            poModel.setDescript("");
+            loJSON = new JSONObject();
+            loJSON.put("result", "error");
+            loJSON.put("message", "No record loaded.");
+            return loJSON;
+        }
+        
+        return loJSON;
+    }
+    
+    public JSONObject checkVhclAvailability(String fsValue){
+        JSONObject loJSON = new JSONObject();
+        try {
+            //TODO
+            //1. CHECK FOR: DR EXIST
+            String lsCSPlateNo = "";
+            String lsID = "";
+            String lsDesc = "";
+            String lsSQL =    " SELECT "                                                              
+                            + "   a.sTransNox "                                                       
+                            + " , a.dTransact "                                                       
+                            + " , a.sClientID "                                                       
+                            + " , a.sSerialID "                                                       
+                            + " , a.sReferNox "                                                       
+                            + " , b.sCompnyNm "                                                       
+                            + " , c.sCSNoxxxx "                                                       
+                            + " , c.sFrameNox "                                                       
+                            + " , c.sEngineNo "                                                       
+                            + " , d.sPlateNox "                                                       
+                            + " FROM udr_master a "                                                   
+                            + " LEFT JOIN client_master b ON b.sClientID = a.sClientID  "             
+                            + " LEFT JOIN vehicle_serial c ON c.sSerialID = a.sSerialID "             
+                            + " LEFT JOIN vehicle_serial_registration d ON d.sSerialID = a.sSerialID "
+                            + " WHERE a.cTranStat <> '0' "
+                            + " AND a.sSerialID = " + SQLUtil.toSQL(fsValue);
+            System.out.println("CHECK FOR: DR EXIST: " + lsSQL);
+            ResultSet loRS = poGRider.executeQuery(lsSQL);
+            if (MiscUtil.RecordCount(loRS) > 0){
+                while(loRS.next()){
+                    lsDesc = loRS.getString("sCompnyNm");
+                    lsID = loRS.getString("sReferNox");
+
+                    if(loRS.getString("sPlateNox") != null){
+                        lsCSPlateNo = loRS.getString("sPlateNox");
+                    } else {
+                        lsCSPlateNo = loRS.getString("sCSNoxxxx");
+                    }
+
+                }
+                loJSON.put("result", "error");
+                loJSON.put("message", "Plate No./CS No. " + lsCSPlateNo + " has been SOLD already. See Unit Delivery Receipt No. " + lsID + ".");
+                return loJSON;
+            }
+            
+            //2. CHECK FOR: VSP EXIST
+            lsCSPlateNo = "";
+            lsID = "";
+            lsDesc = "";
+            lsSQL =    " SELECT "                                                              
+                        + "   a.sTransNox "                                                       
+                        + " , a.dTransact "                                                       
+                        + " , a.sClientID "                                                       
+                        + " , a.sSerialID "                                                       
+                        + " , a.sVSPNOxxx "                                                         
+                        + " , a.cIsVhclNw "                                                      
+                        + " , b.sCompnyNm "                                                       
+                        + " , c.sCSNoxxxx "                                                       
+                        + " , c.sFrameNox "                                                       
+                        + " , c.sEngineNo "                                                       
+                        + " , d.sPlateNox "                                                      
+                        + " FROM vsp_master a "                                                   
+                        + " LEFT JOIN client_master b ON b.sClientID = a.sClientID  "             
+                        + " LEFT JOIN vehicle_serial c ON c.sSerialID = a.sSerialID "             
+                        + " LEFT JOIN vehicle_serial_registration d ON d.sSerialID = a.sSerialID "
+                        + " WHERE a.cTranStat <> '0' "
+                        + " AND a.sSerialID = " + SQLUtil.toSQL(fsValue)
+                        + " AND a.cIsVhclNw = " + SQLUtil.toSQL(poModel.getIsVhclNw()) ;
+            System.out.println("CHECK FOR: VSP EXIST: " + lsSQL);
+            loRS = poGRider.executeQuery(lsSQL);
+            if (MiscUtil.RecordCount(loRS) > 0){
+                while(loRS.next()){
+                    lsDesc = loRS.getString("sCompnyNm");
+                    lsID = loRS.getString("sVSPNOxxx");
+
+                    if(loRS.getString("sPlateNox") != null){
+                        lsCSPlateNo = loRS.getString("sPlateNox");
+                    } else {
+                        lsCSPlateNo = loRS.getString("sCSNoxxxx");
+                    }
+
+                }
+                loJSON.put("result", "error");
+                loJSON.put("message", "Plate No./CS No. " + lsCSPlateNo + " has been SOLD already. SEE VSP No. " + lsID + ".");
+                return loJSON;
+            }
+            
+            //3. CHECK FOR: RESERVE UNIT
+            lsCSPlateNo = "";
+            lsID = "";
+            lsDesc = "";
+            lsSQL =    " SELECT "                                                              
+                        + "   a.sTransNox "                                                       
+                        + " , a.dTransact "                                                       
+                        + " , a.sClientID "                                                       
+                        + " , a.sSerialID "                                                       
+                        + " , a.sInqryIDx "                                                         
+                        + " , a.cIsVhclNw "                                                      
+                        + " , b.sCompnyNm "                                                       
+                        + " , c.sCSNoxxxx "                                                       
+                        + " , c.sFrameNox "                                                       
+                        + " , c.sEngineNo "                                                       
+                        + " , d.sPlateNox "                                                      
+                        + " FROM customer_inquiry a "                                                   
+                        + " LEFT JOIN client_master b ON b.sClientID = a.sClientID  "             
+                        + " LEFT JOIN vehicle_serial c ON c.sSerialID = a.sSerialID "             
+                        + " LEFT JOIN vehicle_serial_registration d ON d.sSerialID = a.sSerialID "
+                        + " WHERE a.sSerialID = " + SQLUtil.toSQL(fsValue)
+                        + " AND a.cIsVhclNw = " + SQLUtil.toSQL(poModel.getIsVhclNw())
+                        + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getClientID()) 
+                        + " AND a.cTranStat <> '5' AND a.cTranStat <> '2' AND a.cTranStat <> '4' " ;
+            System.out.println("CHECK FOR: RESERVATION EXIST: " + lsSQL);
+            loRS = poGRider.executeQuery(lsSQL);
+            if (MiscUtil.RecordCount(loRS) > 0){
+                while(loRS.next()){
+                    lsDesc = loRS.getString("sCompnyNm");
+
+                    if(loRS.getString("sPlateNox") != null){
+                        lsCSPlateNo = loRS.getString("sPlateNox");
+                    } else {
+                        lsCSPlateNo = loRS.getString("sCSNoxxxx");
+                    }
+
+                }
+                loJSON.put("result", "error");
+                loJSON.put("message",  "Plate No./CS No. " + lsCSPlateNo+ " is already RESERVED for Customer " + lsDesc + ".");
+                return loJSON;
+            }
+            
+            //4. CHECK FOR: VEHICLE CUSTOMER OWNERSHIP
+            lsCSPlateNo = "";
+            lsID = "";
+            lsDesc = "";
+            lsSQL =       " SELECT "                                                              
+                        + "   a.sClientID "                                                       
+                        + " , a.sSerialID "                                                       
+                        + " , a.sCSNoxxxx "                                                       
+                        + " , a.sFrameNox "                                                       
+                        + " , a.sEngineNo "                                                       
+                        + " , b.sCompnyNm "                                                       
+                        + " , c.sPlateNox "                                                       
+                        + " FROM vehicle_serial a "                                               
+                        + " LEFT JOIN client_master b ON b.sClientID = a.sClientID "              
+                        + " LEFT JOIN vehicle_serial_registration c ON c.sSerialID = a.sSerialID "
+                        + " WHERE a.sSerialID = " + SQLUtil.toSQL(fsValue)
+                        + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getClientID()) ;
+            System.out.println("CHECK FOR: VEHICLE CUSTOMER OWNERSHIP: " + lsSQL);
+            loRS = poGRider.executeQuery(lsSQL);
+            if (MiscUtil.RecordCount(loRS) > 0){
+                while(loRS.next()){
+                    lsDesc = loRS.getString("sCompnyNm");
+
+                    if(loRS.getString("sPlateNox") != null){
+                        lsCSPlateNo = loRS.getString("sPlateNox");
+                    } else {
+                        lsCSPlateNo = loRS.getString("sCSNoxxxx");
+                    }
+
+                }
+                loJSON.put("result", "error");
+                loJSON.put("message",  "Plate No./CS No. " + lsCSPlateNo+" has been named after " + lsDesc + ". Please verify.");
+                return loJSON;
+            }
+            
+            //5. CHECK FOR: AVAILABILITY BY VEHICLE STATUS
+//            lsCSPlateNo = "";
+//            lsID = "";
+//            lsDesc = "";
+//            lsSQL =   " SELECT "                                                              
+//                    + "   a.sClientID "                                                       
+//                    + " , a.sSerialID "                                                       
+//                    + " , a.sCSNoxxxx "                                                       
+//                    + " , a.sFrameNox "                                                       
+//                    + " , a.sEngineNo "                                                        
+//                    + " , a.cSoldStat "                                                      
+//                    + " , b.sPlateNox "                                                       
+//                    + " FROM vehicle_serial a "                                               
+//                    + " LEFT JOIN vehicle_serial_registration b ON b.sSerialID = a.sSerialID "
+//                    + " WHERE a.sSerialID = " + SQLUtil.toSQL(fsValue);
+//            System.out.println("CHECK FOR: AVAILABILITY BY VEHICLE STATUS: " + lsSQL);
+//            loRS = poGRider.executeQuery(lsSQL);
+//            if (MiscUtil.RecordCount(loRS) > 0){
+//                while(loRS.next()){
+//                    lsID = loRS.getString("cSoldStat");
+//                    
+//                    if(loRS.getString("sPlateNox") != null){
+//                        lsCSPlateNo = loRS.getString("sPlateNox");
+//                    } else {
+//                        lsCSPlateNo = loRS.getString("sCSNoxxxx");
+//                    }
+//
+//                }
+//                loJSON.put("result", "error");
+//                loJSON.put("message",  "Plate No./CS No. " + lsCSPlateNo+" has been named after " + lsDesc + ". Please verify.");
+//                return loJSON;
+//            }
+        
+        } catch (SQLException ex) {
+            Logger.getLogger(Inquiry_Master.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return loJSON;
+    }
 //    public JSONObject loadTestModel() {
 //        poJSON = new JSONObject();
 //        
@@ -723,7 +1249,7 @@ public class Inquiry_Master implements GTransaction {
 //    }
     
     public JSONObject loadTestModel(){
-        poJSON = new JSONObject();
+        JSONObject loJSON = new JSONObject();
         try {
 //            String lsSQL =   " SELECT "
 //                           + "  sDescript "
@@ -755,11 +1281,11 @@ public class Inquiry_Master implements GTransaction {
                     + " FROM vehicle_model a "                                 
                     + " LEFT JOIN vehicle_make b ON b.sMakeIDxx = a.sMakeIDxx ";
             if (MiscUtil.RecordCount(loRS) > 0){
-                lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' "
+                lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' AND (a.sBodyType <> '4' AND a.sBodyType <> '5') "  
                                                         + " AND b.sMakeDesc = (SELECT sValuexxx FROM xxxstandard_sets WHERE sDescript = 'mainproduct') "
                                                         + " GROUP BY a.sModelDsc ORDER BY a.sModelDsc DESC ");
             } else {
-                lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' "
+                lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' AND (a.sBodyType <> '4' AND a.sBodyType <> '5') "
                                                         //+ " AND b.sMakeDesc = (SELECT sValuexxx FROM xxxstandard_sets WHERE sDescript = 'affiliated_make') "
                                                         + " GROUP BY a.sModelDsc ORDER BY a.sModelDsc DESC ");
             }
@@ -771,15 +1297,17 @@ public class Inquiry_Master implements GTransaction {
                 poTestModel = factory.createCachedRowSet();
                 poTestModel.populate(loRS);
                 MiscUtil.close(loRS);
+                loJSON.put("result", "success");
+                loJSON.put("message", "Test Model load successfully.");
             } catch (SQLException e) {
-                poJSON.put("result", "error");
-                poJSON.put("message", e.getMessage());
+                loJSON.put("result", "error");
+                loJSON.put("message", e.getMessage());
             }
             
         } catch (SQLException ex) {
             Logger.getLogger(Inquiry_Master.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return poJSON;
+        return loJSON;
     }
     
     public int getTestModelCount() throws SQLException{
@@ -800,6 +1328,140 @@ public class Inquiry_Master implements GTransaction {
     
     public Object getTestModelDetail(int fnRow, String fsIndex) throws SQLException{
         return getTestModelDetail(fnRow, MiscUtil.getColumnIndex(poTestModel, fsIndex));
+    }
+    
+    public JSONObject loadBankApplicationList(){
+        JSONObject loJSON = new JSONObject();
+        try {
+            String lsSQL =    " SELECT "                                                 
+                            + "    a.sTransNox "                                         
+                            + "  , a.sApplicNo "                                         
+                            + "  , a.dAppliedx "                                         
+                            + "  , a.dApproved "                                         
+                            + "  , a.cPayModex "                                         
+                            + "  , a.sSourceCD "                                         
+                            + "  , a.sSourceNo "                                         
+                            + "  , a.sBrBankID "                                         
+                            + "  , a.sRemarksx "                                         
+                            + "  , a.cTranStat "                                         
+                            + "  , a.sCancelld "                                         
+                            + "  , a.dCancelld "                                         
+                            + "  , b.sBrBankNm "                                         
+                            + "  , c.sBankIDxx "                                         
+                            + "  , c.sBankName "                                          
+                            + "  , c.sBankType "                                          
+                            + " FROM bank_application a "                                
+                            + " LEFT JOIN banks_branches b ON b.sBrBankID = a.sBrBankID "
+                            + " LEFT JOIN banks c ON c.sBankIDxx = b.sBankIDxx ";
+            
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.sSourceNo = " + SQLUtil.toSQL(poModel.getTransNo()) 
+                                                    + " ORDER BY a.sTransNox DESC ");
+            System.out.println("LOAD BANK APPLICATIONS "+ lsSQL);
+            RowSetFactory factory = RowSetProvider.newFactory();
+            ResultSet loRS = poGRider.executeQuery(lsSQL);
+            try {
+                poBankApp = factory.createCachedRowSet();
+                poBankApp.populate(loRS);
+                MiscUtil.close(loRS);
+                loJSON.put("result", "success");
+                loJSON.put("message", "Bank Applications load successfully.");
+            } catch (SQLException e) {
+                loJSON.put("result", "error");
+                loJSON.put("message", e.getMessage());
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(Inquiry_Master.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return loJSON;
+    }
+    
+    public int getBankApplicationCount() throws SQLException{
+        if (poBankApp != null){
+            poBankApp.last();
+            return poBankApp.getRow();
+        }else{
+            return 0;
+        }
+    }
+    
+    public Object getBankApplicationDetail(int fnRow, int fnIndex) throws SQLException{
+        if (fnIndex == 0) return null;
+        
+        poBankApp.absolute(fnRow);
+        return poBankApp.getObject(fnIndex);
+    }
+    
+    public Object getBankApplicationDetail(int fnRow, String fsIndex) throws SQLException{
+        return getBankApplicationDetail(fnRow, MiscUtil.getColumnIndex(poBankApp, fsIndex));
+    }
+    
+    public JSONObject loadFollowUpList(){
+        JSONObject loJSON = new JSONObject();
+        try {
+            String lsSQL =    " SELECT "                                                    
+                            + "    a.sTransNox "                                            
+                            + "  , a.sReferNox "                                            
+                            + "  , a.dTransact "                                            
+                            + "  , a.sRemarksx "                                            
+                            + "  , a.sMessagex "                                            
+                            + "  , a.sMethodCd "                                            
+                            + "  , a.sSclMedia "                                            
+                            + "  , a.dFollowUp "                                            
+                            + "  , a.tFollowUp "                                            
+                            + "  , a.sGdsCmptr "                                            
+                            + "  , a.sMkeCmptr "                                            
+                            + "  , a.sDlrCmptr "                                            
+                            + "  , a.sRspnseCd "                                            
+                            + "  , a.sEmployID "                                              
+                            + "  , b.sPlatform "
+                            + "  , c.sCompnyNm "   
+                            //+ "  , d.sDisValue "                                            
+                            + " FROM customer_inquiry_followup  a "                         
+                            + " LEFT JOIN online_platforms b ON b.sTransNox = a.sSclMedia "
+                            + " LEFT JOIN GGC_ISysDBF.Client_Master c ON c.sClientID = a.sEmployID ";
+                            //+ " LEFT JOIN xxxform_typelist d ON d.sDataValx = a.sRspnseCd ";
+            
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.sTransNox = " + SQLUtil.toSQL(poModel.getTransNo()) 
+                                                    + " ORDER BY a.dTransact ASC ");
+            System.out.println("LOAD FOLLOW UPS "+ lsSQL);
+            RowSetFactory factory = RowSetProvider.newFactory();
+            ResultSet loRS = poGRider.executeQuery(lsSQL);
+            try {
+                poFollowUp = factory.createCachedRowSet();
+                poFollowUp.populate(loRS);
+                MiscUtil.close(loRS);
+                loJSON.put("result", "success");
+                loJSON.put("message", "Follow Ups load successfully.");
+            } catch (SQLException e) {
+                loJSON.put("result", "error");
+                loJSON.put("message", e.getMessage());
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(Inquiry_Master.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return loJSON;
+    }
+    
+    public int getFollowUpCount() throws SQLException{
+        if (poFollowUp != null){
+            poFollowUp.last();
+            return poFollowUp.getRow();
+        }else{
+            return 0;
+        }
+    }
+    
+    public Object getFollowUpDetail(int fnRow, int fnIndex) throws SQLException{
+        if (fnIndex == 0) return null;
+        
+        poFollowUp.absolute(fnRow);
+        return poFollowUp.getObject(fnIndex);
+    }
+    
+    public Object getFollowUpDetail(int fnRow, String fsIndex) throws SQLException{
+        return getFollowUpDetail(fnRow, MiscUtil.getColumnIndex(poFollowUp, fsIndex));
     }
     
 }

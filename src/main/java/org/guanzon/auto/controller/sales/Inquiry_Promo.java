@@ -145,14 +145,13 @@ public class Inquiry_Promo {
         }
         
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
-            if(lnCtr>0){
-                if(paDetail.get(lnCtr).getPromoID().isEmpty()){
-                    paDetail.remove(lnCtr);
-                    lnCtr++;
-                    if(lnCtr > lnSize){
-                        break;
-                    } 
-                }
+            if(paDetail.get(lnCtr).getPromoID().isEmpty()){
+                continue; //skip instead of removing the actual detail
+//                    paDetail.remove(lnCtr);
+//                    lnCtr++;
+//                    if(lnCtr > lnSize){
+//                        break;
+//                    } 
             }
             
             paDetail.get(lnCtr).setTransNo(fsTransNo);
@@ -187,10 +186,8 @@ public class Inquiry_Promo {
     public Object removeDetail(int fnRow){
         JSONObject loJSON = new JSONObject();
         
-        if(paDetail.get(fnRow).getEntryBy() == null){
-            RemoveDetail(fnRow);
-        } else {
-            if(paDetail.get(fnRow).getEntryBy().trim().isEmpty()){
+        if(paDetail.get(fnRow).getEntryBy() != null){
+            if(!paDetail.get(fnRow).getEntryBy().trim().isEmpty()){
                 RemoveDetail(fnRow);
             }
         }
