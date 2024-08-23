@@ -60,6 +60,8 @@ public class VehicleSalesProposal_Labor {
             paDetail.get(0).newRecord();
             
             paDetail.get(0).setValue("sTransNox", fsTransNo);
+            paDetail.get(0).setValue("dAddDatex", poGRider.getServerDate());
+            paDetail.get(0).setValue("sAddByxxx", poGRider.getUserID());
             poJSON.put("result", "success");
             poJSON.put("message", "VSP Labor add record.");
         } else {
@@ -67,6 +69,9 @@ public class VehicleSalesProposal_Labor {
             paDetail.get(paDetail.size()-1).newRecord();
 
             paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
+            paDetail.get(paDetail.size()-1).setValue("dAddDatex", poGRider.getServerDate());
+            paDetail.get(paDetail.size()-1).setValue("sAddByxxx", poGRider.getUserID());
+            
             poJSON.put("result", "success");
             poJSON.put("message", "VSP Labor add record.");
         }
@@ -219,7 +224,7 @@ public class VehicleSalesProposal_Labor {
         return poJSON;
     }
     
-    public JSONObject searchLabor(String fsValue) {
+    public JSONObject searchLabor(String fsValue, boolean withUI) {
         poJSON = new JSONObject();
         String lsHeader = "ID»Description";
         String lsColName = "sLaborCde»sLaborDsc"; 
@@ -230,13 +235,18 @@ public class VehicleSalesProposal_Labor {
                 + " , sLaborDsc "                                      
                 + " , cRecdStat "                                      
                 + " FROM labor " ; 
+        if(withUI){
+            lsSQL = MiscUtil.addCondition(lsSQL,  " cRecdStat = '1' "
+                                                + " AND sLaborDsc LIKE " + SQLUtil.toSQL(fsValue + "%"));
+        } else {
+            lsSQL = MiscUtil.addCondition(lsSQL,  " cRecdStat = '1' "
+                                                + " AND sLaborCde = " + SQLUtil.toSQL(fsValue));
+        }
         
-        lsSQL = MiscUtil.addCondition(lsSQL,  " cRecdStat = '1' "
-                                                + " AND sLaborDsc LIKE " + SQLUtil.toSQL(fsValue));
         System.out.println("SEARCH LABOR: " + lsSQL);
         poJSON = ShowDialogFX.Search(poGRider,
                 lsSQL,
-                "",
+                fsValue,
                     lsHeader,
                     lsColName,
                     lsCriteria,

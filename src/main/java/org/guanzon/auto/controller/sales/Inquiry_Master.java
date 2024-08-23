@@ -543,7 +543,6 @@ public class Inquiry_Master implements GTransaction {
         return loJSON;
     }
     
-    
     public JSONObject checkExistingTransaction(boolean fbisClient){
         JSONObject loJSON = new JSONObject();
         
@@ -954,7 +953,7 @@ public class Inquiry_Master implements GTransaction {
                         + " FROM vehicle_serial a "                                                
                         + " LEFT JOIN vehicle_serial_registration b ON b.sSerialID = a.sSerialID " 
                         + " LEFT JOIN vehicle_master c ON c.sVhclIDxx = a.sVhclIDxx"
-                        + " WHERE a.cSoldStat = '1' "
+                        + " WHERE a.cSoldStat <> '0' "
                         + " AND a.cVhclNewx = " + SQLUtil.toSQL(poModel.getIsVhclNw())  //(TRIM(a.sClientID) = '' OR a.sClientID = NULL) AND 
                         + " AND ( a.sCSNoxxxx LIKE " + SQLUtil.toSQL(fsValue + "%") 
                         + " OR b.sPlateNox LIKE " + SQLUtil.toSQL(fsValue + "%") + " ) " ;
@@ -1141,18 +1140,18 @@ public class Inquiry_Master implements GTransaction {
             lsID = "";
             lsDesc = "";
             lsSQL =       " SELECT "                                                              
-                        + "   a.sClientID "                                                       
-                        + " , a.sSerialID "                                                       
-                        + " , a.sCSNoxxxx "                                                       
-                        + " , a.sFrameNox "                                                       
-                        + " , a.sEngineNo "                                                       
-                        + " , b.sCompnyNm "                                                       
+                        + "   a.sClientID "                                                      
+                        + " , a.sCompnyNm "                                                        
+                        + " , b.sSerialID "                                                       
+                        + " , b.sCSNoxxxx "                                                       
+                        + " , b.sFrameNox "                                                       
+                        + " , b.sEngineNo "                                                       
                         + " , c.sPlateNox "                                                       
-                        + " FROM vehicle_serial a "                                               
-                        + " LEFT JOIN client_master b ON b.sClientID = a.sClientID "              
-                        + " LEFT JOIN vehicle_serial_registration c ON c.sSerialID = a.sSerialID "
-                        + " WHERE a.sSerialID = " + SQLUtil.toSQL(fsValue)
-                        + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getClientID()) ;
+                        + " FROM client_master a "                                               
+                        + " LEFT JOIN vehicle_serial b ON b.sClientID = a.sClientID "              
+                        + " LEFT JOIN vehicle_serial_registration c ON c.sSerialID = b.sSerialID "
+                        + " WHERE b.sSerialID = " + SQLUtil.toSQL(fsValue)
+                        + " AND b.sClientID <> " + SQLUtil.toSQL(poModel.getClientID()) ;
             System.out.println("CHECK FOR: VEHICLE CUSTOMER OWNERSHIP: " + lsSQL);
             loRS = poGRider.executeQuery(lsSQL);
             if (MiscUtil.RecordCount(loRS) > 0){

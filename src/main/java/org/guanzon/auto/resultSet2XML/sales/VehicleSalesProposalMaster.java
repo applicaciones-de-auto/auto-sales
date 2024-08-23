@@ -134,7 +134,7 @@ public class VehicleSalesProposalMaster {
                         + " , l.sCompnyNm AS sAgentNmx "                                                  
                         + " , h.sEmployID              "                                                  
                         + " , m.sCompnyNm AS sSENamexx "                                                  
-                        + " , n.nAmountxx AS nRsvAmtTl "                                                  
+                        //+ " , n.nAmountxx AS nRsvAmtTl "                                                  
                           /*CO-CLIENT*/                                                                   
                         + " , o.sCompnyNm AS sCoCltNmx "                                                  
                           /*VEHICLE INFORMATION*/                                                         
@@ -170,7 +170,7 @@ public class VehicleSalesProposalMaster {
                         + " LEFT JOIN online_platforms k ON k.sTransNox = h.sSourceNo "                   
                         + " LEFT JOIN client_master l ON l.sClientID = h.sAgentIDx    "                   
                         + " LEFT JOIN ggc_isysdbf.client_master m ON m.sClientID = h.sEmployID    "       
-                        + " LEFT JOIN customer_inquiry_reservation n ON n.sSourceNo = a.sInqryIDx "       
+                        //+ " LEFT JOIN customer_inquiry_reservation n ON n.sSourceNo = a.sInqryIDx "       
                          /*CO CLIENT*/                                                                    
                         + " LEFT JOIN client_master o ON o.sClientID = a.sCoCltIDx "                      
                          /*VEHICLE INFORMATION*/                                                          

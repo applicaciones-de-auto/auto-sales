@@ -60,8 +60,6 @@ public class Bank_Application implements GTransaction {
         return poModel;
     }
     
-    
-
     @Override
     public JSONObject setMaster(int fnCol, Object foData) {
         JSONObject obj = new JSONObject();

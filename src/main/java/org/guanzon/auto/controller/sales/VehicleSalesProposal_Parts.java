@@ -8,6 +8,7 @@ package org.guanzon.auto.controller.sales;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import org.guanzon.appdriver.agent.ShowDialogFX;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
@@ -59,6 +60,9 @@ public class VehicleSalesProposal_Parts {
             paDetail.get(0).newRecord();
             
             paDetail.get(0).setValue("sTransNox", fsTransNo);
+            paDetail.get(0).setValue("dAddDatex", poGRider.getServerDate());
+            paDetail.get(0).setValue("sAddByxxx", poGRider.getUserID());
+            
             poJSON.put("result", "success");
             poJSON.put("message", "VSP Parts add record.");
         } else {
@@ -66,6 +70,9 @@ public class VehicleSalesProposal_Parts {
             paDetail.get(paDetail.size()-1).newRecord();
 
             paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
+            paDetail.get(paDetail.size()-1).setValue("dAddDatex", poGRider.getServerDate());
+            paDetail.get(paDetail.size()-1).setValue("sAddByxxx", poGRider.getUserID());
+            
             poJSON.put("result", "success");
             poJSON.put("message", "VSP Parts add record.");
         }
@@ -224,6 +231,41 @@ public class VehicleSalesProposal_Parts {
             poJSON.put("result", "success");
             poJSON.put("message", "added to remove record.");
         }
+        return poJSON;
+    }
+    
+    public JSONObject searchParts(String fsValue) {
+        poJSON = new JSONObject();
+        String lsHeader = "ID»Description";
+        String lsColName = "sBarCodex»sDescript"; 
+        String lsCriteria = "sBarCodex»sDescript";
+        
+        String lsSQL =   " SELECT "                                             
+                + "   sBarCodex "                                      
+                + " , sDescript "                                      
+                + " , cRecdStat "                                      
+                + " FROM inventory " ; 
+        lsSQL = MiscUtil.addCondition(lsSQL,  " cRecdStat = '1' "
+                                                + " AND sBarCodex LIKE " + SQLUtil.toSQL(fsValue + "%"));
+        
+        
+        System.out.println("SEARCH PARTS: " + lsSQL);
+        poJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                    lsHeader,
+                    lsColName,
+                    lsCriteria,
+                1);
+
+        if (poJSON != null) {
+        } else {
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No record loaded.");
+            return poJSON;
+        }
+        
         return poJSON;
     }
 }

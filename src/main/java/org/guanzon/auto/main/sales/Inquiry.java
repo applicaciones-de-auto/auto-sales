@@ -313,14 +313,39 @@ public class Inquiry implements GTransaction{
     
     public JSONObject searchAvlVhcl(String fsValue) {
         JSONObject loJSON = new JSONObject();
+        JSONObject loJSONCheck = new JSONObject();
+        
         loJSON = poController.searchAvlVhcl(fsValue);
-        if(!"error".equals(loJSON.get("result"))){
-            poController.getMasterModel().setSerialID((String) loJSON.get("sSerialID"));
-            poController.getMasterModel().setFrameNo((String) loJSON.get("sFrameNox"));
-            poController.getMasterModel().setEngineNo((String) loJSON.get("sEngineNo"));
-            poController.getMasterModel().setCSNo((String) loJSON.get("sCSNoxxxx"));
-            poController.getMasterModel().setPlateNo((String) loJSON.get("sPlateNox"));
-            poController.getMasterModel().setDescript((String) loJSON.get("sDescript"));
+        
+        if(!"error".equals((String) loJSON.get("result"))){
+            
+            //Check Vehicle Availability
+            loJSONCheck = poController.checkVhclAvailability((String) loJSON.get("sSerialID"));
+            if(!"error".equals((String) loJSONCheck.get("result"))){
+                poController.getMasterModel().setSerialID((String) loJSON.get("sSerialID"));
+                poController.getMasterModel().setFrameNo((String) loJSON.get("sFrameNox"));
+                poController.getMasterModel().setEngineNo((String) loJSON.get("sEngineNo"));
+                poController.getMasterModel().setDescript((String) loJSON.get("sDescript"));
+                
+                if((String) loJSON.get("sCSNoxxxx") == null){
+                    poController.getMasterModel().setCSNo("");
+                } else {
+                    poController.getMasterModel().setCSNo((String) loJSON.get("sCSNoxxxx"));
+                }
+                if((String) loJSON.get("sPlateNox") == null){
+                    poController.getMasterModel().setPlateNo("");
+                } else {
+                    poController.getMasterModel().setPlateNo((String) loJSON.get("sPlateNox"));
+                }
+            } else {
+                poController.getMasterModel().setSerialID("");
+                poController.getMasterModel().setFrameNo("");
+                poController.getMasterModel().setEngineNo("");
+                poController.getMasterModel().setCSNo("");
+                poController.getMasterModel().setPlateNo("");
+                poController.getMasterModel().setDescript("");
+                return loJSONCheck;
+            }
         } else {
             poController.getMasterModel().setSerialID("");
             poController.getMasterModel().setFrameNo("");
@@ -329,6 +354,7 @@ public class Inquiry implements GTransaction{
             poController.getMasterModel().setPlateNo("");
             poController.getMasterModel().setDescript("");
         }
+        
         return loJSON ;
     }
     
