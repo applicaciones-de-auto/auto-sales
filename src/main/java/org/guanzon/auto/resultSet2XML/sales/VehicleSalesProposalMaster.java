@@ -37,7 +37,7 @@ public class VehicleSalesProposalMaster {
         System.setProperty("sys.default.path.metadata", "D:/GGC_Maven_Systems/config/metadata/Model_VehicleSalesProposal_Master.xml");
         
         
-        String lsSQL =    " SELECT "                                                                      
+        String lsSQL =    " SELECT DISTINCT "                                                                      
                         + "   a.sTransNox "                                                               
                         + " , a.dTransact "                                                               
                         + " , a.sVSPNOxxx "                                                               
@@ -65,7 +65,9 @@ public class VehicleSalesProposalMaster {
                         + " , a.sInsurTyp "                                                               
                         + " , a.nInsurYrx "                                                               
                         + " , a.sInsTplCd "                                                               
-                        + " , a.sInsCodex "                                                               
+                        + " , a.sInsCodex "                                                                
+                        + " , a.nToLabDsc "                                                               
+                        + " , a.nToPrtDsc "                                                              
                         + " , a.nPromoDsc "                                                               
                         + " , a.nFleetDsc "                                                               
                         + " , a.nSPFltDsc "                                                               
@@ -134,7 +136,7 @@ public class VehicleSalesProposalMaster {
                         + " , l.sCompnyNm AS sAgentNmx "                                                  
                         + " , h.sEmployID              "                                                  
                         + " , m.sCompnyNm AS sSENamexx "                                                  
-                        //+ " , n.nAmountxx AS nRsvAmtTl "                                                  
+                        //+ " , SUM(n.nAmountxx) AS nRsvAmtTl "                                                  
                           /*CO-CLIENT*/                                                                   
                         + " , o.sCompnyNm AS sCoCltNmx "                                                  
                           /*VEHICLE INFORMATION*/                                                         
@@ -154,7 +156,12 @@ public class VehicleSalesProposalMaster {
                           /*BANK*/                                                                        
                         + " , x.sApplicNo "                                                               
                         + " , y.sBrBankNm "                                                               
-                        + " , z.sBankName "                                                               
+                        + " , z.sBankName " 
+                         /*VSP LINKED THRU THE FOLLOWING FORMS*/     
+                        + " , za.sReferNox AS sUDRNoxxx "
+                        + " , CONCAT(zb.sDSNoxxxx) AS sDSNoxxxx "
+                        + " , CONCAT(zd.sReferNox) AS sSINOxxxx "  
+                           /*TODO GATEPASS*/                                                               
                         + " FROM vsp_master a "                                                           
                          /*BUYING CUSTOMER*/                                                              
                         + " LEFT JOIN client_master b ON b.sClientID = a.sClientID "                      
@@ -188,7 +195,12 @@ public class VehicleSalesProposalMaster {
                          /*BANK*/                                                                         
                         + " LEFT JOIN bank_application x ON x.sTransNox = a.sBnkAppCD "                   
                         + " LEFT JOIN banks_branches y ON y.sBrBankID = x.sBrBankID   "                   
-                        + " LEFT JOIN banks z ON z.sBankIDxx = y.sBankIDxx            "
+                        + " LEFT JOIN banks z ON z.sBankIDxx = y.sBankIDxx            "  
+                         /*VSP LINKED THRU THE FOLLOWING FORMS*/                                                             
+                        + " LEFT JOIN udr_master za ON za.sSourceNo = a.sTransNox AND za.cTranStat = '1' "   
+                        + " LEFT JOIN diagnostic_master zb ON zb.sSourceNo = a.sTransNox AND zb.cTranStat = '1' "
+                        + " LEFT JOIN si_master_source zc ON zc.sSourceNo = a.sTransNox "
+                        + " LEFT JOIN si_master zd ON zd.sTransNox = zc.sReferNox AND zd.cTranStat = '1' "
                         + " WHERE 0=1";
         
         

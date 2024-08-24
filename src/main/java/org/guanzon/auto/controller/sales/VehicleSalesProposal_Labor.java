@@ -25,7 +25,7 @@ import org.json.simple.JSONObject;
 public class VehicleSalesProposal_Labor {
     final String XML = "Model_VehicleSalesProposal_Labor.xml";
     GRider poGRider;
-    String psBranchCd;
+    String psTargetBranchCd = "";
     boolean pbWtParent;
     
     int pnEditMode;
@@ -148,6 +148,20 @@ public class VehicleSalesProposal_Labor {
             return obj;
         }
         
+        if(psTargetBranchCd == null){
+            obj.put("result", "error");
+            obj.put("continue", false);
+            obj.put("message", "Target Branch code for vsp labor cannot be empty.");
+            return obj;
+        } else {
+            if(psTargetBranchCd.isEmpty()){
+                obj.put("result", "error");
+                obj.put("continue", false);
+                obj.put("message", "Target Branch code for vsp labor cannot be empty.");
+                return obj;
+            }
+        }
+        
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
             //if(lnCtr>0){
                 if(paDetail.get(lnCtr).getLaborCde().isEmpty()){
@@ -162,6 +176,7 @@ public class VehicleSalesProposal_Labor {
             
             paDetail.get(lnCtr).setTransNo(fsTransNo);
             paDetail.get(lnCtr).setEntryNo(lnCtr+1);
+            paDetail.get(lnCtr).setTargetBranchCd(psTargetBranchCd);
             
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.VehicleSalesProposal_Labor, paDetail.get(lnCtr));
             validator.setGRider(poGRider);
@@ -174,6 +189,9 @@ public class VehicleSalesProposal_Labor {
         }    
         
         return obj;
+    }
+    public void setTargetBranchCd(String fsBranchCd){
+        psTargetBranchCd = fsBranchCd;
     }
     
     public ArrayList<Model_VehicleSalesProposal_Labor> getDetailList(){

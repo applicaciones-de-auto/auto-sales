@@ -25,7 +25,7 @@ public class VehicleSalesProposal_Finance {
     
     final String FINANCE_XML = "Model_VehicleSalesProposal_Finance.xml";
     GRider poGRider;
-    String psBranchCd;
+    String psTargetBranchCd = "";
     boolean pbWtParent;
     
     int pnEditMode;
@@ -61,14 +61,15 @@ public class VehicleSalesProposal_Finance {
             paDetail.get(0).setValue("sTransNox", fsTransNo);
             poJSON.put("result", "success");
             poJSON.put("message", "VSP Finance add record.");
-        } else {
-            paDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
-            paDetail.get(paDetail.size()-1).newRecord();
-
-            paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
-            poJSON.put("result", "success");
-            poJSON.put("message", "VSP Finance add record.");
-        }
+        } 
+//        else {
+//            paDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
+//            paDetail.get(paDetail.size()-1).newRecord();
+//
+//            paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
+//            poJSON.put("result", "success");
+//            poJSON.put("message", "VSP Finance add record.");
+//        }
         return poJSON;
     }
     
@@ -144,6 +145,20 @@ public class VehicleSalesProposal_Finance {
             return obj;
         }
         
+        if(psTargetBranchCd == null){
+            obj.put("result", "error");
+            obj.put("continue", false);
+            obj.put("message", "Target Branch code for finance cannot be empty.");
+            return obj;
+        } else {
+            if(psTargetBranchCd.isEmpty()){
+                obj.put("result", "error");
+                obj.put("continue", false);
+                obj.put("message", "Target Branch code for finance cannot be empty.");
+                return obj;
+            }
+        }
+        
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
             //if(lnCtr>0){
                 if(paDetail.get(lnCtr).getTransNo().isEmpty()){
@@ -157,6 +172,7 @@ public class VehicleSalesProposal_Finance {
             //}
             
             paDetail.get(lnCtr).setTransNo(fsTransNo);
+            paDetail.get(lnCtr).setTargetBranchCd(psTargetBranchCd);
             
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.VehicleSalesProposal_Finance, paDetail.get(lnCtr));
             validator.setGRider(poGRider);
@@ -171,6 +187,10 @@ public class VehicleSalesProposal_Finance {
         return obj;
     }
     
+    public void setTargetBranchCd(String fsBranchCd){
+        psTargetBranchCd = fsBranchCd; 
+    }
+    
     public ArrayList<Model_VehicleSalesProposal_Finance> getDetailList(){
         if(paDetail == null){
            paDetail = new ArrayList<>();
@@ -183,5 +203,25 @@ public class VehicleSalesProposal_Finance {
     public void setDetail(int fnRow, String fsIndex, Object foValue){ paDetail.get(fnRow).setValue(fsIndex, foValue);}
     public Object getDetail(int fnRow, int fnIndex){return paDetail.get(fnRow).getValue(fnIndex);}
     public Object getDetail(int fnRow, String fsIndex){return paDetail.get(fnRow).getValue(fsIndex);}
+    
+//    public Model_VehicleSalesProposal_Finance getMasterModel() {
+//        return paDetail.get(0);
+//    }
+
+    public JSONObject setMaster(int fnCol, Object foData) {
+        return paDetail.get(0).setValue(fnCol, foData);
+    }
+
+    public JSONObject setMaster(String fsCol, Object foData) {
+        return setMaster(paDetail.get(0).getColumn(fsCol), foData);
+    }
+    
+    public Object getMaster(int fnCol) {
+        return paDetail.get(0).getValue(fnCol);
+    }
+
+    public Object getMaster(String fsCol) {
+        return getMaster(paDetail.get(0).getColumn(fsCol));
+    }
     
 }

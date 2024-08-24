@@ -49,6 +49,7 @@ public class InquiryReservation {
                         + "  , a.nPrintedx "                                                              
                         + "  , a.sResrvCde "                                                              
                         + "  , a.cResrvTyp "                                                              
+                        + "  , a.sTransIDx "                                                              
                         + "  , a.cTranStat "                                                              
                         + "  , a.sApproved "                                                              
                         + "  , a.dApproved "                                                              

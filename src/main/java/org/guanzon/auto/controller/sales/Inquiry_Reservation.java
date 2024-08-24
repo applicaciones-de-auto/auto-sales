@@ -80,7 +80,7 @@ public class Inquiry_Reservation {
         return poJSON;
     }
     
-    public JSONObject openDetail(String fsValue){
+    public JSONObject openDetail(String fsValue, boolean fbIsInq){
         paDetail = new ArrayList<>();
         paRemDetail = new ArrayList<>();
         poJSON = new JSONObject();
@@ -88,9 +88,14 @@ public class Inquiry_Reservation {
                         + "  sTransNox "                                             
                         + ", sReferNox "                                             
                         + ", sClientID "                                             
-                        + ", sSourceNo "                                            
+                        + ", sSourceNo "                                             
+                        + ", sTransIDx "                                            
                         + "  FROM customer_inquiry_reservation "  ;
-        lsSQL = MiscUtil.addCondition(lsSQL, " sSourceNo = " + SQLUtil.toSQL(fsValue));
+        if(fbIsInq){
+            lsSQL = MiscUtil.addCondition(lsSQL, " sSourceNo = " + SQLUtil.toSQL(fsValue));
+        } else {
+            lsSQL = MiscUtil.addCondition(lsSQL, " sTransIDx = " + SQLUtil.toSQL(fsValue));
+        }
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
         System.out.println(lsSQL);
@@ -119,6 +124,24 @@ public class Inquiry_Reservation {
             poJSON.put("result", "error");
             poJSON.put("message", e.getMessage());
         }
+        return poJSON;
+    }
+    
+    public JSONObject openRecord(String fsValue){
+        if(paDetail == null){
+           paDetail = new ArrayList<>();
+        }
+        
+        poJSON = new JSONObject();
+        paDetail.add(new Model_Inquiry_Reservation(poGRider));
+        poJSON = paDetail.get(paDetail.size() - 1).openRecord(fsValue);
+        
+        if(!"error".equals((String) poJSON.get("result"))){
+            pnEditMode = EditMode.UPDATE;
+            poJSON.put("result", "success");
+            poJSON.put("message", "Record loaded successfully.");
+        }
+        
         return poJSON;
     }
     
@@ -235,19 +258,23 @@ public class Inquiry_Reservation {
     public Object getDetail(int fnRow, String fsIndex){return paDetail.get(fnRow).getValue(fsIndex);}
     
     
-    public JSONObject removeDetail(int fnRow){
+    public JSONObject removeDetail(int fnRow, boolean fbIsInq){
         JSONObject loJSON = new JSONObject();
         
-        if(paDetail.get(fnRow).getEntryBy()== null){
-            paDetail.remove(fnRow);
-        } else {
-            if(paDetail.get(fnRow).getEntryBy().trim().isEmpty()){
+        if(fbIsInq){
+            if(paDetail.get(fnRow).getEntryBy()== null){
                 paDetail.remove(fnRow);
             } else {
-                loJSON.put("result", "error");
-                loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already saved.\n\nCancel reservation instead.");
-                return loJSON;
+                if(paDetail.get(fnRow).getEntryBy().trim().isEmpty()){
+                    paDetail.remove(fnRow);
+                } else {
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already saved.\n\nCancel reservation instead.");
+                    return loJSON;
+                }
             }
+        } else {
+            paDetail.remove(fnRow);
         }
         
         return loJSON;

@@ -7,10 +7,12 @@ package org.guanzon.auto.main.sales;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.iface.GTransaction;
+import org.guanzon.auto.controller.sales.Inquiry_Reservation;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Finance;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Labor;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Master;
@@ -34,12 +36,14 @@ public class VehicleSalesProposal implements GTransaction{
     VehicleSalesProposal_Finance poVSPFinance;
     VehicleSalesProposal_Labor poVSPLabor;
     VehicleSalesProposal_Parts poVSPParts;
+    Inquiry_Reservation poReservation;
     
     public VehicleSalesProposal(GRider foAppDrver, boolean fbWtParent, String fsBranchCd){
         poController = new VehicleSalesProposal_Master(foAppDrver,fbWtParent,fsBranchCd);
         poVSPFinance = new VehicleSalesProposal_Finance(foAppDrver);
         poVSPLabor = new VehicleSalesProposal_Labor(foAppDrver);
         poVSPParts = new VehicleSalesProposal_Parts(foAppDrver);
+        poReservation = new Inquiry_Reservation(foAppDrver);
         
         poGRider = foAppDrver;
         pbWtParent = fbWtParent;
@@ -122,6 +126,12 @@ public class VehicleSalesProposal implements GTransaction{
             return poJSON;
         }
         
+        poJSON = poReservation.openDetail(fsValue, false);
+        if(!"success".equals((String) checkData(poJSON).get("result"))){
+            pnEditMode = EditMode.UNKNOWN;
+            return poJSON;
+        }
+        
         return poJSON;
     }
 
@@ -153,19 +163,31 @@ public class VehicleSalesProposal implements GTransaction{
             return checkData(poJSON);
         }
         
+        poVSPFinance.setTargetBranchCd(poController.getMasterModel().getBranchCD());
         poJSON =  poVSPFinance.saveDetail((String) poController.getMasterModel().getTransNo());
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
         }
         
+        poVSPLabor.setTargetBranchCd(poController.getMasterModel().getBranchCD());
         poJSON =  poVSPLabor.saveDetail((String) poController.getMasterModel().getTransNo());
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
         }
         
+        poVSPParts.setTargetBranchCd(poController.getMasterModel().getBranchCD());
         poJSON =  poVSPParts.saveDetail((String) poController.getMasterModel().getTransNo());
+        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return checkData(poJSON);
+        }
+        
+        for(int lnCtr = 0; lnCtr <= getReservationList().size()-1; lnCtr++){
+            poReservation.setDetail(lnCtr, "sTransIDx", poController.getMasterModel().getTransNo());
+        }
+        poJSON =  poReservation.saveDetail("");
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
@@ -256,10 +278,26 @@ public class VehicleSalesProposal implements GTransaction{
     public ArrayList getVSPFinanceList(){return poVSPFinance.getDetailList();}
     public void setVSPFinanceList(ArrayList foObj){this.poVSPFinance.setDetailList(foObj);}
     
-    public void setVSPFinance(int fnRow, int fnIndex, Object foValue){ poVSPFinance.setDetail(fnRow, fnIndex, foValue);}
-    public void setVSPFinance(int fnRow, String fsIndex, Object foValue){ poVSPFinance.setDetail(fnRow, fsIndex, foValue);}
-    public Object getVSPFinance(int fnRow, int fnIndex){return poVSPFinance.getDetail(fnRow, fnIndex);}
-    public Object getVSPFinance(int fnRow, String fsIndex){return poVSPFinance.getDetail(fnRow, fsIndex);}
+//    public void setVSPFinance(int fnIndex, Object foValue){ poVSPFinance.setDetail(fnRow, fnIndex, foValue);}
+//    public void setVSPFinance(String fsIndex, Object foValue){ poVSPFinance.setDetail(fnRow, fsIndex, foValue);}
+//    public Object getVSPFinance(int fnIndex){return poVSPFinance.getDetail(fnRow, fnIndex);}
+//    public Object getVSPFinance(String fsIndex){return poVSPFinance.getDetail(fnRow, fsIndex);}
+    
+    public JSONObject setVSPFinance(int fnCol, Object foData) {
+        return poVSPFinance.setMaster(fnCol, foData);
+    }
+
+    public JSONObject setVSPFinance(String fsCol, Object foData) {
+        return poVSPFinance.setMaster(fsCol, foData);
+    }
+
+    public Object getVSPFinance(int fnCol) {
+        return poVSPFinance.getMaster(fnCol);
+    }
+
+    public Object getVSPFinance(String fsCol) {
+        return poVSPFinance.getMaster(fsCol);
+    }
     
     public Object addVSPFinance(){ return poVSPFinance.addDetail(poController.getMasterModel().getTransNo());}
     //public Object removeVSPFinance(int fnRow){ return poVSPFinance.removeDetail(fnRow);}
@@ -285,6 +323,63 @@ public class VehicleSalesProposal implements GTransaction{
     
     public Object addVSPParts(){ return poVSPParts.addDetail(poController.getMasterModel().getTransNo());}
     public Object removeVSPParts(int fnRow){ return poVSPParts.removeDetail(fnRow);}
+    
+    public JSONObject loadReservationList() {
+        JSONObject loJSON = new JSONObject();
+        loJSON = poReservation.openDetail(poController.getMasterModel().getTransNo(),false);
+        if(!"success".equals(poJSON.get("result"))){
+            if(true == (boolean) poJSON.get("continue")){
+                loJSON.put("result", "success");
+                loJSON.put("message", "Record loaded succesfully.");
+            }
+        }
+        return loJSON;
+    }
+    
+    public ArrayList getReservationList(){return poReservation.getDetailList();}
+    public Object getReservation(int fnRow, int fnIndex){return poReservation.getDetail(fnRow, fnIndex);}
+    public Object getReservation(int fnRow, String fsIndex){return poReservation.getDetail(fnRow, fsIndex);}
+    public Object removeReservation(int fnRow){ return poReservation.removeDetail(fnRow,false);}
+    
+    public JSONObject addOthReservation(String fsRsvTrnNo){ 
+        JSONObject loJSON = new JSONObject();
+        //Check if reservation already exist
+        for(int lnCtr = 0; lnCtr <= getReservationList().size()-1;lnCtr++){
+            if(((String) getReservation(lnCtr, "sTransNox")).equals(fsRsvTrnNo)){
+                loJSON.put("result", "error");
+                loJSON.put("message", "Reservation already exist.");
+                return loJSON;
+            }
+        }
+        
+        loJSON = poReservation.openRecord(fsRsvTrnNo);
+        if("error".equals((String) loJSON.get("resutl"))){
+            removeReservation(getReservationList().size()-1);
+            loJSON.put("result", "error");
+            loJSON.put("message", "Cannot add other reservation.");
+        } else {
+            poReservation.setDetail(getReservationList().size()-1, "sTransIDx", poController.getMasterModel().getTransNo());
+        }
+        
+        return loJSON;
+    }
+    
+    
+    public JSONObject loadOthReservation() {
+        return poController.loadOthReservation();
+    }
+    
+    public int getOthReservationCount() throws SQLException{
+        return poController.getOthReservationCount();
+    }
+    
+    public Object getOthReservationDetail(int fnRow, int fnIndex) throws SQLException{
+        return poController.getOthReservationDetail(fnRow, fnIndex);
+    }
+    
+    public Object getOthReservationDetail(int fnRow, String fsIndex) throws SQLException{
+        return poController.getOthReservationDetail(fnRow, fsIndex);
+    }
     
     public JSONObject searchInquiry(String fsValue){
         JSONObject loJSON = new JSONObject();
@@ -501,37 +596,48 @@ public class VehicleSalesProposal implements GTransaction{
         int lnCtr;
         String lsQty = ""; 
         BigDecimal ldblLaborAmt = new BigDecimal("0.00"); 
+        BigDecimal ldblLaborDsc = new BigDecimal("0.00"); 
         BigDecimal ldblAccesAmt = new BigDecimal("0.00"); 
+        BigDecimal ldblAccesDsc = new BigDecimal("0.00"); 
         BigDecimal ldblPartsAmt = new BigDecimal("0.00"); 
         BigDecimal ldblFinAmt = new BigDecimal("0.00");
         
         /*Compute Labor Total*/
         for (lnCtr = 0; lnCtr <= getVSPLaborList().size()-1; lnCtr++){
-            //ldblLaborAmt = ldblLaborAmt + (Double) getVSPLabor(lnCtr, "nLaborAmt");
             if(String.valueOf( getVSPLabor(lnCtr, "nLaborAmt")) != null){
                 ldblLaborAmt = ldblLaborAmt.add(new BigDecimal( String.valueOf( getVSPLabor(lnCtr, "nLaborAmt")))).setScale(2, BigDecimal.ROUND_HALF_UP);
             }
+            
+            if(String.valueOf( getVSPLabor(lnCtr, "nToLabDsc")) != null){
+                ldblLaborDsc = ldblLaborDsc.add(new BigDecimal( String.valueOf( getVSPLabor(lnCtr, "nToLabDsc")))).setScale(2, BigDecimal.ROUND_HALF_UP);
+            }
         }
+        
         ldblLaborAmt = ldblLaborAmt.setScale(2, BigDecimal.ROUND_HALF_UP);
+        ldblLaborDsc = ldblLaborDsc.setScale(2, BigDecimal.ROUND_HALF_UP);
         /*Compute Parts Total*/
         for (lnCtr = 1; lnCtr <= getVSPPartsList().size()-1; lnCtr++){
-            //ldblAccesAmt = ldblAccesAmt + ((Double) getVSPParts(lnCtr, "nSelPrice") * (Integer) getVSPParts(lnCtr, "nQuantity"));
-            //ldblAccesAmt = ldblAccesAmt.add(new BigDecimal( String.valueOf( getVSPParts(lnCtr, "nSelPrice"))));
-            //ldblAccesAmt = ldblAccesAmt.add(new BigDecimal( String.valueOf( getVSPParts(lnCtr, "sTotlAmtx")))); //nUnitPrce
             if(String.valueOf(getVSPParts(lnCtr, "nQuantity")) != null){
                 lsQty = String.valueOf(getVSPParts(lnCtr, "nQuantity"));
             } else {
                 lsQty = "0";
             }
+            
             if(String.valueOf( getVSPParts(lnCtr, "nUnitPrce")) != null){
                 ldblPartsAmt = new BigDecimal(lsQty).multiply(new BigDecimal( String.valueOf( getVSPParts(lnCtr, "nUnitPrce"))));
             }
+            
             setVSPParts(lnCtr,"sTotlAmtx",String.valueOf(ldblPartsAmt));
             System.out.println(" ROW "+ lnCtr + " total amount >> " + getVSPParts(lnCtr, "sTotlAmtx"));
             ldblAccesAmt = ldblAccesAmt.add(ldblPartsAmt);
+            
+            if(String.valueOf( getVSPParts(lnCtr, "nToPrtDsc")) != null){
+                ldblAccesDsc = ldblAccesDsc.add(new BigDecimal( String.valueOf( getVSPParts(lnCtr, "nToPrtDsc")))).setScale(2, BigDecimal.ROUND_HALF_UP);
+            }
         }
         
         ldblAccesAmt = ldblAccesAmt.setScale(2, BigDecimal.ROUND_HALF_UP);
+        ldblAccesDsc = ldblAccesDsc.setScale(2, BigDecimal.ROUND_HALF_UP);
         
         //TODO
 //        if (!computeTotlAmtPaid()){
@@ -645,7 +751,7 @@ public class VehicleSalesProposal implements GTransaction{
 //        
         //vsptotal = vsptotal - (cashdisc + promodisc + stdfleetdisc + splfleet disc + bundledisc)  //gross vsp total less discounts and other deductibles
         //ldblTranTotl = ldblTranTotl - (ldblAddlDscx + ldblPromoDsc + ldblFleetDsc + ldblSPFltDsc + ldblBndleDsc);
-        ldblDiscntxx = ldblAddlDscx.add(ldblPromoDsc).add(ldblFleetDsc).add(ldblSPFltDsc).add(ldblBndleDsc);
+        ldblDiscntxx = ldblAddlDscx.add(ldblPromoDsc).add(ldblFleetDsc).add(ldblSPFltDsc).add(ldblBndleDsc).add(ldblLaborDsc).add(ldblAccesDsc);
         ldblDiscntxx = ldblDiscntxx.setScale(2, BigDecimal.ROUND_HALF_UP);
         
         ldblTranTotl = ldblTranTotl.subtract(ldblDiscntxx);
@@ -674,43 +780,45 @@ public class VehicleSalesProposal implements GTransaction{
         setMaster("nNetTTotl",ldblNetTTotl);
         setMaster("nLaborAmt",ldblLaborAmt);
         setMaster("nAccesAmt",ldblAccesAmt);
+        setMaster("nToLabDsc",ldblLaborDsc);
+        setMaster("nToPrtDsc",ldblAccesDsc);
         
         //PO / FINANCING
         if (!lsPayModex.equals("0")){ 
-            if (getVSPFinanceList().size() >= 0){
+            if (getVSPFinanceList().size()-1 >= 0){
                 ldblFinAmt = new BigDecimal("0.00"); 
                 BigDecimal ldblRatexx = new BigDecimal("0.00"); 
                 BigDecimal ldblMonAmort = new BigDecimal("0.00"); 
                 BigDecimal ldblGrsMonth = new BigDecimal("0.00"); 
                 BigDecimal ldblPNValuex = new BigDecimal("0.00"); 
                 
-                String lsDiscount = String.valueOf( getVSPFinance(getVSPFinanceList().size()-1,"nDiscount")); 
+                String lsDiscount = String.valueOf( getVSPFinance("nDiscount")); 
                 BigDecimal ldblDiscount = new BigDecimal("0.00");
                 if(lsDiscount != null && !lsDiscount.equals("null")){
                     ldblDiscount = new BigDecimal(lsDiscount);
                 }
                 
                 
-                String lsNtDwnPmt = String.valueOf( getVSPFinance(getVSPFinanceList().size()-1,"nNtDwnPmt")); 
+                String lsNtDwnPmt = String.valueOf( getVSPFinance("nNtDwnPmt")); 
                 BigDecimal ldblNtDwnPmt = new BigDecimal("0.00");
                 if(lsNtDwnPmt != null && !lsNtDwnPmt.equals("null")){
                     ldblNtDwnPmt = new BigDecimal(lsNtDwnPmt);
                 }
                 
-                String lsRebatesx = String.valueOf( getVSPFinance(getVSPFinanceList().size()-1,"nRebatesx")); 
+                String lsRebatesx = String.valueOf( getVSPFinance("nRebatesx")); 
                 BigDecimal ldblRebatesx = new BigDecimal("0.00");
                 if(lsRebatesx != null && !lsRebatesx.equals("null")){
                     ldblRebatesx = new BigDecimal(lsRebatesx);
                 }
                 
-                String lsAcctRate = String.valueOf( getVSPFinance(getVSPFinanceList().size()-1,"nAcctRate")); 
+                String lsAcctRate = String.valueOf( getVSPFinance("nAcctRate")); 
                 BigDecimal ldblAcctRate = new BigDecimal("0.00");
                 if(lsAcctRate != null && !lsAcctRate.equals("null")){
                     ldblAcctRate = new BigDecimal(lsAcctRate);
                 }
                 
                 
-                int lnAcctTerm = (Integer) getVSPFinance(getVSPFinanceList().size()-1,"nAcctTerm");
+                int lnAcctTerm = (Integer) getVSPFinance("nAcctTerm");
                 
                 lsUnitPrce = String.valueOf( getMaster("nUnitPrce"));
                 if(lsUnitPrce != null && !lsUnitPrce.equals("null")){
@@ -779,10 +887,10 @@ public class VehicleSalesProposal implements GTransaction{
 //                System.out.println("lnAcctTerm " + lnAcctTerm);
 //                System.out.println("ldblPNValuex " + ldblPNValuex);
                 
-                setVSPFinance(getVSPFinanceList().size()-1,"nFinAmtxx",ldblFinAmt);
-                setVSPFinance(getVSPFinanceList().size()-1,"nMonAmort",ldblMonAmort);
-                setVSPFinance(getVSPFinanceList().size()-1,"nGrsMonth",ldblGrsMonth);
-                setVSPFinance(getVSPFinanceList().size()-1,"nPNValuex",ldblPNValuex);
+                setVSPFinance("nFinAmtxx",ldblFinAmt);
+                setVSPFinance("nMonAmort",ldblMonAmort);
+                setVSPFinance("nGrsMonth",ldblGrsMonth);
+                setVSPFinance("nPNValuex",ldblPNValuex);
             }
         }
         
@@ -792,7 +900,7 @@ public class VehicleSalesProposal implements GTransaction{
                 loJSON.put("message", "Please Enter Amount to be transact.");
                 return loJSON;
             } else {
-                ldblFinAmt = new BigDecimal(String.valueOf(getVSPFinance(getVSPFinanceList().size()-1,"nFinAmtxx")));
+                ldblFinAmt = new BigDecimal(String.valueOf(getVSPFinance("nFinAmtxx")));
                 if (ldblFinAmt.compareTo(new BigDecimal("0.00")) <= 0){
                     loJSON.put("result", "error");
                     loJSON.put("message", "Please Enter Amount to be transact.");
