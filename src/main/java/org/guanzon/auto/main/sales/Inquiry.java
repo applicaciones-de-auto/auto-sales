@@ -178,24 +178,28 @@ public class Inquiry implements GTransaction{
             return checkData(poJSON);
         }
         
+        poVehiclePriority.setTargetBranchCd(poController.getMasterModel().getBranchCd());
         poJSON =  poVehiclePriority.saveDetail((String) poController.getMasterModel().getTransNo());
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
         }
         
+        poPromo.setTargetBranchCd(poController.getMasterModel().getBranchCd());
         poJSON =  poPromo.saveDetail((String) poController.getMasterModel().getTransNo());
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
         }
         
+        poRequirements.setTargetBranchCd(poController.getMasterModel().getBranchCd());
         poJSON =  poRequirements.saveDetail((String) poController.getMasterModel().getTransNo());
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
         }
         
+        poReservation.setTargetBranchCd(poController.getMasterModel().getBranchCd());
         poJSON =  poReservation.saveDetail((String) poController.getMasterModel().getTransNo());
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();

@@ -29,7 +29,7 @@ public class Inquiry_Requirements {
     
     final String XML = "Model_Inquiry_Requirements.xml";
     GRider poGRider;
-    String psBranchCd;
+    String psTargetBranchCd;
     boolean pbWtParent;
     
     int pnEditMode;
@@ -149,7 +149,20 @@ public class Inquiry_Requirements {
             return obj;
         }
         
-
+        if(psTargetBranchCd == null){
+            obj.put("result", "error");
+            obj.put("continue", false);
+            obj.put("message", "Target Branch code for inquiry requirements cannot be empty.");
+            return obj;
+        } else {
+            if(psTargetBranchCd.isEmpty()){
+                obj.put("result", "error");
+                obj.put("continue", false);
+                obj.put("message", "Target Branch code for inquiry requirements cannot be empty.");
+                return obj;
+            }
+        }
+        
         int lnEntryNo = 1;
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
             if(paDetail.get(lnCtr).getReceived().trim().isEmpty()){
@@ -159,6 +172,7 @@ public class Inquiry_Requirements {
             
             paDetail.get(lnCtr).setTransNo(fsTransNo);
             paDetail.get(lnCtr).setEntryNo(lnEntryNo);
+            paDetail.get(lnCtr).setTargetBranchCd(psTargetBranchCd);
 
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Inquiry_Requirements, paDetail.get(lnCtr));
             validator.setGRider(poGRider);
@@ -172,6 +186,10 @@ public class Inquiry_Requirements {
         }    
         
         return obj;
+    }
+    
+    public void setTargetBranchCd(String fsBranchCd){
+        psTargetBranchCd = fsBranchCd; 
     }
     
     public ArrayList<Model_Inquiry_Requirements> getDetailList(){

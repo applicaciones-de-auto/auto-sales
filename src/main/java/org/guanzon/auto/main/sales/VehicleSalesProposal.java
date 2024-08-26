@@ -7,9 +7,17 @@ package org.guanzon.auto.main.sales;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.sql.rowset.CachedRowSet;
+import javax.sql.rowset.RowSetFactory;
+import javax.sql.rowset.RowSetProvider;
 import org.guanzon.appdriver.base.GRider;
+import org.guanzon.appdriver.base.MiscUtil;
+import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.controller.sales.Inquiry_Reservation;
@@ -37,6 +45,8 @@ public class VehicleSalesProposal implements GTransaction{
     VehicleSalesProposal_Labor poVSPLabor;
     VehicleSalesProposal_Parts poVSPParts;
     Inquiry_Reservation poReservation;
+    
+    CachedRowSet poPaymentHstry;
     
     public VehicleSalesProposal(GRider foAppDrver, boolean fbWtParent, String fsBranchCd){
         poController = new VehicleSalesProposal_Master(foAppDrver,fbWtParent,fsBranchCd);
@@ -363,7 +373,6 @@ public class VehicleSalesProposal implements GTransaction{
         
         return loJSON;
     }
-    
     
     public JSONObject loadOthReservation() {
         return poController.loadOthReservation();
@@ -917,6 +926,68 @@ public class VehicleSalesProposal implements GTransaction{
     
     //TODO
     private boolean computeTotlAmtPaid(){
+        try {
+            String lsWhere = "";
+            ResultSet loRS;
+            BigDecimal ldblPayment = new BigDecimal("0.00"); 
+            String lsSQL =   " SELECT "                                             
+                    + "   a.sTransNox "                                     
+                    + " , a.sReferNox "                                     
+                    + " , a.sSourceCD "                                     
+                    + " , a.sSourceNo "                                     
+                    + " , a.sTranType "                      
+                    + " , a.nTranAmtx "                                    
+                    + " , b.sReferNox AS sSINoxxxx "                        
+                    + " , b.dTransact "                      
+                    + " , b.cTranStat "                                
+                    + " FROM si_master_source a "                           
+                    + " LEFT JOIN si_master b ON b.sTransNox = a.sTransNox ";
+
+            /* 1. Get all Invoice Receipts (SI) linked thru INQUIRY RESERVATION sTransNox */
+            for(int lnCtr = 0; lnCtr <= getReservationList().size()-1; lnCtr++){
+                lsWhere = MiscUtil.addCondition(lsSQL, " b.cTranStat <> '0' "
+                                                    + " AND a.sReferNox = " + SQLUtil.toSQL(getReservation(lnCtr, "sTransNox"))
+                                                    );
+                System.out.println("EXISTING RESERVATION PAYMENT CHECK: " + lsSQL);
+                loRS = poGRider.executeQuery(lsWhere);
+                if (MiscUtil.RecordCount(loRS) > 0){
+                    while(loRS.next()){
+                        ldblPayment.add(new BigDecimal(String.valueOf(loRS.getDouble("nTranAmtx"))));
+                    }
+
+                    MiscUtil.close(loRS);
+                    return false;
+                }
+            }
+            
+            /* 2. Get all Invoice Receipts (SI) and PR linked thru VSP sTransNox */
+            lsWhere = MiscUtil.addCondition(lsSQL, " b.cTranStat <> '0' "
+                                                + " AND a.sReferNox = " + SQLUtil.toSQL(poController.getMasterModel().getTransNo())
+                                                );
+            System.out.println("EXISTING VSP PAYMENT CHECK: " + lsSQL);
+            loRS = poGRider.executeQuery(lsWhere);
+
+            if (MiscUtil.RecordCount(loRS) > 0){
+                while(loRS.next()){
+                    ldblPayment.add(new BigDecimal(String.valueOf(loRS.getDouble("nTranAmtx"))));
+                }
+
+                MiscUtil.close(loRS);
+                return false;
+            }
+            
+            poController.getMasterModel().setAmtPaid(ldblPayment);
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(VehicleSalesProposal.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return true;
     }
+    
+    public JSONObject loadPaymentHistory(){
+        JSONObject loJSON = new JSONObject();
+        
+        return loJSON;
+    } 
+    
 }

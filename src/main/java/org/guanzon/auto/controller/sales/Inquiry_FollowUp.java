@@ -29,6 +29,7 @@ public class Inquiry_FollowUp implements GTransaction {
     final String XML = "Model_Inquiry_FollowUp.xml";
     GRider poGRider;
     String psBranchCd;
+    String psTargetBranchCd = "";
     boolean pbWtParent;
     int pnEditMode;
     String psTransStat;
@@ -149,6 +150,20 @@ public class Inquiry_FollowUp implements GTransaction {
     public JSONObject saveTransaction() {
         poJSON = new JSONObject();  
         
+        if(psTargetBranchCd == null){
+            poJSON.put("result", "error");
+            poJSON.put("continue", false);
+            poJSON.put("message", "Target Branch code for follow up cannot be empty.");
+            return poJSON;
+        } else {
+            if(psTargetBranchCd.isEmpty()){
+                poJSON.put("result", "error");
+                poJSON.put("continue", false);
+                poJSON.put("message", "Target Branch code for follow up cannot be empty.");
+                return poJSON;
+            }
+        }
+        
         ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Inquiry_FollowUp, poModel);
         validator.setGRider(poGRider);
         if (!validator.isEntryOkay()){
@@ -166,6 +181,10 @@ public class Inquiry_FollowUp implements GTransaction {
         }
         
         return poJSON;
+    }
+    
+    public void setTargetBranchCd(String fsBranchCd){
+        psTargetBranchCd = fsBranchCd; 
     }
 
     @Override

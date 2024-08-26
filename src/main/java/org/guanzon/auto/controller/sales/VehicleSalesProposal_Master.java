@@ -750,7 +750,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
 //            }
         
         } catch (SQLException ex) {
-            Logger.getLogger(Inquiry_Master.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VehicleSalesProposal_Master.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         return loJSON;
@@ -890,7 +890,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
         return loJSON;
     }
     
-     public JSONObject loadOthReservation(){
+    public JSONObject loadOthReservation(){
         JSONObject loJSON = new JSONObject();
         try {
             String lsSQL =    " SELECT "                                                                  
@@ -937,14 +937,14 @@ public class VehicleSalesProposal_Master implements GTransaction{
                 poReservation.populate(loRS);
                 MiscUtil.close(loRS);
                 loJSON.put("result", "success");
-                loJSON.put("message", "Other load successfully.");
+                loJSON.put("message", "Other reservation load successfully.");
             } catch (SQLException e) {
                 loJSON.put("result", "error");
                 loJSON.put("message", e.getMessage());
             }
             
         } catch (SQLException ex) {
-            Logger.getLogger(Inquiry_Master.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VehicleSalesProposal_Master.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return loJSON;

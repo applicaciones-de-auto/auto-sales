@@ -28,7 +28,7 @@ import org.json.simple.JSONObject;
 public class Inquiry_Reservation {
     final String XML = "Model_Inquiry_Promo.xml";
     GRider poGRider;
-    String psBranchCd;
+    String psTargetBranchCd = "";
     boolean pbWtParent;
     
     int pnEditMode;
@@ -169,6 +169,20 @@ public class Inquiry_Reservation {
             return obj;
         }
         
+        if(psTargetBranchCd == null){
+            obj.put("result", "error");
+            obj.put("continue", false);
+            obj.put("message", "Target Branch code for reservation cannot be empty.");
+            return obj;
+        } else {
+            if(psTargetBranchCd.isEmpty()){
+                obj.put("result", "error");
+                obj.put("continue", false);
+                obj.put("message", "Target Branch code for reservation cannot be empty.");
+                return obj;
+            }
+        }
+        
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
             if(paDetail.get(lnCtr).getAmount() == null ){
                 continue; //skip, instead of removing the actual detail
@@ -181,6 +195,9 @@ public class Inquiry_Reservation {
             if(paDetail.get(lnCtr).getAmount() <= 0.00){
                 continue; //skip, instead of removing the actual detail
             }
+            
+            
+            paDetail.get(lnCtr).setTargetBranchCd(psTargetBranchCd);
             
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Inquiry_Reservation, paDetail.get(lnCtr));
             validator.setGRider(poGRider);
@@ -195,6 +212,9 @@ public class Inquiry_Reservation {
         return obj;
     }
     
+    public void setTargetBranchCd(String fsBranchCd){
+        psTargetBranchCd = fsBranchCd; 
+    }
     
     private JSONObject validateReservationSum(){
         JSONObject loJSON = new JSONObject();
