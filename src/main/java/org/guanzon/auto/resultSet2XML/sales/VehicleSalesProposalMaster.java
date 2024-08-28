@@ -65,8 +65,8 @@ public class VehicleSalesProposalMaster {
                         + " , a.sInsurTyp "                                                               
                         + " , a.nInsurYrx "                                                               
                         + " , a.sInsTplCd "                                                               
-                        + " , a.sInsCodex "                                                                
-                        + " , a.nToLabDsc "                                                               
+                        + " , a.sInsCodex "                                                               
+                        + " , a.nToLabDsc "                                                              
                         + " , a.nToPrtDsc "                                                              
                         + " , a.nPromoDsc "                                                               
                         + " , a.nFleetDsc "                                                               
@@ -159,8 +159,9 @@ public class VehicleSalesProposalMaster {
                         + " , z.sBankName " 
                          /*VSP LINKED THRU THE FOLLOWING FORMS*/     
                         + " , za.sReferNox AS sUDRNoxxx "
-                        + " , CONCAT(zb.sDSNoxxxx) AS sDSNoxxxx "
-                        + " , CONCAT(zd.sReferNox) AS sSINOxxxx "  
+                        + " , CONCAT(zb.sDSNoxxxx) AS sJONoxxxx "
+                        + " , CONCAT(zd.sReferNox) AS sSINoxxxx "    
+                        + " , ze.sTransNox AS sGatePsNo "
                            /*TODO GATEPASS*/                                                               
                         + " FROM vsp_master a "                                                           
                          /*BUYING CUSTOMER*/                                                              
@@ -200,7 +201,8 @@ public class VehicleSalesProposalMaster {
                         + " LEFT JOIN udr_master za ON za.sSourceNo = a.sTransNox AND za.cTranStat = '1' "   
                         + " LEFT JOIN diagnostic_master zb ON zb.sSourceNo = a.sTransNox AND zb.cTranStat = '1' "
                         + " LEFT JOIN si_master_source zc ON zc.sSourceNo = a.sTransNox "
-                        + " LEFT JOIN si_master zd ON zd.sTransNox = zc.sReferNox AND zd.cTranStat = '1' "
+                        + " LEFT JOIN si_master zd ON zd.sTransNox = zc.sReferNox AND zd.cTranStat = '1'"
+                        + " LEFT JOIN vehicle_gatepass ze ON ze.sSourceNo = a.sTransNox "
                         + " WHERE 0=1";
         
         

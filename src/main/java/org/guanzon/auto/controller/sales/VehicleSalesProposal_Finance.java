@@ -197,31 +197,31 @@ public class VehicleSalesProposal_Finance {
         }
         return paDetail;
     }
-    public void setDetailList(ArrayList<Model_VehicleSalesProposal_Finance> foObj){this.paDetail = foObj;}
+//    public void setDetailList(ArrayList<Model_VehicleSalesProposal_Finance> foObj){this.paDetail = foObj;}
+//    
+//    public void setDetail(int fnRow, int fnIndex, Object foValue){ paDetail.get(fnRow).setValue(fnIndex, foValue);}
+//    public void setDetail(int fnRow, String fsIndex, Object foValue){ paDetail.get(fnRow).setValue(fsIndex, foValue);}
+//    public Object getDetail(int fnRow, int fnIndex){return paDetail.get(fnRow).getValue(fnIndex);}
+//    public Object getDetail(int fnRow, String fsIndex){return paDetail.get(fnRow).getValue(fsIndex);}
     
-    public void setDetail(int fnRow, int fnIndex, Object foValue){ paDetail.get(fnRow).setValue(fnIndex, foValue);}
-    public void setDetail(int fnRow, String fsIndex, Object foValue){ paDetail.get(fnRow).setValue(fsIndex, foValue);}
-    public Object getDetail(int fnRow, int fnIndex){return paDetail.get(fnRow).getValue(fnIndex);}
-    public Object getDetail(int fnRow, String fsIndex){return paDetail.get(fnRow).getValue(fsIndex);}
-    
-//    public Model_VehicleSalesProposal_Finance getMasterModel() {
-//        return paDetail.get(0);
+    public Model_VehicleSalesProposal_Finance getVSPFinanceModel() {
+        return paDetail.get(0);
+    }
+
+//    public JSONObject setMaster(int fnCol, Object foData) {
+//        return paDetail.get(0).setValue(fnCol, foData);
 //    }
-
-    public JSONObject setMaster(int fnCol, Object foData) {
-        return paDetail.get(0).setValue(fnCol, foData);
-    }
-
-    public JSONObject setMaster(String fsCol, Object foData) {
-        return setMaster(paDetail.get(0).getColumn(fsCol), foData);
-    }
-    
-    public Object getMaster(int fnCol) {
-        return paDetail.get(0).getValue(fnCol);
-    }
-
-    public Object getMaster(String fsCol) {
-        return getMaster(paDetail.get(0).getColumn(fsCol));
-    }
+//
+//    public JSONObject setMaster(String fsCol, Object foData) {
+//        return setMaster(paDetail.get(0).getColumn(fsCol), foData);
+//    }
+//    
+//    public Object getMaster(int fnCol) {
+//        return paDetail.get(0).getValue(fnCol);
+//    }
+//
+//    public Object getMaster(String fsCol) {
+//        return getMaster(paDetail.get(0).getColumn(fsCol));
+//    }
     
 }

@@ -45,6 +45,8 @@ public class VehicleSalesProposalLabor {
                         + " , a.sChrgeTyp "                                                                                                    
                         + " , a.sRemarksx "                                                                                                    
                         + " , a.sLaborDsc "                                                                                                    
+                        + " , a.nLaborDsc "                                                                                                    
+                        + " , a.nNtLabAmt "                                                                                                   
                         + " , a.cAddtlxxx "                                                                                                    
                         + " , a.dAddDatex "                                                                                                    
                         + " , a.sAddByxxx "                                                                                                    

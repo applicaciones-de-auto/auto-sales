@@ -1,4 +1,5 @@
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.auto.main.sales.VehicleSalesProposal;
@@ -176,19 +177,19 @@ public class VehicleSalesProposalTest {
 //                System.exit(1);
 //            }
 //            
-//            json = model.setMaster("sChmoStat","1");
+//            json = model.setMaster("sChmoStat","2");
 //            if ("error".equals((String) json.get("result"))){
 //                System.err.println((String) json.get("message"));
 //                System.exit(1);
 //            }
 //            
-//            json = model.setMaster("sTPLStatx","1");
+//            json = model.setMaster("sTPLStatx","2");
 //            if ("error".equals((String) json.get("result"))){
 //                System.err.println((String) json.get("message"));
 //                System.exit(1);
 //            }
 //            
-//            json = model.setMaster("sCompStat","1");
+//            json = model.setMaster("sCompStat","2");
 //            if ("error".equals((String) json.get("result"))){
 //                System.err.println((String) json.get("message"));
 //                System.exit(1);
@@ -252,12 +253,12 @@ public class VehicleSalesProposalTest {
 //                System.err.println((String) json.get("message"));
 //                System.exit(1);
 //            }
-//            json = model.setMaster("cPayModex","0");
+//            json = model.setMaster("cPayModex","2");
 //            if ("error".equals((String) json.get("result"))){
 //                System.err.println((String) json.get("message"));
 //                System.exit(1);
 //            }
-//            json = model.setMaster("sBnkAppCD","");
+//            json = model.setMaster("sBnkAppCD","M001BA240001");
 //            if ("error".equals((String) json.get("result"))){
 //                System.err.println((String) json.get("message"));
 //                System.exit(1);
@@ -382,29 +383,30 @@ public class VehicleSalesProposalTest {
 //            
 //            model.addVSPFinance();
 //            System.out.println("VSP Finance size = " + model.getVSPFinanceList().size());
-//            for(int lnctr = 0; lnctr < model.getVSPFinanceList().size(); lnctr++){
-//                model.setVSPFinance(lnctr, "cFinPromo", "0");
-//                model.setVSPFinance(lnctr, "sBankIDxx", "M001BK240001");
-//                model.setVSPFinance(lnctr, "sBankname", "BANKO DE ORO - PEREZ");
-//                model.setVSPFinance(lnctr, "nFinAmtxx", 5000.00);
-//                model.setVSPFinance(lnctr, "nAcctTerm", 0.01);
-//                model.setVSPFinance(lnctr, "nAcctRate", 06.40);
-//                model.setVSPFinance(lnctr, "nRebatesx", 06.00);
-//                model.setVSPFinance(lnctr, "nMonAmort", 650.00);
-//                model.setVSPFinance(lnctr, "nPNValuex", 600.00);
-//                model.setVSPFinance(lnctr, "nBnkPaidx", 4000.00);
-//                model.setVSPFinance(lnctr, "nGrsMonth", 50.00);
-//                model.setVSPFinance(lnctr, "nNtDwnPmt", 5.50);
-//                model.setVSPFinance(lnctr, "nDiscount", 10000.00);
-//            }
+//            //for(int lnctr = 0; lnctr < model.getVSPFinanceList().size(); lnctr++){
+//                model.getVSPFinanceModel().getVSPFinanceModel().setFinPromo("0"); //setVSPFinance(lnctr, "cFinPromo", "0");
+//                model.getVSPFinanceModel().getVSPFinanceModel().setBankID("M001BK240001"); //setVSPFinance(lnctr, "sBankIDxx", "M001BK240001");
+//                model.getVSPFinanceModel().getVSPFinanceModel().setBankname("BANKO DE ORO - PEREZ"); //setVSPFinance(lnctr, "sBankname", "BANKO DE ORO - PEREZ");
+//                model.getVSPFinanceModel().getVSPFinanceModel().setFinAmt(new BigDecimal("5000.00"));//setVSPFinance(lnctr, "nFinAmtxx", 5000.00);
+//                model.getVSPFinanceModel().getVSPFinanceModel().setAcctTerm(24); //setVSPFinance(lnctr, "nAcctTerm", 0.01);
+//                model.getVSPFinanceModel().getVSPFinanceModel().setAcctRate(6.40); //setVSPFinance(lnctr, "nAcctRate", 06.40);
+//                model.getVSPFinanceModel().getVSPFinanceModel().setRebates(new BigDecimal("6.00")); //setVSPFinance(lnctr, "nRebatesx", 06.00);
+//                //model.getVSPFinanceModel().getVSPFinanceModel().setMonAmort(new BigDecimal("650.00")); //setVSPFinance(lnctr, "nMonAmort", 650.00);
+//                //model.getVSPFinanceModel().getVSPFinanceModel().setsetVSPFinance(lnctr, "nPNValuex", 600.00);
+//                model.getVSPFinanceModel().getVSPFinanceModel().setBnkPaid(new BigDecimal("4000.00")); //setVSPFinance(lnctr, "nBnkPaidx", 4000.00);
+//                //model.getVSPFinanceModel().getVSPFinanceModel().setGrsMonth(50.00); //setVSPFinance(lnctr, "nGrsMonth", 50.00);
+//                model.getVSPFinanceModel().getVSPFinanceModel().setNtDwnPmt(new BigDecimal("5.00")); //setVSPFinance(lnctr, "nNtDwnPmt", 5.50);
+//                model.getVSPFinanceModel().getVSPFinanceModel().setDiscount(new BigDecimal("10000.00")) ; //setVSPFinance(lnctr, "nDiscount", 10000.00);
+//            //}
 //            
 //            model.addVSPLabor();
 //            System.out.println("VSP Labor size = " + model.getVSPLaborList().size());
 //            for(int lnctr = 0; lnctr < model.getVSPLaborList().size(); lnctr++){
 //                model.setVSPLabor(lnctr, "sLaborCde", "M00124000001");
 //                model.setVSPLabor(lnctr, "nLaborAmt", 1500.00);
-//                model.setVSPLabor(lnctr, "sChrgeTyp", "0");
+//                model.setVSPLabor(lnctr, "sChrgeTyp", "1");
 //                model.setVSPLabor(lnctr, "sLaborDsc", "TINT");
+//                model.setVSPLabor(lnctr, "nLaborDsc", 1000.00);
 //                model.setVSPLabor(lnctr, "sRemarksx", "TEST");
 //                model.setVSPLabor(lnctr, "cAddtlxxx", "0");
 ////                model.setVSPLabor(lnctr, "dAddDatex", instance.getServerDate());
@@ -415,13 +417,14 @@ public class VehicleSalesProposalTest {
 //            System.out.println("VSP Parts size = " + model.getVSPPartsList().size());
 //            for(int lnctr = 0; lnctr < model.getVSPPartsList().size(); lnctr++){
 //                model.setVSPParts(lnctr, "sStockIDx", "");
-//                model.setVSPParts(lnctr, "nUnitPrce", 0.00);
+//                model.setVSPParts(lnctr, "nUnitPrce", 5000.00);
 //                model.setVSPParts(lnctr, "nSelPrice", 5000.00);
 //                model.setVSPParts(lnctr, "nQuantity", 1);
 //                model.setVSPParts(lnctr, "nReleased", 0);
-//                model.setVSPParts(lnctr, "sChrgeTyp", "0");
+//                model.setVSPParts(lnctr, "sChrgeTyp", "1");
 //                model.setVSPParts(lnctr, "sPartStat", "0");
 //                model.setVSPParts(lnctr, "sDescript", "SEAT COVER");
+//                model.setVSPParts(lnctr, "nPartsDsc", 500.00);
 ////                model.setVSPParts(lnctr, "dAddDatex", instance.getServerDate());
 ////                model.setVSPParts(lnctr, "sAddByxxx", instance.getUserID());
 //            }
