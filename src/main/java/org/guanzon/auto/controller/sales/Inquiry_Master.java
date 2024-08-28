@@ -188,7 +188,7 @@ public class Inquiry_Master implements GTransaction {
             return poJSON;
         } 
         
-        poLockTrans.saveLockTransaction(poModel.getTable(),"sTransNox", poModel.getTransNo());
+        poLockTrans.saveLockTransaction(poModel.getTable(),"sTransNox", poModel.getTransNo(), poModel.getBranchCd());
         
         pnEditMode = EditMode.UPDATE;
         poJSON.put("result", "success");

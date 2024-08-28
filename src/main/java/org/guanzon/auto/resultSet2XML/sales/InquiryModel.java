@@ -103,7 +103,7 @@ public class InquiryModel {
                         + " LEFT JOIN client_master k ON k.sClientID = a.sContctID   "                             
                         + " LEFT JOIN ggc_isysdbf.client_master l ON l.sClientID = a.sEmployID "                   
                         + " LEFT JOIN client_master m ON m.sClientID = a.sAgentIDx    "                            
-                        + " LEFT JOIN online_platforms n ON n.sTransNox = a.sSourceCD "                            
+                        + " LEFT JOIN online_platforms n ON n.sTransNox = a.sSourceNo "                            
                         + " LEFT JOIN activity_master o ON o.sActvtyID = a.sActvtyID  "                            
                         + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd           "                             
                         + " LEFT JOIN vehicle_serial q ON q.sSerialID = a.sSerialID           "    

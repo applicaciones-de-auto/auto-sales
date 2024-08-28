@@ -214,6 +214,9 @@ public class VehicleSalesProposal_Parts {
     public Object getDetail(int fnRow, int fnIndex){return paDetail.get(fnRow).getValue(fnIndex);}
     public Object getDetail(int fnRow, String fsIndex){return paDetail.get(fnRow).getValue(fsIndex);}
     
+    public Model_VehicleSalesProposal_Parts getDetailModel(int fnRow) {
+        return paDetail.get(fnRow);
+    }
     
     public Object removeDetail(int fnRow){
         JSONObject loJSON = new JSONObject();

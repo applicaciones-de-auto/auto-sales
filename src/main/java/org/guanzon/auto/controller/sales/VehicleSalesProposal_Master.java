@@ -187,7 +187,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
             return poJSON;
         } 
         
-        poLockTrans.saveLockTransaction(poModel.getTable(),"sTransNox", poModel.getTransNo());
+        poLockTrans.saveLockTransaction(poModel.getTable(),"sTransNox", poModel.getTransNo(),poModel.getBranchCD());
         
         pnEditMode = EditMode.UPDATE;
         poJSON.put("result", "success");

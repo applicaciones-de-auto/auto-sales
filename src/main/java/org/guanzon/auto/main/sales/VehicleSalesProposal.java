@@ -10,6 +10,7 @@ import java.math.RoundingMode;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.rowset.CachedRowSet;
@@ -314,6 +315,8 @@ public class VehicleSalesProposal implements GTransaction{
     public Object addVSPFinance(){ return poVSPFinance.addDetail(poController.getMasterModel().getTransNo());}
     //public Object removeVSPFinance(int fnRow){ return poVSPFinance.removeDetail(fnRow);}
     
+    public VehicleSalesProposal_Labor getVSPLaborModel(){return poVSPLabor;} 
+    
     public ArrayList getVSPLaborList(){return poVSPLabor.getDetailList();}
     public void setVSPLaborList(ArrayList foObj){this.poVSPLabor.setDetailList(foObj);}
     
@@ -324,6 +327,8 @@ public class VehicleSalesProposal implements GTransaction{
     
     public Object addVSPLabor(){ return poVSPLabor.addDetail(poController.getMasterModel().getTransNo());}
     public Object removeVSPLabor(int fnRow){ return poVSPLabor.removeDetail(fnRow);}
+    
+    public VehicleSalesProposal_Parts getVSPPartsModel(){return poVSPParts;} 
     
     public ArrayList getVSPPartsList(){return poVSPParts.getDetailList();}
     public void setVSPPartsList(ArrayList foObj){this.poVSPParts.setDetailList(foObj);}
@@ -396,50 +401,82 @@ public class VehicleSalesProposal implements GTransaction{
         JSONObject loJSON = new JSONObject();
         loJSON = poController.searchInquiry(fsValue);
         if(!"error".equals((String) loJSON.get("result"))){
-            //Buying Customer Default
-            setMaster("sClientID", (String) loJSON.get("sClientID"));
-            setMaster("sBuyCltNm", (String) loJSON.get("sCompnyNm"));
-            setMaster("sAddressx", (String) loJSON.get("sAddressx"));
-            setMaster("cPayModex", (String) loJSON.get("cPayModex"));
-            setMaster("cIsVhclNw", (String) loJSON.get("cIsVhclNw"));
-            setMaster("nResrvFee", (Double) loJSON.get("nAmountxx"));
-            //Inquiring Customer
-            setMaster( "sInqryIDx", (String) loJSON.get("sTransNox"));
-            setMaster("dInqryDte", (String) loJSON.get("dTransact"));
-            setMaster("sInqCltID", (String) loJSON.get("sClientID"));
-            setMaster("sInqCltNm", (String) loJSON.get("sCompnyNm"));
-            setMaster("cInqCltTp", (String) loJSON.get("cClientTp"));
-            setMaster("sSourceCD", (String) loJSON.get("sSourceCD"));
-            setMaster("sSourceNo", (String) loJSON.get("sSourceNo"));
-            setMaster("sPlatform", (String) loJSON.get("sPlatform"));
-            setMaster("sAgentIDx", (String) loJSON.get("sAgentIDx"));
-            setMaster("sAgentNmx", (String) loJSON.get("sSalesAgn"));
-            setMaster("sEmployID", (String) loJSON.get("sEmployID"));
-            setMaster("sSENamexx", (String) loJSON.get("sSalesExe"));
-            setMaster( "sContctNm", (String) loJSON.get("sContctNm"));
-            setMaster( "sBranchCD", (String) loJSON.get("sBranchCd"));
-            setMaster( "sBranchNm", (String) loJSON.get("sBranchNm"));
-        } else {
-            setMaster("sClientID", ""); 
-            setMaster("sBuyCltNm", ""); 
-            setMaster("sAddressx", ""); 
-            setMaster("nResrvFee", 0.00);
-            //Inquiring Customer        
-            setMaster("sInqryIDx","");  
-            setMaster("dInqryDte", ""); 
-            setMaster("sInqCltID", ""); 
-            setMaster("sInqCltNm", ""); 
-            setMaster("cInqCltTp", ""); 
-            setMaster("sSourceCD", ""); 
-            setMaster("sSourceNo", ""); 
-            setMaster("sPlatform", ""); 
-            setMaster("sAgentIDx", ""); 
-            setMaster("sAgentNmx", ""); 
-            setMaster("sEmployID", ""); 
-            setMaster("sSENamexx", ""); 
-            setMaster( "sContctNm",""); 
-            setMaster( "sBranchCd",""); 
-            setMaster( "sBranchNm",""); 
+            //Buying Customer Default                                                                                                                      
+           poController.getMasterModel().setClientID((String) loJSON.get("sClientID"));                                                        
+           poController.getMasterModel().setBuyCltNm((String) loJSON.get("sCompnyNm"));                                                        
+           poController.getMasterModel().setAddress((String) loJSON.get("sAddressx"));                                                         
+           poController.getMasterModel().setPayMode((String) loJSON.get("cPayModex"));                                                         
+           poController.getMasterModel().setIsVhclNw((String) loJSON.get("cIsVhclNw"));                                                        
+            if((String) loJSON.get("nAmountxx") == null){                                                                                      
+                poController.getMasterModel().setResrvFee(new BigDecimal("0.00"));                                                             
+            } else {                                                                                                                           
+                poController.getMasterModel().setResrvFee(new BigDecimal((String) loJSON.get("nAmountxx")));                                   
+            }                                                                                                                                  
+                                                                                                                                               
+            //Inquiring Customer                                                                                                               
+            poController.getMasterModel().setInqryID((String) loJSON.get("sTransNox"));                                                        
+            poController.getMasterModel().setInqryDte(SQLUtil.toDate((String) loJSON.get("dTransact"), SQLUtil.FORMAT_SHORT_DATE));            
+            System.out.println(getMasterModel().getMasterModel().getInqryDte());                                                               
+            poController.getMasterModel().setInqCltID((String) loJSON.get("sClientID"));                                                       
+            poController.getMasterModel().setInqCltNm((String) loJSON.get("sCompnyNm"));                                                       
+            poController.getMasterModel().setInqCltTp((String) loJSON.get("cClientTp"));                                                       
+            poController.getMasterModel().setSourceCD((String) loJSON.get("sSourceCD"));                                                       
+            poController.getMasterModel().setSourceNo((String) loJSON.get("sSourceNo"));                                                       
+            poController.getMasterModel().setPlatform((String) loJSON.get("sPlatform"));                                                       
+            poController.getMasterModel().setAgentID((String) loJSON.get("sAgentIDx"));                                                        
+            poController.getMasterModel().setAgentNm((String) loJSON.get("sSalesAgn"));                                                        
+            poController.getMasterModel().setEmployID((String) loJSON.get("sEmployID"));                                                       
+            poController.getMasterModel().setSEName((String) loJSON.get("sSalesExe"));                                                         
+            poController.getMasterModel().setContctNm((String) loJSON.get("sContctNm"));                                                       
+            poController.getMasterModel().setBranchCD((String) loJSON.get("sBranchCd"));                                                       
+            poController.getMasterModel().setBranchNm((String) loJSON.get("sBranchNm"));                                                       
+        } else {                                                                                                                               
+            //Buying Customer Default                                                                                                          
+            poController.getMasterModel().setClientID("");                                                                                     
+            poController.getMasterModel().setBuyCltNm("");                                                                                     
+            poController.getMasterModel().setAddress("");                                                                                      
+            poController.getMasterModel().setPayMode("");                                                                                      
+            poController.getMasterModel().setIsVhclNw("");                                                                                     
+            poController.getMasterModel().setResrvFee(new BigDecimal("0.00"));                                                                 
+                                                                                                                                               
+            //Inquiring Customer                                                                                                               
+            poController.getMasterModel().setInqryID("");                                                                                      
+            poController.getMasterModel().setInqryDte(SQLUtil.toDate("1900-01-01", SQLUtil.FORMAT_SHORT_DATE));                                
+            System.out.println(poController.getMasterModel().getInqryDte());                                                               
+            poController.getMasterModel().setInqCltID("");                                                                                     
+            poController.getMasterModel().setInqCltNm("");                                                                                     
+            poController.getMasterModel().setInqCltTp("");                                                                                     
+            poController.getMasterModel().setSourceCD("");                                                                                     
+            poController.getMasterModel().setSourceNo("");                                                                                     
+            poController.getMasterModel().setPlatform("");                                                                                     
+            poController.getMasterModel().setAgentID("");                                                                                      
+            poController.getMasterModel().setAgentNm("");                                                                                      
+            poController.getMasterModel().setEmployID("");                                                                                     
+            poController.getMasterModel().setSEName("");                                                                                       
+            poController.getMasterModel().setContctNm("");                                                                                     
+            poController.getMasterModel().setBranchCD("");                                                                                     
+            poController.getMasterModel().setBranchNm("");                                                                                     
+                                              
+//            setMaster("sClientID", ""); 
+//            setMaster("sBuyCltNm", ""); 
+//            setMaster("sAddressx", ""); 
+//            setMaster("nResrvFee", 0.00);
+//            //Inquiring Customer        
+//            setMaster("sInqryIDx","");  
+//            setMaster("dInqryDte", SQLUtil.toDate("1900-01-01", SQLUtil.FORMAT_SHORT_DATE)); 
+//            setMaster("sInqCltID", ""); 
+//            setMaster("sInqCltNm", ""); 
+//            setMaster("cInqCltTp", ""); 
+//            setMaster("sSourceCD", ""); 
+//            setMaster("sSourceNo", ""); 
+//            setMaster("sPlatform", ""); 
+//            setMaster("sAgentIDx", ""); 
+//            setMaster("sAgentNmx", ""); 
+//            setMaster("sEmployID", ""); 
+//            setMaster("sSENamexx", ""); 
+//            setMaster( "sContctNm",""); 
+//            setMaster( "sBranchCd",""); 
+//            setMaster( "sBranchNm",""); 
         }
         return loJSON;
     }
@@ -531,13 +568,13 @@ public class VehicleSalesProposal implements GTransaction{
         JSONObject loJSON = new JSONObject();
         loJSON = poController.searchBankApp(fsValue);
         if(!"error".equals((String) loJSON.get("result"))){
-            setMaster( "sBnkAppCD", (String) loJSON.get("sTransNox"));
-            setMaster( "sBankName", (String) loJSON.get("sBankName"));
-            setMaster( "sBrBankNm", (String) loJSON.get("sBrBankNm"));
+            poController.getMasterModel().setBnkAppCD((String) loJSON.get("sTransNox"));
+            poController.getMasterModel().setBankName((String) loJSON.get("sBankName"));
+            poController.getMasterModel().setBrBankNm((String) loJSON.get("sBrBankNm"));
         } else {
-            setMaster( "sBnkAppCD",""); 
-            setMaster( "sBankName",""); 
-            setMaster( "sBrBankNm",""); 
+            poController.getMasterModel().setBnkAppCD("");
+            poController.getMasterModel().setBankName("");
+            poController.getMasterModel().setBrBankNm("");
         }
         return loJSON;
     }
@@ -547,23 +584,23 @@ public class VehicleSalesProposal implements GTransaction{
         loJSON = poController.searchInsurance(fsValue);
         if(!"error".equals((String) loJSON.get("result"))){
             if(fbisTPL){
-                setMaster( "sInsTplCd", (String) loJSON.get("sBrInsIDx"));
-                setMaster( "sTPLInsNm", (String) loJSON.get("sInsurNme"));
-                setMaster( "sTPLBrIns", (String) loJSON.get("sBrInsNme"));
+                poController.getMasterModel().setInsTplCd((String) loJSON.get("sBrInsIDx"));
+                poController.getMasterModel().setTPLInsNm((String) loJSON.get("sInsurNme"));
+                poController.getMasterModel().setTPLBrIns((String) loJSON.get("sBrInsNme"));
             } else {
-                setMaster( "sInsCodex", (String) loJSON.get("sBrInsIDx"));
-                setMaster( "sCOMInsNm", (String) loJSON.get("sInsurNme"));
-                setMaster( "sCOMBrIns", (String) loJSON.get("sBrInsNme"));
+                poController.getMasterModel().setInsCode((String) loJSON.get("sBrInsIDx"));
+                poController.getMasterModel().setCOMInsNm((String) loJSON.get("sInsurNme"));
+                poController.getMasterModel().setCOMBrIns((String) loJSON.get("sBrInsNme"));
             }
         } else {
             if(fbisTPL){
-                setMaster( "sInsTplCd", "");
-                setMaster( "sTPLInsNm", "");
-                setMaster( "sTPLBrIns", "");
+                poController.getMasterModel().setInsTplCd("");
+                poController.getMasterModel().setTPLInsNm("");
+                poController.getMasterModel().setTPLBrIns("");
             } else {
-                setMaster( "sInsCodex", "");
-                setMaster( "sCOMInsNm", "");
-                setMaster( "sCOMBrIns", "");
+                poController.getMasterModel().setInsCode("");
+                poController.getMasterModel().setCOMInsNm("");
+                poController.getMasterModel().setCOMBrIns("");
             }
         }
         return loJSON;
@@ -573,11 +610,15 @@ public class VehicleSalesProposal implements GTransaction{
         JSONObject loJSON = new JSONObject();
         loJSON = poVSPLabor.searchLabor(fsValue, withUI);
         if(!"error".equals((String) loJSON.get("result"))){
-            setVSPLabor(fnRow, "sLaborCde", (String) loJSON.get("sLaborCde"));
-            setVSPLabor(fnRow, "sLaborDsc", (String) loJSON.get("sLaborDsc"));
+            poVSPLabor.getDetailModel(fnRow).setLaborCde((String) loJSON.get("sLaborCde"));
+            poVSPLabor.getDetailModel(fnRow).setLaborDsc((String) loJSON.get("sLaborDsc"));
+//            setVSPLabor(fnRow, "sLaborCde", (String) loJSON.get("sLaborCde"));
+//            setVSPLabor(fnRow, "sLaborDsc", (String) loJSON.get("sLaborDsc"));
         } else {
-            setVSPLabor(fnRow, "sLaborCde","");
-            setVSPLabor(fnRow, "sLaborDsc", "");
+            poVSPLabor.getDetailModel(fnRow).setLaborCde("");
+            poVSPLabor.getDetailModel(fnRow).setLaborDsc("");
+//            setVSPLabor(fnRow, "sLaborCde","");
+//            setVSPLabor(fnRow, "sLaborDsc", "");
         }
         return loJSON;
     }
@@ -586,14 +627,21 @@ public class VehicleSalesProposal implements GTransaction{
         JSONObject loJSON = new JSONObject();
         loJSON = poVSPParts.searchParts(fsValue);
         if(!"error".equals((String) loJSON.get("result"))){
-            setVSPParts(fnRow, "sStockIDx", (String) loJSON.get("sStockIDx"));
-            setVSPParts(fnRow, "sBarCodex", (String) loJSON.get("sBarCodex"));
-            setVSPParts(fnRow, "nSelPrice", (String) loJSON.get("nSelPrice"));
+            poVSPParts.getDetailModel(fnRow).setStockID((String) loJSON.get("sStockIDx"));
+            poVSPParts.getDetailModel(fnRow).setBarCode((String) loJSON.get("sBarCodex"));
+            poVSPParts.getDetailModel(fnRow).setSelPrice(new BigDecimal((String) loJSON.get("nSelPrice")));
+            
+//            setVSPParts(fnRow, "sStockIDx", (String) loJSON.get("sStockIDx"));
+//            setVSPParts(fnRow, "sBarCodex", (String) loJSON.get("sBarCodex"));
+//            setVSPParts(fnRow, "nSelPrice", (String) loJSON.get("nSelPrice"));
             //setVSPParts(fnRow, "sDescript", (String) loJSON.get("sDescript"));
         } else {
-            setVSPParts(fnRow, "sStockIDx","");
-            setVSPParts(fnRow, "sBarCodex","");
-            setVSPParts(fnRow, "nSelPrice","");
+            poVSPParts.getDetailModel(fnRow).setStockID("");
+            poVSPParts.getDetailModel(fnRow).setBarCode("");
+            poVSPParts.getDetailModel(fnRow).setSelPrice(new BigDecimal("0.00"));
+//            setVSPParts(fnRow, "sStockIDx","");
+//            setVSPParts(fnRow, "sBarCodex","");
+//            setVSPParts(fnRow, "nSelPrice","");
             //setVSPParts(fnRow, "sDescript", "");
         }
         return loJSON;
@@ -618,40 +666,21 @@ public class VehicleSalesProposal implements GTransaction{
         
         /*Compute Labor Total*/
         for (lnCtr = 0; lnCtr <= getVSPLaborList().size()-1; lnCtr++){
-            if(String.valueOf( getVSPLabor(lnCtr, "nLaborAmt")) != null){
-                ldblLaborAmt = ldblLaborAmt.add(new BigDecimal( String.valueOf( getVSPLabor(lnCtr, "nLaborAmt")))).setScale(2, BigDecimal.ROUND_HALF_UP);
-            }
-            
-            if(String.valueOf( getVSPLabor(lnCtr, "nLaborDsc")) != null){
-                ldblLaborDsc = ldblLaborDsc.add(new BigDecimal( String.valueOf( getVSPLabor(lnCtr, "nLaborDsc")))).setScale(2, BigDecimal.ROUND_HALF_UP);
-            }
-            
-            setVSPLabor(lnCtr, "nNtLabAmt",ldblLaborAmt.subtract(new BigDecimal(String.valueOf( getVSPLabor(lnCtr, "nLaborDsc")))));
+            ldblLaborAmt = ldblLaborAmt.add(poVSPLabor.getDetailModel(lnCtr).getLaborAmt()).setScale(2, BigDecimal.ROUND_HALF_UP);
+            ldblLaborDsc = ldblLaborDsc.add(poVSPLabor.getDetailModel(lnCtr).getLaborDscount()).setScale(2, BigDecimal.ROUND_HALF_UP);
+            poVSPLabor.getDetailModel(lnCtr).setNtLabAmt(poVSPLabor.getDetailModel(lnCtr).getLaborDscount());
         }
         
         ldblLaborAmt = ldblLaborAmt.setScale(2, BigDecimal.ROUND_HALF_UP);
         ldblLaborDsc = ldblLaborDsc.setScale(2, BigDecimal.ROUND_HALF_UP);
         /*Compute Parts Total*/
         for (lnCtr = 1; lnCtr <= getVSPPartsList().size()-1; lnCtr++){
-            if(String.valueOf(getVSPParts(lnCtr, "nQuantity")) != null){
-                lsQty = String.valueOf(getVSPParts(lnCtr, "nQuantity"));
-            } else {
-                lsQty = "0";
-            }
-            
-            if(String.valueOf( getVSPParts(lnCtr, "nUnitPrce")) != null){
-                ldblPartsAmt = new BigDecimal(lsQty).multiply(new BigDecimal( String.valueOf( getVSPParts(lnCtr, "nUnitPrce"))));
-            }
-            
-            setVSPParts(lnCtr,"sTotlAmtx",String.valueOf(ldblPartsAmt));
-            System.out.println(" ROW "+ lnCtr + " total amount >> " + getVSPParts(lnCtr, "sTotlAmtx"));
+            lsQty = String.valueOf(poVSPParts.getDetailModel(lnCtr).getQuantity());
+            ldblPartsAmt = new BigDecimal(lsQty).multiply(poVSPParts.getDetailModel(lnCtr).getUnitPrce());
             ldblAccesAmt = ldblAccesAmt.add(ldblPartsAmt);
-            
-            if(String.valueOf( getVSPParts(lnCtr, "nPartsDsc")) != null){
-                ldblAccesDsc = ldblAccesDsc.add(new BigDecimal( String.valueOf( getVSPParts(lnCtr, "nPartsDsc")))).setScale(2, BigDecimal.ROUND_HALF_UP);
-            }
-            
-            setVSPParts(lnCtr, "nNtPrtAmt",ldblPartsAmt.subtract(new BigDecimal(String.valueOf( getVSPParts(lnCtr, "nPartsDsc")))));
+            ldblAccesDsc = ldblAccesDsc.add(poVSPParts.getDetailModel(lnCtr).getPartsDscount()).setScale(2, BigDecimal.ROUND_HALF_UP);
+            poVSPParts.getDetailModel(lnCtr).setNtPrtAmt(ldblPartsAmt.subtract(poVSPParts.getDetailModel(lnCtr).getPartsDscount()));
+            System.out.println(" ROW "+ lnCtr + " total amount >> " + poVSPParts.getDetailModel(lnCtr).getNtPrtAmt());
         }
         
         ldblAccesAmt = ldblAccesAmt.setScale(2, BigDecimal.ROUND_HALF_UP);
@@ -670,47 +699,26 @@ public class VehicleSalesProposal implements GTransaction{
         BigDecimal ldblDiscntxx= new BigDecimal("0.00"); 
         
         //Amount to be Pay
-        String lsUnitPrce = String.valueOf( getMaster("nUnitPrce"));   
         BigDecimal ldblUnitPrce =  new BigDecimal("0.00");
-        if(lsUnitPrce != null && !lsUnitPrce.equals("null")){
-            ldblUnitPrce = new BigDecimal(lsUnitPrce);
-        }
+        ldblUnitPrce = poController.getMasterModel().getUnitPrce(); 
         
-        String lsTPLAmtxx = String.valueOf( getMaster("nTPLAmtxx"));
         BigDecimal ldblTPLAmtxx = new BigDecimal("0.00");
-        if(lsTPLAmtxx != null && !lsTPLAmtxx.equals("null")){
-            ldblTPLAmtxx = new BigDecimal(lsTPLAmtxx);
-        }
+        ldblTPLAmtxx = poController.getMasterModel().getTPLAmt(); 
         
-        String lsCompAmtx = String.valueOf( getMaster("nCompAmtx"));
         BigDecimal ldblCompAmtx = new BigDecimal("0.00");
-        if(lsCompAmtx != null && !lsCompAmtx.equals("null")){
-            ldblCompAmtx = new BigDecimal(lsCompAmtx);
-        }
+        ldblCompAmtx = poController.getMasterModel().getCompAmt();
         
-        String lsLTOAmtxx = String.valueOf( getMaster("nLTOAmtxx")); 
         BigDecimal ldblLTOAmtxx = new BigDecimal("0.00");
-        if(lsLTOAmtxx != null && !lsLTOAmtxx.equals("null")){
-            ldblLTOAmtxx = new BigDecimal(lsLTOAmtxx);
-        }
+        ldblLTOAmtxx = poController.getMasterModel().getLTOAmt();
         
-        String lsChmoAmtx = String.valueOf( getMaster("nChmoAmtx")); 
         BigDecimal ldblChmoAmtx = new BigDecimal("0.00");
-        if(lsChmoAmtx != null && !lsChmoAmtx.equals("null")){
-            ldblChmoAmtx = new BigDecimal(lsChmoAmtx);
-        }
+        ldblChmoAmtx = poController.getMasterModel().getChmoAmt();
         
-        String lsFrgtChrg = String.valueOf( getMaster("nFrgtChrg"));
         BigDecimal ldblFrgtChrg = new BigDecimal("0.00");
-        if(lsFrgtChrg != null && !lsFrgtChrg.equals("null")){
-            ldblFrgtChrg = new BigDecimal(lsFrgtChrg);
-        }
+        ldblFrgtChrg = poController.getMasterModel().getFrgtChrg();
         
-        String lsOthrChrg = String.valueOf( getMaster("nOthrChrg")); 
         BigDecimal ldblOthrChrg = new BigDecimal("0.00");
-        if(lsOthrChrg != null && !lsOthrChrg.equals("null")){
-            ldblOthrChrg = new BigDecimal(lsOthrChrg);
-        }
+        ldblOthrChrg = poController.getMasterModel().getOthrChrg();
         
         String lsAdvDwPmt = String.valueOf( getMaster("nAdvDwPmt"));
         BigDecimal ldblAdvDwPmt = new BigDecimal("0.00");
@@ -841,11 +849,8 @@ public class VehicleSalesProposal implements GTransaction{
                 
                 int lnAcctTerm = getVSPFinanceModel().getVSPFinanceModel().getAcctTerm() ; //getVSPFinance("nAcctTerm");
                 
-                lsUnitPrce = String.valueOf( getMaster("nUnitPrce"));
-                if(lsUnitPrce != null && !lsUnitPrce.equals("null")){
-                    ldblUnitPrce = new BigDecimal(lsUnitPrce);
-                }
-                ldblUnitPrce = ldblUnitPrce.setScale(2, BigDecimal.ROUND_HALF_UP);
+                
+                ldblUnitPrce = poController.getMasterModel().getUnitPrce().setScale(2, BigDecimal.ROUND_HALF_UP);
                 
                 //-Amount Financed = nUnitPrce -(nDiscount + nNtDwnPmt)
                 //ldblFinAmt = ldblUnitPrce - (ldblDiscount + ldblNtDwnPmt); 

@@ -198,7 +198,8 @@ public class Inquiry_Reservation {
             
             
             paDetail.get(lnCtr).setTargetBranchCd(psTargetBranchCd);
-            
+//            paDetail.get(lnCtr).setReferNo(MiscUtil.getNextCode(paDetail.get(lnCtr).getTable(), "sReferNox", true, poGRider.getConnection(), poGRider.getBranchCode()));
+               
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Inquiry_Reservation, paDetail.get(lnCtr));
             validator.setGRider(poGRider);
             if (!validator.isEntryOkay()){
