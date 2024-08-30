@@ -135,7 +135,7 @@ public class Inquiry implements GTransaction{
             }
         }
         
-        poJSON = poReservation.openDetail(fsValue,true);
+        poJSON = poReservation.openDetail(fsValue,true, false);
         if(!"success".equals(poJSON.get("result"))){
             if(true == (boolean) poJSON.get("continue")){
                 poJSON.put("result", "success");
@@ -489,7 +489,7 @@ public class Inquiry implements GTransaction{
     
     public JSONObject loadReservationList() {
         JSONObject loJSON = new JSONObject();
-        loJSON = poReservation.openDetail(poController.getMasterModel().getTransNo(),true);
+        loJSON = poReservation.openDetail(poController.getMasterModel().getTransNo(),true,false);
         if(!"success".equals(poJSON.get("result"))){
             if(true == (boolean) poJSON.get("continue")){
                 loJSON.put("result", "success");

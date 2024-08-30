@@ -32,6 +32,7 @@ public class VehicleSalesProposal_Parts {
     String psMessagex;
     public JSONObject poJSON;
     
+    
     ArrayList<Model_VehicleSalesProposal_Parts> paDetail;
     ArrayList<Model_VehicleSalesProposal_Parts> paRemDetail;
     
@@ -43,7 +44,7 @@ public class VehicleSalesProposal_Parts {
         return pnEditMode;
     }
 
-    public Model_VehicleSalesProposal_Parts getVSPLabor(int fnIndex){
+    public Model_VehicleSalesProposal_Parts getVSPParts(int fnIndex){
         if (fnIndex > paDetail.size() - 1 || fnIndex < 0) return null;
         
         return paDetail.get(fnIndex);

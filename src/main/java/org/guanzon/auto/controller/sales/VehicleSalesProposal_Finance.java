@@ -33,6 +33,7 @@ public class VehicleSalesProposal_Finance {
     public JSONObject poJSON;
     
     ArrayList<Model_VehicleSalesProposal_Finance> paDetail;
+    ArrayList<Model_VehicleSalesProposal_Finance> paRemDetail;
 
     public VehicleSalesProposal_Finance(GRider foAppDrver){
         poGRider = foAppDrver;
@@ -49,33 +50,23 @@ public class VehicleSalesProposal_Finance {
     }
     
     public JSONObject addDetail(String fsTransNo){
-        if(paDetail == null){
+//        if(paDetail == null){
            paDetail = new ArrayList<>();
-        }
+//        }
         
         poJSON = new JSONObject();
-        if (paDetail.size()<=0){
-            paDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
-            paDetail.get(0).newRecord();
-            
-            paDetail.get(0).setValue("sTransNox", fsTransNo);
-            poJSON.put("result", "success");
-            poJSON.put("message", "VSP Finance add record.");
-        } 
-//        else {
-//            paDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
-//            paDetail.get(paDetail.size()-1).newRecord();
-//
-//            paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
-//            poJSON.put("result", "success");
-//            poJSON.put("message", "VSP Finance add record.");
-//        }
+        paDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
+        paDetail.get(0).newRecord();
+
+//        paDetail.get(0).setValue("sTransNox", fsTransNo);
+        poJSON.put("result", "success");
+        poJSON.put("message", "VSP Finance add record.");
         return poJSON;
     }
     
     public JSONObject openDetail(String fsValue){
         paDetail = new ArrayList<>();
-//        paRemDetail = new ArrayList<>();
+        paRemDetail = new ArrayList<>();
         poJSON = new JSONObject();
         String lsSQL =    "  SELECT "                                                  
                         + "    sTransNox "
@@ -102,8 +93,6 @@ public class VehicleSalesProposal_Finance {
                 
                 System.out.println("lnctr = " + lnctr);
             }else{
-//                paDetail = new ArrayList<>();
-//                addDetail(fsValue);
                 poJSON.put("result", "error");
                 poJSON.put("continue", true);
                 poJSON.put("message", "No record selected.");
@@ -120,17 +109,17 @@ public class VehicleSalesProposal_Finance {
         JSONObject obj = new JSONObject();
         
         int lnCtr;
-//        if(paRemDetail != null){
-//            int lnRemSize = paRemDetail.size() -1;
-//            if(lnRemSize >= 0){
-//                for(lnCtr = 0; lnCtr <= lnRemSize; lnCtr++){
-//                    obj = paRemDetail.get(lnCtr).deleteRecord();
-//                    if("error".equals((String) obj.get("result"))){
-//                        return obj;
-//                    }
-//                }
-//            }
-//        }
+        if(paRemDetail != null){
+            int lnRemSize = paRemDetail.size() -1;
+            if(lnRemSize >= 0){
+                for(lnCtr = 0; lnCtr <= lnRemSize; lnCtr++){
+                    obj = paRemDetail.get(lnCtr).deleteRecord();
+                    if("error".equals((String) obj.get("result"))){
+                        return obj;
+                    }
+                }
+            }
+        }
         
         if(paDetail == null){
             obj.put("result", "error");
@@ -160,16 +149,9 @@ public class VehicleSalesProposal_Finance {
         }
         
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
-            //if(lnCtr>0){
-                if(paDetail.get(lnCtr).getTransNo().isEmpty()){
-                    continue; //skip, instead of removing the actual detail
-//                    paDetail.remove(lnCtr);
-//                    lnCtr++;
-//                    if(lnCtr > lnSize){
-//                        break;
-//                    } 
-                }
-            //}
+            if(paDetail.get(lnCtr).getTransNo().isEmpty()){
+                continue; //skip, instead of removing the actual detail
+            }
             
             paDetail.get(lnCtr).setTransNo(fsTransNo);
             paDetail.get(lnCtr).setTargetBranchCd(psTargetBranchCd);
@@ -197,31 +179,43 @@ public class VehicleSalesProposal_Finance {
         }
         return paDetail;
     }
-//    public void setDetailList(ArrayList<Model_VehicleSalesProposal_Finance> foObj){this.paDetail = foObj;}
-//    
-//    public void setDetail(int fnRow, int fnIndex, Object foValue){ paDetail.get(fnRow).setValue(fnIndex, foValue);}
-//    public void setDetail(int fnRow, String fsIndex, Object foValue){ paDetail.get(fnRow).setValue(fsIndex, foValue);}
-//    public Object getDetail(int fnRow, int fnIndex){return paDetail.get(fnRow).getValue(fnIndex);}
-//    public Object getDetail(int fnRow, String fsIndex){return paDetail.get(fnRow).getValue(fsIndex);}
     
     public Model_VehicleSalesProposal_Finance getVSPFinanceModel() {
         return paDetail.get(0);
     }
-
-//    public JSONObject setMaster(int fnCol, Object foData) {
-//        return paDetail.get(0).setValue(fnCol, foData);
-//    }
-//
-//    public JSONObject setMaster(String fsCol, Object foData) {
-//        return setMaster(paDetail.get(0).getColumn(fsCol), foData);
-//    }
-//    
-//    public Object getMaster(int fnCol) {
-//        return paDetail.get(0).getValue(fnCol);
-//    }
-//
-//    public Object getMaster(String fsCol) {
-//        return getMaster(paDetail.get(0).getColumn(fsCol));
-//    }
+    
+    public Object removeDetail(int fnRow){
+        JSONObject loJSON = new JSONObject();
+        
+        if(paDetail.get(fnRow).getTransNo()!= null){
+            if(paDetail.get(fnRow).getTransNo().trim().isEmpty()){
+                RemoveDetail(fnRow);
+            }
+        }
+        
+        paDetail.remove(fnRow);
+        return loJSON;
+    }
+    
+    private JSONObject RemoveDetail(Integer fnRow){
+        
+        if(paRemDetail == null){
+           paRemDetail = new ArrayList<>();
+        }
+        
+        poJSON = new JSONObject();
+        if (paRemDetail.size()<=0){
+            paRemDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
+            paRemDetail.get(0).openRecord(paDetail.get(fnRow).getTransNo());
+            poJSON.put("result", "success");
+            poJSON.put("message", "added to remove record.");
+        } else {
+            paRemDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
+            paRemDetail.get(paRemDetail.size()-1).openRecord(paDetail.get(fnRow).getTransNo());
+            poJSON.put("result", "success");
+            poJSON.put("message", "added to remove record.");
+        }
+        return poJSON;
+    }
     
 }

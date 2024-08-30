@@ -73,7 +73,7 @@ public class VehicleSalesProposalMaster {
                         + " , a.nSPFltDsc "                                                               
                         + " , a.nBndleDsc "                                                               
                         + " , a.nAddlDscx "                                                               
-                        + " , a.nDealrInc "                                                               
+        //                + " , a.nDealrInc "                                                               
                         + " , a.cPayModex "                                                               
                         + " , a.sBnkAppCD "                                                               
                         + " , a.nTranTotl "                                                               

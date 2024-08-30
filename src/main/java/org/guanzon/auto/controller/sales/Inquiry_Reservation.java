@@ -80,22 +80,39 @@ public class Inquiry_Reservation {
         return poJSON;
     }
     
-    public JSONObject openDetail(String fsValue, boolean fbIsInq){
+    /**
+     * LOAD INQUIRY RESERVATION
+     * @param fsValue store Inquiry sTransNox or VSP sTransNox
+     * @param fbIsInq set true when retrieving for Inquiry else false when retrieving for VSP
+     * @param fbOthRsv set true when retrieving for other reservation that is not equal to actual Inquiry sTransNox
+     * @return 
+     */
+    public JSONObject openDetail(String fsValue, boolean fbIsInq, boolean fbOthRsv){
         paDetail = new ArrayList<>();
         paRemDetail = new ArrayList<>();
         poJSON = new JSONObject();
-        String lsSQL =    "  SELECT "                                                  
-                        + "  sTransNox "                                             
-                        + ", sReferNox "                                             
-                        + ", sClientID "                                             
-                        + ", sSourceNo "                                             
-                        + ", sTransIDx "                                            
-                        + "  FROM customer_inquiry_reservation "  ;
-        if(fbIsInq){
-            lsSQL = MiscUtil.addCondition(lsSQL, " sSourceNo = " + SQLUtil.toSQL(fsValue));
+        String lsSQL =    " SELECT "                                                     
+                        + "   a.sTransNox "                                              
+                        + " , a.sReferNox "                                              
+                        + " , a.sClientID "                                              
+                        + " , a.sSourceNo "                                              
+                        + " , a.sTransIDx "                                              
+                        + " , a.sApproved "                                              
+                        + " , b.sReferNox "                                              
+                        + " FROM customer_inquiry_reservation a "                        
+                        + " LEFT JOIN si_master_source b ON b.sReferNox = a.sTransNox "  
+                        + " LEFT JOIN si_master c ON c.sTransNox = b.sTransNox "         ;
+        if(!fbOthRsv){
+            if(fbIsInq){
+                lsSQL = MiscUtil.addCondition(lsSQL, " a.sSourceNo = " + SQLUtil.toSQL(fsValue));
+            } else {
+                lsSQL = MiscUtil.addCondition(lsSQL, " a.sTransIDx = " + SQLUtil.toSQL(fsValue));
+            }
         } else {
-            lsSQL = MiscUtil.addCondition(lsSQL, " sTransIDx = " + SQLUtil.toSQL(fsValue));
+            lsSQL = MiscUtil.addCondition(lsSQL, " a.sApproved = '2' AND (c.sReferNox <> NULL OR TRIM(c.sReferNox) <> '')"
+                                                  + " AND a.sSourceNo <> " + SQLUtil.toSQL(fsValue));
         }
+        
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
         System.out.println(lsSQL);
@@ -278,6 +295,9 @@ public class Inquiry_Reservation {
     public Object getDetail(int fnRow, int fnIndex){return paDetail.get(fnRow).getValue(fnIndex);}
     public Object getDetail(int fnRow, String fsIndex){return paDetail.get(fnRow).getValue(fsIndex);}
     
+    public Model_Inquiry_Reservation getDetailModel(int fnRow) {
+        return paDetail.get(fnRow);
+    }
     
     public JSONObject removeDetail(int fnRow, boolean fbIsInq){
         JSONObject loJSON = new JSONObject();
@@ -327,8 +347,8 @@ public class Inquiry_Reservation {
                 loJSON.put("result", "error");
                 loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already cancelled.");
                 return loJSON;
-            }
-            
+            } 
+           
             CancelForm cancelform = new CancelForm();
             if (!cancelform.loadCancelWindow(poGRider, paDetail.get(fnRow).getReferNo(), paDetail.get(fnRow).getTransNo(), "RESERVATION")) {
                 poJSON.put("result", "error");

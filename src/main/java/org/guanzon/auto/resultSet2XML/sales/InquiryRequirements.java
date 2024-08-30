@@ -41,7 +41,7 @@ public class InquiryRequirements {
                         + "    a.sTransNox "                                                    
                         + "  , a.nEntryNox "                                                    
                         + "  , a.sRqrmtCde "                                                    
-                        + "  , a.cRequired "                                                    
+        //                + "  , a.cRequired "                                                    
                         + "  , a.cSubmittd "                                                    
                         + "  , a.sReceived "                                                    
                         + "  , a.dReceived "                                                    
@@ -49,13 +49,15 @@ public class InquiryRequirements {
                         + "  , d.cPayModex "                                                    
                         + "  , d.cCustGrpx "                                                    
                         + "  , e.sCompnyNm "                                                    
+                        + "  , f.cRequired "                                                        
                         + " FROM customer_inquiry_requirements a "                              
                         + " LEFT JOIN requirement_source b ON a.sRqrmtCde = b.sRqrmtCde "       
                         + " LEFT JOIN customer_inquiry d ON d.sTransNox = a.sTransNox   "       
-                        + " LEFT JOIN GGC_ISysDBF.Client_Master e ON e.sClientID = a.sReceived " 
+                        + " LEFT JOIN GGC_ISysDBF.Client_Master e ON e.sClientID = a.sReceived "               
+                        + " LEFT JOIN requirement_source_pergroup f ON f.sRqrmtCde = a.sRqrmtCde " 
                         + " WHERE 0=1";
         
-        
+        System.out.println(lsSQL);
         ResultSet loRS = instance.executeQuery(lsSQL);
         try {
             if (MiscUtil.resultSet2XML(instance, loRS, System.getProperty("sys.default.path.metadata"), "customer_inquiry_requirements", "")){

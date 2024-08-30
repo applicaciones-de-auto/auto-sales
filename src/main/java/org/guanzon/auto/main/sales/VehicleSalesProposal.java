@@ -10,12 +10,9 @@ import java.math.RoundingMode;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.rowset.CachedRowSet;
-import javax.sql.rowset.RowSetFactory;
-import javax.sql.rowset.RowSetProvider;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
@@ -45,7 +42,8 @@ public class VehicleSalesProposal implements GTransaction{
     VehicleSalesProposal_Finance poVSPFinance;
     VehicleSalesProposal_Labor poVSPLabor;
     VehicleSalesProposal_Parts poVSPParts;
-    Inquiry_Reservation poReservation;
+    Inquiry_Reservation poVSPReservation;
+    Inquiry_Reservation poOTHReservation;
     
     CachedRowSet poPaymentHstry;
     
@@ -54,7 +52,8 @@ public class VehicleSalesProposal implements GTransaction{
         poVSPFinance = new VehicleSalesProposal_Finance(foAppDrver);
         poVSPLabor = new VehicleSalesProposal_Labor(foAppDrver);
         poVSPParts = new VehicleSalesProposal_Parts(foAppDrver);
-        poReservation = new Inquiry_Reservation(foAppDrver);
+        poVSPReservation = new Inquiry_Reservation(foAppDrver);
+        poOTHReservation = new Inquiry_Reservation(foAppDrver);
         
         poGRider = foAppDrver;
         pbWtParent = fbWtParent;
@@ -137,7 +136,7 @@ public class VehicleSalesProposal implements GTransaction{
             return poJSON;
         }
         
-        poJSON = poReservation.openDetail(fsValue, false);
+        poJSON = poVSPReservation.openDetail(fsValue, false, false);
         if(!"success".equals((String) checkData(poJSON).get("result"))){
             pnEditMode = EditMode.UNKNOWN;
             return poJSON;
@@ -195,10 +194,12 @@ public class VehicleSalesProposal implements GTransaction{
             return checkData(poJSON);
         }
         
-        for(int lnCtr = 0; lnCtr <= getReservationList().size()-1; lnCtr++){
-            poReservation.setDetail(lnCtr, "sTransIDx", poController.getMasterModel().getTransNo());
+        for(int lnCtr = 0; lnCtr <= getVSPReservationList().size()-1; lnCtr++){
+            poVSPReservation.getDetailModel(lnCtr).setTransID(poController.getMasterModel().getTransNo());
         }
-        poJSON =  poReservation.saveDetail("");
+        
+        poVSPReservation.setTargetBranchCd(poController.getMasterModel().getBranchCD());
+        poJSON =  poVSPReservation.saveDetail("");
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
@@ -289,41 +290,18 @@ public class VehicleSalesProposal implements GTransaction{
     public ArrayList getVSPFinanceList(){return poVSPFinance.getDetailList();}
     public VehicleSalesProposal_Finance getVSPFinanceModel(){return poVSPFinance;} 
     
-//    public void setVSPFinanceList(ArrayList foObj){this.poVSPFinance.setDetailList(foObj);}
-    
-//    public void setVSPFinance(int fnIndex, Object foValue){ poVSPFinance.setDetail(fnRow, fnIndex, foValue);}
-//    public void setVSPFinance(String fsIndex, Object foValue){ poVSPFinance.setDetail(fnRow, fsIndex, foValue);}
-//    public Object getVSPFinance(int fnIndex){return poVSPFinance.getDetail(fnRow, fnIndex);}
-//    public Object getVSPFinance(String fsIndex){return poVSPFinance.getDetail(fnRow, fsIndex);}
-    
-//    public JSONObject setVSPFinance(int fnCol, Object foData) {
-//        return poVSPFinance.setMaster(fnCol, foData); 
-//    }
-//
-//    public JSONObject setVSPFinance(String fsCol, Object foData) {
-//        return poVSPFinance.setMaster(fsCol, foData);
-//    }
-//
-//    public Object getVSPFinance(int fnCol) {
-//        return poVSPFinance.getMaster(fnCol);
-//    }
-//
-//    public Object getVSPFinance(String fsCol) {
-//        return poVSPFinance.getMaster(fsCol); 
-//    }
-    
     public Object addVSPFinance(){ return poVSPFinance.addDetail(poController.getMasterModel().getTransNo());}
-    //public Object removeVSPFinance(int fnRow){ return poVSPFinance.removeDetail(fnRow);}
+    public Object removeVSPFinance(int fnRow){ return poVSPFinance.removeDetail(fnRow);}
     
     public VehicleSalesProposal_Labor getVSPLaborModel(){return poVSPLabor;} 
     
     public ArrayList getVSPLaborList(){return poVSPLabor.getDetailList();}
-    public void setVSPLaborList(ArrayList foObj){this.poVSPLabor.setDetailList(foObj);}
+//    public void setVSPLaborList(ArrayList foObj){this.poVSPLabor.setDetailList(foObj);}
     
-    public void setVSPLabor(int fnRow, int fnIndex, Object foValue){ poVSPLabor.setDetail(fnRow, fnIndex, foValue);}
-    public void setVSPLabor(int fnRow, String fsIndex, Object foValue){ poVSPLabor.setDetail(fnRow, fsIndex, foValue);}
-    public Object getVSPLabor(int fnRow, int fnIndex){return poVSPLabor.getDetail(fnRow, fnIndex);}
-    public Object getVSPLabor(int fnRow, String fsIndex){return poVSPLabor.getDetail(fnRow, fsIndex);}
+//    public void setVSPLabor(int fnRow, int fnIndex, Object foValue){ poVSPLabor.setDetail(fnRow, fnIndex, foValue);}
+//    public void setVSPLabor(int fnRow, String fsIndex, Object foValue){ poVSPLabor.setDetail(fnRow, fsIndex, foValue);}
+//    public Object getVSPLabor(int fnRow, int fnIndex){return poVSPLabor.getDetail(fnRow, fnIndex);}
+//    public Object getVSPLabor(int fnRow, String fsIndex){return poVSPLabor.getDetail(fnRow, fsIndex);}
     
     public Object addVSPLabor(){ return poVSPLabor.addDetail(poController.getMasterModel().getTransNo());}
     public Object removeVSPLabor(int fnRow){ return poVSPLabor.removeDetail(fnRow);}
@@ -331,19 +309,23 @@ public class VehicleSalesProposal implements GTransaction{
     public VehicleSalesProposal_Parts getVSPPartsModel(){return poVSPParts;} 
     
     public ArrayList getVSPPartsList(){return poVSPParts.getDetailList();}
-    public void setVSPPartsList(ArrayList foObj){this.poVSPParts.setDetailList(foObj);}
-    
-    public void setVSPParts(int fnRow, int fnIndex, Object foValue){ poVSPParts.setDetail(fnRow, fnIndex, foValue);}
-    public void setVSPParts(int fnRow, String fsIndex, Object foValue){ poVSPParts.setDetail(fnRow, fsIndex, foValue);}
-    public Object getVSPParts(int fnRow, int fnIndex){return poVSPParts.getDetail(fnRow, fnIndex);}
-    public Object getVSPParts(int fnRow, String fsIndex){return poVSPParts.getDetail(fnRow, fsIndex);}
+//    public void setVSPPartsList(ArrayList foObj){this.poVSPParts.setDetailList(foObj);}
+//    
+//    public void setVSPParts(int fnRow, int fnIndex, Object foValue){ poVSPParts.setDetail(fnRow, fnIndex, foValue);}
+//    public void setVSPParts(int fnRow, String fsIndex, Object foValue){ poVSPParts.setDetail(fnRow, fsIndex, foValue);}
+//    public Object getVSPParts(int fnRow, int fnIndex){return poVSPParts.getDetail(fnRow, fnIndex);}
+//    public Object getVSPParts(int fnRow, String fsIndex){return poVSPParts.getDetail(fnRow, fsIndex);}
     
     public Object addVSPParts(){ return poVSPParts.addDetail(poController.getMasterModel().getTransNo());}
     public Object removeVSPParts(int fnRow){ return poVSPParts.removeDetail(fnRow);}
     
-    public JSONObject loadReservationList() {
+    /**
+     * Load linked reservation into VSP
+     * @return 
+     */
+    public JSONObject loadVSPReservationList() {
         JSONObject loJSON = new JSONObject();
-        loJSON = poReservation.openDetail(poController.getMasterModel().getTransNo(),false);
+        loJSON = poVSPReservation.openDetail(poController.getMasterModel().getTransNo(),false, false);
         if(!"success".equals(poJSON.get("result"))){
             if(true == (boolean) poJSON.get("continue")){
                 loJSON.put("result", "success");
@@ -353,49 +335,83 @@ public class VehicleSalesProposal implements GTransaction{
         return loJSON;
     }
     
-    public ArrayList getReservationList(){return poReservation.getDetailList();}
-    public Object getReservation(int fnRow, int fnIndex){return poReservation.getDetail(fnRow, fnIndex);}
-    public Object getReservation(int fnRow, String fsIndex){return poReservation.getDetail(fnRow, fsIndex);}
-    public Object removeReservation(int fnRow){ return poReservation.removeDetail(fnRow,false);}
+    public Inquiry_Reservation getVSPReservationModel(){return poVSPReservation;} 
+    public ArrayList getVSPReservationList(){return poVSPReservation.getDetailList();}
+    public Object removeVSPReservation(int fnRow){ return poVSPReservation.removeDetail(fnRow,false);}
     
-    public JSONObject addOthReservation(String fsRsvTrnNo){ 
+    /**
+     * Add other reservation to VSP Other Reservation
+     * @param fsRsvTrnNo
+     * @return 
+     */
+    public JSONObject addToVSPReservation(String fsRsvTrnNo){ 
         JSONObject loJSON = new JSONObject();
         //Check if reservation already exist
-        for(int lnCtr = 0; lnCtr <= getReservationList().size()-1;lnCtr++){
-            if(((String) getReservation(lnCtr, "sTransNox")).equals(fsRsvTrnNo)){
+        for(int lnCtr = 0; lnCtr <= getVSPReservationList().size() - 1;lnCtr++){
+            if(((String) poVSPReservation.getDetailModel(lnCtr).getTransNo()).equals(fsRsvTrnNo)){
                 loJSON.put("result", "error");
                 loJSON.put("message", "Reservation already exist.");
                 return loJSON;
             }
         }
         
-        loJSON = poReservation.openRecord(fsRsvTrnNo);
+        loJSON = poVSPReservation.openRecord(fsRsvTrnNo);
         if("error".equals((String) loJSON.get("resutl"))){
-            removeReservation(getReservationList().size()-1);
+            removeVSPReservation(getVSPReservationList().size()-1);
             loJSON.put("result", "error");
             loJSON.put("message", "Cannot add other reservation.");
         } else {
-            poReservation.setDetail(getReservationList().size()-1, "sTransIDx", poController.getMasterModel().getTransNo());
+            poVSPReservation.getDetailModel(getVSPReservationList().size()-1).setTransID(poController.getMasterModel().getTransNo());
         }
-        
         return loJSON;
     }
     
-    public JSONObject loadOthReservation() {
-        return poController.loadOthReservation();
+    /**
+     * Load linked reservation into VSP
+     * @return 
+     */
+    public JSONObject loadOTHReservationList() {
+        JSONObject loJSON = new JSONObject();
+        if(poController.getMasterModel().getInqTran() == null) {
+            loJSON.put("result","error");
+            loJSON.put("message", "Select Inquiry first.");
+            return loJSON;
+        } else {
+            if(poController.getMasterModel().getInqTran().trim().isEmpty()){
+                loJSON.put("result","error");
+                loJSON.put("message", "Select Inquiry first.");
+                return loJSON;
+            }
+        }
+        
+        loJSON = poOTHReservation.openDetail(poController.getMasterModel().getInqTran(),true, true);
+        if(!"success".equals(poJSON.get("result"))){
+            if(true == (boolean) poJSON.get("continue")){
+                loJSON.put("result", "success");
+                loJSON.put("message", "Record loaded succesfully.");
+            }
+        }
+        return loJSON;
     }
     
-    public int getOthReservationCount() throws SQLException{
-        return poController.getOthReservationCount();
-    }
+    public Inquiry_Reservation getOTHReservationModel(){return poOTHReservation;} 
+    public ArrayList getOTHReservationList(){return poOTHReservation.getDetailList();}
     
-    public Object getOthReservationDetail(int fnRow, int fnIndex) throws SQLException{
-        return poController.getOthReservationDetail(fnRow, fnIndex);
-    }
-    
-    public Object getOthReservationDetail(int fnRow, String fsIndex) throws SQLException{
-        return poController.getOthReservationDetail(fnRow, fsIndex);
-    }
+//    public JSONObject loadOthReservation() {
+//        return poController.loadOthReservation();
+//    }
+//    
+//    public int getOthReservationCount() throws SQLException{
+//        return poController.getOthReservationCount();
+//    }
+//    
+//    public Object getOthReservationDetail(int fnRow, int fnIndex) throws SQLException{
+//        return poController.getOthReservationDetail(fnRow, fnIndex);
+//    }
+//    
+//    public Object getOthReservationDetail(int fnRow, String fsIndex) throws SQLException{
+//        return poController.getOthReservationDetail(fnRow, fsIndex);
+//    }
     
     public JSONObject searchInquiry(String fsValue){
         JSONObject loJSON = new JSONObject();
@@ -410,7 +426,35 @@ public class VehicleSalesProposal implements GTransaction{
             if((String) loJSON.get("nAmountxx") == null){                                                                                      
                 poController.getMasterModel().setResrvFee(new BigDecimal("0.00"));                                                             
             } else {                                                                                                                           
-                poController.getMasterModel().setResrvFee(new BigDecimal((String) loJSON.get("nAmountxx")));                                   
+                poController.getMasterModel().setResrvFee(new BigDecimal((String) loJSON.get("nAmountxx")));  
+                
+                //Automatically add reservation to VSP reservation list
+                loJSON = poOTHReservation.openDetail(poController.getMasterModel().getInqTran(),true, false);
+                if(!"success".equals(poJSON.get("result"))){
+                    if(true == (boolean) poJSON.get("continue")){
+                        loJSON.put("result", "success");
+                        loJSON.put("message", "Record loaded succesfully.");
+                    }
+                }
+                
+                for(int lnCtr = 0; lnCtr <= poOTHReservation.getDetailList().size() - 1; lnCtr++){
+                    //check for approval
+                    if(poOTHReservation.getDetailModel(lnCtr).getTranStat().equals("2")){
+                        //check for payment
+                        if(poOTHReservation.getDetailModel(lnCtr).getSINo() != null){
+                            if(!poOTHReservation.getDetailModel(lnCtr).getSINo().trim().isEmpty()){
+                                addToVSPReservation(poOTHReservation.getDetailModel(lnCtr).getTransNo());
+                            }
+                        }
+                        
+                    }
+                }
+                
+                //Automatically add row for vsp finance when payment mode is not cash
+                if(!poController.getMasterModel().getPayMode().equals("0")){
+                    addVSPFinance();
+                }
+                
             }                                                                                                                                  
                                                                                                                                                
             //Inquiring Customer                                                                                                                                                          
@@ -430,7 +474,8 @@ public class VehicleSalesProposal implements GTransaction{
             poController.getMasterModel().setSEName((String) loJSON.get("sSalesExe"));                                                         
             poController.getMasterModel().setContctNm((String) loJSON.get("sContctNm"));                                                       
             poController.getMasterModel().setBranchCD((String) loJSON.get("sBranchCd"));                                                       
-            poController.getMasterModel().setBranchNm((String) loJSON.get("sBranchNm"));                                                       
+            poController.getMasterModel().setBranchNm((String) loJSON.get("sBranchNm"));       
+            
         } else {                                                                                                                               
             //Buying Customer Default                                                                                                          
             poController.getMasterModel().setClientID("");                                                                                     
@@ -456,29 +501,10 @@ public class VehicleSalesProposal implements GTransaction{
             poController.getMasterModel().setSEName("");                                                                                       
             poController.getMasterModel().setContctNm("");                                                                                     
             poController.getMasterModel().setBranchCD("");                                                                                     
-            poController.getMasterModel().setBranchNm("");                                                                                     
-                                              
-//            setMaster("sClientID", ""); 
-//            setMaster("sBuyCltNm", ""); 
-//            setMaster("sAddressx", ""); 
-//            setMaster("nResrvFee", 0.00);
-//            //Inquiring Customer        
-//            setMaster("sInqryIDx","");  
-//            setMaster("dInqryDte", SQLUtil.toDate("1900-01-01", SQLUtil.FORMAT_SHORT_DATE)); 
-//            setMaster("sInqCltID", ""); 
-//            setMaster("sInqCltNm", ""); 
-//            setMaster("cInqCltTp", ""); 
-//            setMaster("sSourceCD", ""); 
-//            setMaster("sSourceNo", ""); 
-//            setMaster("sPlatform", ""); 
-//            setMaster("sAgentIDx", ""); 
-//            setMaster("sAgentNmx", ""); 
-//            setMaster("sEmployID", ""); 
-//            setMaster("sSENamexx", ""); 
-//            setMaster( "sContctNm",""); 
-//            setMaster( "sBranchCd",""); 
-//            setMaster( "sBranchNm",""); 
+            poController.getMasterModel().setBranchNm("");      
         }
+        
+        
         return loJSON;
     }
     
@@ -904,9 +930,9 @@ public class VehicleSalesProposal implements GTransaction{
                     + " LEFT JOIN si_master b ON b.sTransNox = a.sTransNox ";
 
             /* 1. Get all Invoice Receipts (SI) linked thru INQUIRY RESERVATION sTransNox */
-            for(int lnCtr = 0; lnCtr <= getReservationList().size()-1; lnCtr++){
+            for(int lnCtr = 0; lnCtr <= getVSPReservationList().size()-1; lnCtr++){
                 lsWhere = MiscUtil.addCondition(lsSQL, " b.cTranStat <> '0' "
-                                                    + " AND a.sReferNox = " + SQLUtil.toSQL(getReservation(lnCtr, "sTransNox"))
+                                                    + " AND a.sReferNox = " + SQLUtil.toSQL(poVSPReservation.getDetailModel(lnCtr).getTransNo()) //getReservation(lnCtr, "sTransNox")
                                                     );
                 System.out.println("EXISTING RESERVATION PAYMENT CHECK: " + lsSQL);
                 loRS = poGRider.executeQuery(lsWhere);

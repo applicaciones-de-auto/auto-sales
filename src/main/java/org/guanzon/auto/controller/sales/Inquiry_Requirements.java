@@ -163,6 +163,26 @@ public class Inquiry_Requirements {
             }
         }
         
+        //validate atleast 1 required requirements must sent
+        boolean lbRqrdChk = false;
+        for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
+            if(paDetail.get(lnCtr).getRequired().equals("1")){
+                if(paDetail.get(lnCtr).getReceived() != null){
+                    if(!paDetail.get(lnCtr).getReceived().isEmpty()){
+                        lbRqrdChk = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if(!lbRqrdChk){
+            obj.put("result", "error");
+            obj.put("continue", false);
+            obj.put("message", "Client must submit atleast 1 required requirement to proceed to on process.\nOtherwise inquiry must be approve for VIP clients.");
+            return obj;
+        }
+        
         int lnEntryNo = 1;
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
             if(paDetail.get(lnCtr).getReceived().trim().isEmpty()){
@@ -322,6 +342,7 @@ public class Inquiry_Requirements {
                         + "  , b.sRqrmtIDx "                                                      
                         + "  , b.cPayModex "                                                      
                         + "  , b.cCustGrpx "                                                      
+                        + "  , b.cRequired "                                                      
                         + " FROM requirement_source a "                                           
                         + " LEFT JOIN requirement_source_pergroup b ON b.sRqrmtCde = a.sRqrmtCde " ;  
         lsSQL = MiscUtil.addCondition(lsSQL, " b.cPayModex = " + SQLUtil.toSQL(fsPaymode)
@@ -336,6 +357,7 @@ public class Inquiry_Requirements {
                     addRequirements();
                     setRequirements(paRequirements.size()-1,"sRqrmtCde", (String) loRS.getString("sRqrmtCde"));
                     setRequirements(paRequirements.size()-1,"sDescript", (String) loRS.getString("sDescript"));
+                    setRequirements(paRequirements.size()-1,"cRequired", (String) loRS.getString("cRequired"));
                     
                     for (int lnCtr = 0; lnCtr <= paDetail.size()-1;lnCtr++){
                         if(paDetail.get(lnCtr).getRqrmtCde().equals( loRS.getString("sRqrmtCde"))){

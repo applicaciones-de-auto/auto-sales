@@ -895,86 +895,86 @@ public class VehicleSalesProposal_Master implements GTransaction{
         return loJSON;
     }
     
-    public JSONObject loadOthReservation(){
-        JSONObject loJSON = new JSONObject();
-        try {
-            String lsSQL =    " SELECT "                                                                  
-                            + "   a.sTransNox "                                                           
-                            + " , a.sBranchCd "                                                           
-                            + " , a.dTransact "                                                           
-                            + " , a.cDocTypex "                                                           
-                            + " , a.sReferNox "                                                           
-                            + " , a.sClientID "                                                           
-                            + " , a.nTranTotl "                                                           
-                            + " , a.nDiscount "                                                           
-                            + " , a.nVatSales "                                                           
-                            + " , a.nVatAmtxx "                                                           
-                            + " , a.nNonVATSl "                                                           
-                            + " , a.nZroVATSl "                                                           
-                            + " , a.cWTRatexx "                                                           
-                            + " , a.nCWTAmtxx "                                                           
-                            + " , a.nAdvPaymx "                                                           
-                            + " , a.nNetTotal "                                                           
-                            + " , a.nCashAmtx "                                                           
-                            + " , a.nChckAmtx "                                                           
-                            + " , a.nCardAmtx "                                                           
-                            + " , a.nOthrAmtx "                                                           
-                            + " , a.nGiftAmtx "                                                           
-                            + " , a.nAmtPaidx "                                                           
-                            + " , a.cTranStat "                                                           
-                            + " , b.sReferNox "                                                       
-                            + " , c.sTransNox AS sRsvTrnNo "                                                         
-                            + " , c.sReferNox AS sRsvSlpNo "                                              
-                            + " , d.sCompnyNm AS sClientNm "                                              
-                            + " FROM si_master a  "                                                       
-                            + " INNER JOIN si_master_source b ON b.sTransNox = a.sTransNox "              
-                            + " INNER JOIN customer_inquiry_reservation c ON c.sTransNox = b.sReferNox "  
-                            + " LEFT JOIN client_master d ON d.sClientID = a.sClientID " ;
-            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '1' "
-                                                    + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getInqCltID()) 
-                                                    + " GROUP BY a.sTransNox ORDER BY a.dTransact DESC ");
-            
-            System.out.println("LOAD OTHER RESERVATION "+ lsSQL);
-            RowSetFactory factory = RowSetProvider.newFactory();
-            ResultSet loRS = poGRider.executeQuery(lsSQL);
-            try {
-                poReservation = factory.createCachedRowSet();
-                poReservation.populate(loRS);
-                MiscUtil.close(loRS);
-                loJSON.put("result", "success");
-                loJSON.put("message", "Other reservation load successfully.");
-            } catch (SQLException e) {
-                loJSON.put("result", "error");
-                loJSON.put("message", e.getMessage());
-            }
-            
-        } catch (SQLException ex) {
-            Logger.getLogger(VehicleSalesProposal_Master.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        return loJSON;
-        
-    }
-     
-    public int getOthReservationCount() throws SQLException{
-        if (poReservation != null){
-            poReservation.last();
-            return poReservation.getRow();
-        }else{
-            return 0;
-        }
-    }
-    
-    public Object getOthReservationDetail(int fnRow, int fnIndex) throws SQLException{
-        if (fnIndex == 0) return null;
-        
-        poReservation.absolute(fnRow);
-        return poReservation.getObject(fnIndex);
-    }
-    
-    public Object getOthReservationDetail(int fnRow, String fsIndex) throws SQLException{
-        return getOthReservationDetail(fnRow, MiscUtil.getColumnIndex(poReservation, fsIndex));
-    } 
+//    public JSONObject loadOthReservation(){
+//        JSONObject loJSON = new JSONObject();
+//        try {
+//            String lsSQL =    " SELECT "                                                                  
+//                            + "   a.sTransNox "                                                           
+//                            + " , a.sBranchCd "                                                           
+//                            + " , a.dTransact "                                                           
+//                            + " , a.cDocTypex "                                                           
+//                            + " , a.sReferNox "                                                           
+//                            + " , a.sClientID "                                                           
+//                            + " , a.nTranTotl "                                                           
+//                            + " , a.nDiscount "                                                           
+//                            + " , a.nVatSales "                                                           
+//                            + " , a.nVatAmtxx "                                                           
+//                            + " , a.nNonVATSl "                                                           
+//                            + " , a.nZroVATSl "                                                           
+//                            + " , a.cWTRatexx "                                                           
+//                            + " , a.nCWTAmtxx "                                                           
+//                            + " , a.nAdvPaymx "                                                           
+//                            + " , a.nNetTotal "                                                           
+//                            + " , a.nCashAmtx "                                                           
+//                            + " , a.nChckAmtx "                                                           
+//                            + " , a.nCardAmtx "                                                           
+//                            + " , a.nOthrAmtx "                                                           
+//                            + " , a.nGiftAmtx "                                                           
+//                            + " , a.nAmtPaidx "                                                           
+//                            + " , a.cTranStat "                                                           
+//                            + " , b.sReferNox "                                                       
+//                            + " , c.sTransNox AS sRsvTrnNo "                                                         
+//                            + " , c.sReferNox AS sRsvSlpNo "                                              
+//                            + " , d.sCompnyNm AS sClientNm "                                              
+//                            + " FROM si_master a  "                                                       
+//                            + " INNER JOIN si_master_source b ON b.sTransNox = a.sTransNox "              
+//                            + " INNER JOIN customer_inquiry_reservation c ON c.sTransNox = b.sReferNox "  
+//                            + " LEFT JOIN client_master d ON d.sClientID = a.sClientID " ;
+//            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '1' "
+//                                                    + " AND a.sClientID <> " + SQLUtil.toSQL(poModel.getInqCltID()) 
+//                                                    + " GROUP BY a.sTransNox ORDER BY a.dTransact DESC ");
+//            
+//            System.out.println("LOAD OTHER RESERVATION "+ lsSQL);
+//            RowSetFactory factory = RowSetProvider.newFactory();
+//            ResultSet loRS = poGRider.executeQuery(lsSQL);
+//            try {
+//                poReservation = factory.createCachedRowSet();
+//                poReservation.populate(loRS);
+//                MiscUtil.close(loRS);
+//                loJSON.put("result", "success");
+//                loJSON.put("message", "Other reservation load successfully.");
+//            } catch (SQLException e) {
+//                loJSON.put("result", "error");
+//                loJSON.put("message", e.getMessage());
+//            }
+//            
+//        } catch (SQLException ex) {
+//            Logger.getLogger(VehicleSalesProposal_Master.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//
+//        return loJSON;
+//        
+//    }
+//     
+//    public int getOthReservationCount() throws SQLException{
+//        if (poReservation != null){
+//            poReservation.last();
+//            return poReservation.getRow();
+//        }else{
+//            return 0;
+//        }
+//    }
+//    
+//    public Object getOthReservationDetail(int fnRow, int fnIndex) throws SQLException{
+//        if (fnIndex == 0) return null;
+//        
+//        poReservation.absolute(fnRow);
+//        return poReservation.getObject(fnIndex);
+//    }
+//    
+//    public Object getOthReservationDetail(int fnRow, String fsIndex) throws SQLException{
+//        return getOthReservationDetail(fnRow, MiscUtil.getColumnIndex(poReservation, fsIndex));
+//    } 
     
     private static String xsDateShort(Date fdValue) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
