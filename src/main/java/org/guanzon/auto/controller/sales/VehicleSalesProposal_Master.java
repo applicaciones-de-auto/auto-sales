@@ -333,9 +333,9 @@ public class VehicleSalesProposal_Master implements GTransaction{
     }
     
     public JSONObject searchInquiry(String fsValue){
-        JSONObject loJSON = new JSONObject();
-        String lsHeader = "Inquiry Date»Inquiry ID»Customer Name»Customer Address»Inquiry Status»Branch";
-        String lsColName = "dTransact»sInqryIDx»sCompnyNm»sAddressx»sBranchNm»sTranStat";
+        JSONObject loJSON = new JSONObject(); //Inquiry Date» dTransact» Customer Address» sAddressx»
+        String lsHeader = "Inquiry ID»Customer Name»Branch»Inquiry Status";
+        String lsColName = "sInqryIDx»sCompnyNm»sBranchNm»sTranStat";
         String lsCriteria = "a.dTransact»a.sInqryIDx»b.sCompnyNm»"
                             + "IFNULL(CONCAT( IFNULL(CONCAT(d.sHouseNox,' ') , ''), "                      
                             + " 	IFNULL(CONCAT(d.sAddressx,' ') , ''),  "                                     
@@ -391,10 +391,11 @@ public class VehicleSalesProposal_Master implements GTransaction{
                         + " LEFT JOIN client_master m ON m.sClientID = a.sAgentIDx "                        
                         + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd "                          
                         + " LEFT JOIN online_platforms q ON q.sTransNox = a.sTransNox "
-                        + " LEFT JOIN customer_inquiry_reservation r ON r.sSourceNo = a.sTransNox "   ; 
+                        + " LEFT JOIN customer_inquiry_reservation r ON r.sSourceNo = a.sTransNox AND r.cTranStat = '2' "   ; 
         
         lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '1' "
-                                                + " AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%"));
+                                                + " AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%")
+                                                + " GROUP BY a.sTransNox ");
         System.out.println("SEARCH INQUIRY: " + lsSQL);
         loJSON = ShowDialogFX.Search(poGRider,
                 lsSQL,

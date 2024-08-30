@@ -483,6 +483,7 @@ public class Inquiry implements GTransaction{
     public Object removeReservation(int fnRow){ return poReservation.removeDetail(fnRow,true);}
     
     public JSONObject cancelReservation(int fnRow) {
+        poReservation.setTargetBranchCd(poController.getMasterModel().getBranchCd());
         return poReservation.cancelReservation(fnRow);
     }
     

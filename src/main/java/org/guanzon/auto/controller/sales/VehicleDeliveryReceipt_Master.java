@@ -70,15 +70,7 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
 
         poJSON = poModel.saveRecord();
 
-        if ("success".equals((String) poJSON.get("result"))) {
-            if (!pbWthParent) {
-                poGRider.commitTrans();
-            }
-        } else {
-            if (!pbWthParent) {
-                poGRider.rollbackTrans();
-            }
-        }
+      
 
         return poJSON;
     }

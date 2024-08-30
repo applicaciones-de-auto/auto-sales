@@ -413,8 +413,9 @@ public class VehicleSalesProposal implements GTransaction{
                 poController.getMasterModel().setResrvFee(new BigDecimal((String) loJSON.get("nAmountxx")));                                   
             }                                                                                                                                  
                                                                                                                                                
-            //Inquiring Customer                                                                                                               
-            poController.getMasterModel().setInqryID((String) loJSON.get("sTransNox"));                                                        
+            //Inquiring Customer                                                                                                                                                          
+            poController.getMasterModel().setInqTran((String) loJSON.get("sTransNox"));          
+            poController.getMasterModel().setInqryID((String) loJSON.get("sInqryIDx"));                                                        
             poController.getMasterModel().setInqryDte(SQLUtil.toDate((String) loJSON.get("dTransact"), SQLUtil.FORMAT_SHORT_DATE));            
             System.out.println(getMasterModel().getMasterModel().getInqryDte());                                                               
             poController.getMasterModel().setInqCltID((String) loJSON.get("sClientID"));                                                       
@@ -688,81 +689,31 @@ public class VehicleSalesProposal implements GTransaction{
         
         //TODO
         computeTotlAmtPaid();
-//        if (!computeTotlAmtPaid()){
-//            loJSON.put("result", "error");
-//            loJSON.put("messager", "Error while computing total amount paid.");
-//            return loJSON;
-//        }
         
         BigDecimal ldblTranTotl = new BigDecimal("0.00"); 
         BigDecimal ldblNetTTotl = new BigDecimal("0.00"); 
         BigDecimal ldblDiscntxx= new BigDecimal("0.00"); 
         
         //Amount to be Pay
-        BigDecimal ldblUnitPrce =  new BigDecimal("0.00");
-        ldblUnitPrce = poController.getMasterModel().getUnitPrce(); 
-        
-        BigDecimal ldblTPLAmtxx = new BigDecimal("0.00");
-        ldblTPLAmtxx = poController.getMasterModel().getTPLAmt(); 
-        
-        BigDecimal ldblCompAmtx = new BigDecimal("0.00");
-        ldblCompAmtx = poController.getMasterModel().getCompAmt();
-        
-        BigDecimal ldblLTOAmtxx = new BigDecimal("0.00");
-        ldblLTOAmtxx = poController.getMasterModel().getLTOAmt();
-        
-        BigDecimal ldblChmoAmtx = new BigDecimal("0.00");
-        ldblChmoAmtx = poController.getMasterModel().getChmoAmt();
-        
-        BigDecimal ldblFrgtChrg = new BigDecimal("0.00");
-        ldblFrgtChrg = poController.getMasterModel().getFrgtChrg();
-        
-        BigDecimal ldblOthrChrg = new BigDecimal("0.00");
-        ldblOthrChrg = poController.getMasterModel().getOthrChrg();
-        
-        String lsAdvDwPmt = String.valueOf( getMaster("nAdvDwPmt"));
-        BigDecimal ldblAdvDwPmt = new BigDecimal("0.00");
-        if(lsAdvDwPmt != null && !lsAdvDwPmt.equals("null")){
-            ldblAdvDwPmt = new BigDecimal(lsAdvDwPmt);
-        }
-        //Discounted Amount                        
-        String lsAddlDscx = String.valueOf( getMaster("nAddlDscx"));  
-        BigDecimal ldblAddlDscx = new BigDecimal("0.00");
-        if(lsAddlDscx != null && !lsAddlDscx.equals("null")){
-            ldblAddlDscx = new BigDecimal(lsAddlDscx);
-        }
-        String lsPromoDsc = String.valueOf( getMaster("nPromoDsc"));
-        BigDecimal ldblPromoDsc = new BigDecimal("0.00");
-        if(lsPromoDsc != null && !lsPromoDsc.equals("null")){
-            ldblPromoDsc = new BigDecimal(lsPromoDsc);
-        }
-        String lsFleetDsc = String.valueOf( getMaster("nFleetDsc"));
-        BigDecimal ldblFleetDsc = new BigDecimal("0.00");
-        if(lsFleetDsc != null && !lsFleetDsc.equals("null")){
-            ldblFleetDsc = new BigDecimal(lsFleetDsc);
-        }
-        
-        String lsSPFltDsc = String.valueOf( getMaster("nSPFltDsc"));
-        BigDecimal ldblSPFltDsc = new BigDecimal("0.00");
-        if(lsSPFltDsc != null && !lsSPFltDsc.equals("null")){
-            ldblSPFltDsc = new BigDecimal(lsSPFltDsc);
-        }
-        
-        String lsBndleDsc = String.valueOf( getMaster("nBndleDsc"));
-        BigDecimal ldblBndleDsc = new BigDecimal("0.00");
-        if(lsBndleDsc != null && !lsBndleDsc.equals("null")){
-            ldblBndleDsc = new BigDecimal(lsBndleDsc);
-        }
+        BigDecimal ldblUnitPrce = poController.getMasterModel().getUnitPrce(); 
+        BigDecimal ldblTPLAmtxx = poController.getMasterModel().getTPLAmt(); 
+        BigDecimal ldblCompAmtx = poController.getMasterModel().getCompAmt();
+        BigDecimal ldblLTOAmtxx = poController.getMasterModel().getLTOAmt();
+        BigDecimal ldblChmoAmtx = poController.getMasterModel().getChmoAmt();
+        BigDecimal ldblFrgtChrg = poController.getMasterModel().getFrgtChrg();
+        BigDecimal ldblOthrChrg = poController.getMasterModel().getOthrChrg();
+        BigDecimal ldblAdvDwPmt = poController.getMasterModel().getAdvDwPmt();
+        //Discounted Amount                      
+        BigDecimal ldblAddlDscx = poController.getMasterModel().getAddlDsc();
+        BigDecimal ldblPromoDsc = poController.getMasterModel().getPromoDsc();
+        BigDecimal ldblFleetDsc = poController.getMasterModel().getFleetDsc();
+        BigDecimal ldblSPFltDsc = poController.getMasterModel().getSPFltDsc();
+        BigDecimal ldblBndleDsc = poController.getMasterModel().getBndleDsc();
         
         //Paid Amount
         //double ldblDownPaym = (Double) getMaster("nDownPaym"); 
         BigDecimal ldblDownPaym = new BigDecimal("0.00"); 
-        
-        String lsResrvFee = String.valueOf( getMaster("nResrvFee")); 
-        BigDecimal ldblResrvFee = new BigDecimal("0.00");
-        if(lsResrvFee != null && !lsResrvFee.equals("null")){
-            ldblResrvFee = new BigDecimal(lsResrvFee);
-        }
+        BigDecimal ldblResrvFee = poController.getMasterModel().getResrvFee();
         
         if (!lsPayModex.equals("0")){ 
             String lsDownPaym = String.valueOf( getMaster("nDownPaym")); 
@@ -805,12 +756,19 @@ public class VehicleSalesProposal implements GTransaction{
             return loJSON;
         }
         
-        setMaster("nTranTotl",ldblTranTotl);
-        setMaster("nNetTTotl",ldblNetTTotl);
-        setMaster("nLaborAmt",ldblLaborAmt);
-        setMaster("nAccesAmt",ldblAccesAmt);
-        setMaster("nToLabDsc",ldblLaborDsc);
-        setMaster("nToPrtDsc",ldblAccesDsc);
+//        setMaster("nTranTotl",ldblTranTotl);
+//        setMaster("nNetTTotl",ldblNetTTotl);
+//        setMaster("nLaborAmt",ldblLaborAmt);
+//        setMaster("nAccesAmt",ldblAccesAmt);
+//        setMaster("nToLabDsc",ldblLaborDsc);
+//        setMaster("nToPrtDsc",ldblAccesDsc);
+        
+        poController.getMasterModel().setTranTotl(ldblTranTotl);
+        poController.getMasterModel().setNetTTotl(ldblNetTTotl);
+        poController.getMasterModel().setLaborAmt(ldblLaborAmt);
+        poController.getMasterModel().setAccesAmt(ldblAccesAmt);
+        poController.getMasterModel().setToLabDsc(ldblLaborDsc);
+        poController.getMasterModel().setToPrtDsc(ldblAccesDsc);
         
         //PO / FINANCING
         if (!lsPayModex.equals("0")){ 
@@ -821,24 +779,9 @@ public class VehicleSalesProposal implements GTransaction{
                 BigDecimal ldblGrsMonth = new BigDecimal("0.00"); 
                 BigDecimal ldblPNValuex = new BigDecimal("0.00"); 
                 
-                String lsDiscount = String.valueOf( getVSPFinanceModel().getVSPFinanceModel().getDiscount());  //getVSPFinance("nDiscount")
-                BigDecimal ldblDiscount = new BigDecimal("0.00");
-                if(lsDiscount != null && !lsDiscount.equals("null")){
-                    ldblDiscount = new BigDecimal(lsDiscount);
-                }
-                
-                
-                String lsNtDwnPmt = String.valueOf( getVSPFinanceModel().getVSPFinanceModel().getNtDwnPmt() ); //getVSPFinance("nNtDwnPmt")
-                BigDecimal ldblNtDwnPmt = new BigDecimal("0.00");
-                if(lsNtDwnPmt != null && !lsNtDwnPmt.equals("null")){
-                    ldblNtDwnPmt = new BigDecimal(lsNtDwnPmt);
-                }
-                
-                String lsRebatesx = String.valueOf( getVSPFinanceModel().getVSPFinanceModel().getRebates() ); //getVSPFinance("nRebatesx")
-                BigDecimal ldblRebatesx = new BigDecimal("0.00");
-                if(lsRebatesx != null && !lsRebatesx.equals("null")){
-                    ldblRebatesx = new BigDecimal(lsRebatesx);
-                }
+                BigDecimal ldblDiscount = getVSPFinanceModel().getVSPFinanceModel().getDiscount();
+                BigDecimal ldblNtDwnPmt = getVSPFinanceModel().getVSPFinanceModel().getNtDwnPmt();
+                BigDecimal ldblRebatesx = getVSPFinanceModel().getVSPFinanceModel().getRebates();
                 
                 String lsAcctRate = String.valueOf( getVSPFinanceModel().getVSPFinanceModel().getAcctRate() ); //getVSPFinance("nAcctRate")
                 BigDecimal ldblAcctRate = new BigDecimal("0.00");
@@ -846,9 +789,7 @@ public class VehicleSalesProposal implements GTransaction{
                     ldblAcctRate = new BigDecimal(lsAcctRate);
                 }
                 
-                
-                int lnAcctTerm = getVSPFinanceModel().getVSPFinanceModel().getAcctTerm() ; //getVSPFinance("nAcctTerm");
-                
+                int lnAcctTerm = getVSPFinanceModel().getVSPFinanceModel().getAcctTerm(); //getVSPFinance("nAcctTerm");
                 
                 ldblUnitPrce = poController.getMasterModel().getUnitPrce().setScale(2, BigDecimal.ROUND_HALF_UP);
                 

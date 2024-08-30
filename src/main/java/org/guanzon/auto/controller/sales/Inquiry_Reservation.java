@@ -249,11 +249,11 @@ public class Inquiry_Reservation {
             }
         }
         
-        if(ldblRsvSum <= 0 || ldblRsvSum <= 0.00){
-            loJSON.put("result", "error");
-            loJSON.put("message", "Invalid reservation amount");
-            return loJSON;
-        }
+//        if(ldblRsvSum <= 0 || ldblRsvSum <= 0.00){
+//            loJSON.put("result", "error");
+//            loJSON.put("message", "Invalid reservation amount");
+//            return loJSON;
+//        }
         
         DecimalFormat lDcmFmt = new DecimalFormat("#,##0.00");
         if(ldblRsvSum > Double.parseDouble(lsValue)){
@@ -303,7 +303,19 @@ public class Inquiry_Reservation {
     
     public JSONObject cancelReservation(int fnRow){
         JSONObject loJSON = new JSONObject();
+        int lnRsvRow = fnRow + 1;
         try {
+            if(paDetail.get(fnRow).getReferNo() == null){
+                loJSON.put("result", "error");
+                loJSON.put("message", "Reservation row "+lnRsvRow+" is not yet save.\n\nRemove this instead.");
+                return loJSON;
+            } else {
+                if(paDetail.get(fnRow).getReferNo().isEmpty()){
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Reservation row "+lnRsvRow+" is not yet save.\n\nRemove this instead.");
+                    return loJSON;
+                }
+            }
             
             if(paDetail.get(fnRow).getTranStat().equals("2")){
                 loJSON.put("result", "error");
@@ -325,6 +337,7 @@ public class Inquiry_Reservation {
             }
             
             paDetail.get(fnRow).setTranStat("0");
+            paDetail.get(fnRow).setTargetBranchCd(psTargetBranchCd);
             loJSON = paDetail.get(fnRow).saveRecord(); //paDetail.get(fnRow).getTransNo());
             
         } catch (SQLException ex) {

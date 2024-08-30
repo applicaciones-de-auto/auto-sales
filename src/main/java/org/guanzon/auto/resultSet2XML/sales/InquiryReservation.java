@@ -48,8 +48,8 @@ public class InquiryReservation {
                         + "  , a.sSourceNo "                                                              
                         + "  , a.nPrintedx "                                                              
                         + "  , a.sResrvCde "                                                              
-                        + "  , a.cResrvTyp "                                                              
-                        + "  , a.sTransIDx "                                                              
+                        + "  , a.cResrvTyp "                                                             
+                        + "  , a.sTransIDx "    //where the reservation has been linked                                                           
                         + "  , a.cTranStat "                                                              
                         + "  , a.sApproved "                                                              
                         + "  , a.dApproved "                                                              
@@ -63,14 +63,18 @@ public class InquiryReservation {
                         + "  IFNULL(CONCAT(d.sAddressx,' ') , ''), "                                      
                         + "  IFNULL(CONCAT(e.sBrgyName,' '), ''),  "                                      
                         + "  IFNULL(CONCAT(f.sTownName, ', '),''), "                                      
-                        + "  IFNULL(CONCAT(g.sProvName),'') )	, '') AS sAddressx "                        
+                        + "  IFNULL(CONCAT(g.sProvName),'') )	, '') AS sAddressx  "
+                        + "  , i.sReferNox  AS sSINoxxxx " 
+                        + "  , i.dTransact AS dSIDatexx "                        
                         + " FROM customer_inquiry_reservation a    "                                      
                         + " LEFT JOIN client_master b ON b.sClientID = a.sClientID "                      
                         + " LEFT JOIN client_address c ON c.sClientID = a.sClientID AND c.cPrimaryx = 1 " 
                         + " LEFT JOIN addresses d ON d.sAddrssID = c.sAddrssID "                          
                         + " LEFT JOIN barangay e ON e.sBrgyIDxx = d.sBrgyIDxx  "                          
                         + " LEFT JOIN towncity f ON f.sTownIDxx = d.sTownIDxx  "                          
-                        + " LEFT JOIN province g ON g.sProvIDxx = f.sProvIDxx  "  
+                        + " LEFT JOIN province g ON g.sProvIDxx = f.sProvIDxx  "
+                        + " LEFT JOIN si_master_source h ON h.sReferNox = a.sTransNox " 
+                        + " LEFT JOIN si_master i ON i.sTransNox = h.sTransNox  "
                         + " WHERE 0=1";
         
         

@@ -122,7 +122,8 @@ public class VehicleSalesProposalMaster {
                         + "   IFNULL(CONCAT(e.sBrgyName,' '), ''),                  "                     
                         + "   IFNULL(CONCAT(f.sTownName, ', '),''),                 "                     
                         + "   IFNULL(CONCAT(g.sProvName),'') )	, '') AS sAddressx  "                     
-                          /*INQUIRY*/                                                                     
+                          /*INQUIRY*/                                                            
+                        + " , h.sInqryIDx AS sInquryID "                                                                
                         + " , DATE(h.dTransact) AS dInqryDte "                                                  
                         + " , h.sClientID AS sInqCltID "                                                  
                         + " , i.sCompnyNm AS sInqCltNm "                                                  
