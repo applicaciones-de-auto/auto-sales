@@ -786,7 +786,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
                         + " LEFT JOIN banks c ON c.sBankIDxx = b.sBankIDxx          "; 
         
         lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '2' "
-                                                + " AND a.sSourceNo = " + SQLUtil.toSQL(poModel.getInqryID())
+                                                + " AND a.sSourceNo = " + SQLUtil.toSQL(poModel.getInqTran())
                                                 + " AND a.cPayModex = " + SQLUtil.toSQL(poModel.getPayMode())
                                                 + " AND c.sBankName LIKE " + SQLUtil.toSQL(fsValue + "%"));
         System.out.println("SEARCH BANK APPLICATION: " + lsSQL);

@@ -58,7 +58,7 @@ public class VehicleSalesProposal_Finance {
         paDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
         paDetail.get(0).newRecord();
 
-//        paDetail.get(0).setValue("sTransNox", fsTransNo);
+        paDetail.get(0).setValue("sTransNox", fsTransNo);
         poJSON.put("result", "success");
         poJSON.put("message", "VSP Finance add record.");
         return poJSON;
