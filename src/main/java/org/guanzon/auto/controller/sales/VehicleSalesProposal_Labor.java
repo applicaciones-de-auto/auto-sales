@@ -59,9 +59,10 @@ public class VehicleSalesProposal_Labor {
             paDetail.add(new Model_VehicleSalesProposal_Labor(poGRider));
             paDetail.get(0).newRecord();
             
-            paDetail.get(0).setValue("sTransNox", fsTransNo);
-            paDetail.get(0).setValue("dAddDatex", poGRider.getServerDate());
-            paDetail.get(0).setValue("sAddByxxx", poGRider.getUserID());
+            paDetail.get(0).setTransNo(fsTransNo);
+            paDetail.get(0).setEntryNo(0);
+            paDetail.get(0).setAddDate(poGRider.getServerDate());
+            paDetail.get(0).setAddBy(poGRider.getUserID());
             poJSON.put("result", "success");
             poJSON.put("message", "VSP Labor add record.");
         } else {
@@ -69,8 +70,9 @@ public class VehicleSalesProposal_Labor {
             paDetail.get(paDetail.size()-1).newRecord();
 
             paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
-            paDetail.get(paDetail.size()-1).setValue("dAddDatex", poGRider.getServerDate());
-            paDetail.get(paDetail.size()-1).setValue("sAddByxxx", poGRider.getUserID());
+            paDetail.get(paDetail.size()-1).setEntryNo(0);
+            paDetail.get(paDetail.size()-1).setAddDate(poGRider.getServerDate());
+            paDetail.get(paDetail.size()-1).setAddBy(poGRider.getUserID());
             
             poJSON.put("result", "success");
             poJSON.put("message", "VSP Labor add record.");
@@ -261,7 +263,8 @@ public class VehicleSalesProposal_Labor {
                                                 + " AND sLaborDsc LIKE " + SQLUtil.toSQL(fsValue + "%"));
         } else {
             lsSQL = MiscUtil.addCondition(lsSQL,  " cRecdStat = '1' "
-                                                + " AND sLaborCde = " + SQLUtil.toSQL(fsValue));
+                                                + " AND TRIM(REPLACE(sLaborDsc, ' ', '')) = " + SQLUtil.toSQL(fsValue.replace(" ", "")))
+                                                + " LIMIT 1 ";
         }
         
         System.out.println("SEARCH LABOR: " + lsSQL);

@@ -48,8 +48,6 @@ public class VehicleSalesProposal_Master implements GTransaction{
 
     Model_VehicleSalesProposal_Master poModel;
     LockTransaction poLockTrans;
-    
-    CachedRowSet poReservation;
 
     public VehicleSalesProposal_Master(GRider foGRider, boolean fbWthParent, String fsBranchCd) {
         poGRider = foGRider;
@@ -208,7 +206,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
         }
         
         poJSON =  poModel.saveRecord();
-        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
+        if("error".equalsIgnoreCase((String)poJSON.get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
         } 
@@ -264,7 +262,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
     public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
         String lsHeader = "VSP Date»VSP No»Customer»CS No»Plate No»Cancelled";
         String lsColName = "dTransact»sVSPNOxxx»sCompnyNm»sCSNoxxxx»sPlateNox»sTrStatus";
-        String lsSQL = poModel.getSQL();
+        String lsSQL = poModel.makeSelectSQL();
         System.out.println(lsSQL);
         JSONObject loJSON = SearchDialog.jsonSearch(
                     poGRider,

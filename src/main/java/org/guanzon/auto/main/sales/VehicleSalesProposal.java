@@ -608,12 +608,23 @@ public class VehicleSalesProposal implements GTransaction{
         JSONObject loJSON = new JSONObject();
         loJSON = poVSPLabor.searchLabor(fsValue, withUI);
         if(!"error".equals((String) loJSON.get("result"))){
+            //check exisiting labor
+            for(int lnCtr = 0; lnCtr <= getVSPLaborList().size()-1; lnCtr++){
+                if(((String) loJSON.get("sLaborCde")).equals(poVSPLabor.getDetailModel(lnCtr).getLaborCde())){
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Labor " + (String) loJSON.get("sLaborDsc") + " already exist. Add labor aborted.");
+                    return loJSON;
+                }
+            }
+            
             poVSPLabor.getDetailModel(fnRow).setLaborCde((String) loJSON.get("sLaborCde"));
             poVSPLabor.getDetailModel(fnRow).setLaborDsc((String) loJSON.get("sLaborDsc"));
         } else {
             poVSPLabor.getDetailModel(fnRow).setLaborCde("");
             poVSPLabor.getDetailModel(fnRow).setLaborDsc("");
         }
+        
+        System.out.println("CLASS LABOR CODE : " + getVSPLaborModel().getDetailModel(fnRow).getLaborCde());
         return loJSON;
     }
     
@@ -621,6 +632,15 @@ public class VehicleSalesProposal implements GTransaction{
         JSONObject loJSON = new JSONObject();
         loJSON = poVSPParts.searchParts(fsValue);
         if(!"error".equals((String) loJSON.get("result"))){
+            //check exisiting part
+            for(int lnCtr = 0; lnCtr <= getVSPPartsList().size()-1; lnCtr++){
+                if(((String) loJSON.get("sStockIDx")).equals(poVSPParts.getDetailModel(lnCtr).getStockID())){
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Part No. " + (String) loJSON.get("sBarCodex") + " already exist. Part number update aborted.");
+                    return loJSON;
+                }
+            }
+            
             poVSPParts.getDetailModel(fnRow).setStockID((String) loJSON.get("sStockIDx"));
             poVSPParts.getDetailModel(fnRow).setBarCode((String) loJSON.get("sBarCodex"));
             poVSPParts.getDetailModel(fnRow).setSelPrice(new BigDecimal((String) loJSON.get("nSelPrice")));
