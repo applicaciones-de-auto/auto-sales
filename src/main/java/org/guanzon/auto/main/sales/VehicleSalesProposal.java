@@ -210,6 +210,13 @@ public class VehicleSalesProposal implements GTransaction{
             return checkData(poJSON);
         }
         
+        //Update Inquiry and Vehicle Serial
+        JSONObject loJSON = poController.getMasterModel().updateTables();
+        if("error".equalsIgnoreCase((String) checkData(loJSON).get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return loJSON;
+        }
+        
         if (!pbWtParent) poGRider.commitTrans();
         
         return poJSON;
@@ -569,6 +576,9 @@ public class VehicleSalesProposal implements GTransaction{
             poController.getMasterModel().setBnkAppCD((String) loJSON.get("sTransNox"));
             poController.getMasterModel().setBankName((String) loJSON.get("sBankName"));
             poController.getMasterModel().setBrBankNm((String) loJSON.get("sBrBankNm"));
+            
+            poVSPFinance.getVSPFinanceModel().setBankID((String) loJSON.get("sBrBankID"));
+            poVSPFinance.getVSPFinanceModel().setBankname((String) loJSON.get("sBankName") + " " + (String) loJSON.get("sBrBankNm"));
         } else {
             poController.getMasterModel().setBnkAppCD("");
             poController.getMasterModel().setBankName("");
@@ -680,16 +690,17 @@ public class VehicleSalesProposal implements GTransaction{
         }
         
         /*Compute Parts Total*/
-        for (lnCtr = 1; lnCtr <= getVSPPartsList().size()-1; lnCtr++){
+        for (lnCtr = 0; lnCtr <= getVSPPartsList().size()-1; lnCtr++){
             
             lsQty = String.valueOf(poVSPParts.getDetailModel(lnCtr).getQuantity());
-            ldblPartsAmt = new BigDecimal(lsQty).multiply(poVSPParts.getDetailModel(lnCtr).getUnitPrce());
+            ldblPartsAmt = new BigDecimal(lsQty).multiply(poVSPParts.getDetailModel(lnCtr).getSelPrice());
             //Net Parts Amount = (parts amount * qty) - parts discount;
             poVSPParts.getDetailModel(lnCtr).setNtPrtAmt(ldblPartsAmt.subtract(poVSPParts.getDetailModel(lnCtr).getPartsDscount()));
             System.out.println(" ROW "+ lnCtr + " total amount >> " + poVSPParts.getDetailModel(lnCtr).getNtPrtAmt());
             
             ldblAccesAmt = ldblAccesAmt.add(ldblPartsAmt);
-            ldblAccesDsc = ldblAccesDsc.add(poVSPParts.getDetailModel(lnCtr).getPartsDscount()).setScale(2, BigDecimal.ROUND_HALF_UP);
+            ldblAccesDsc = ldblAccesDsc.add(poVSPParts.getDetailModel(lnCtr).getPartsDscount()); //.setScale(2, BigDecimal.ROUND_HALF_UP);
+            lsQty = "";
         }
         
         //Amount to be Pay

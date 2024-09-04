@@ -210,12 +210,6 @@ public class VehicleSalesProposal_Master implements GTransaction{
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
         } 
-        //Update Inquiry and Vehicle Serial
-        JSONObject loJSON = poModel.updateTables();
-        if("error".equalsIgnoreCase((String) loJSON.get("result"))){
-            if (!pbWtParent) poGRider.rollbackTrans();
-            return loJSON;
-        }
         
         return poJSON;
     }
@@ -786,7 +780,8 @@ public class VehicleSalesProposal_Master implements GTransaction{
         lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '2' "
                                                 + " AND a.sSourceNo = " + SQLUtil.toSQL(poModel.getInqTran())
                                                 + " AND a.cPayModex = " + SQLUtil.toSQL(poModel.getPayMode())
-                                                + " AND c.sBankName LIKE " + SQLUtil.toSQL(fsValue + "%"));
+                                                + " AND CONCAT(c.sBankName, ' ',  b.sBrBankNm) LIKE " + SQLUtil.toSQL(fsValue + "%"));
+                                                //+ " AND c.sBankName LIKE " + SQLUtil.toSQL(fsValue + "%"));
         System.out.println("SEARCH BANK APPLICATION: " + lsSQL);
         loJSON = ShowDialogFX.Search(poGRider,
                 lsSQL,
