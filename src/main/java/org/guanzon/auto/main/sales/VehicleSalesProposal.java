@@ -600,6 +600,9 @@ public class VehicleSalesProposal implements GTransaction{
                 poController.getMasterModel().setCOMInsNm((String) loJSON.get("sInsurNme"));
                 poController.getMasterModel().setCOMBrIns((String) loJSON.get("sBrInsNme"));
             }
+            
+//            System.out.println("Insurance Compre Main : "+ poController.getMasterModel().getCOMInsNm() );
+//            System.out.println("Insurance Compre Branch : "+ poController.getMasterModel().getCOMBrIns() );
         } else {
             if(fbisTPL){
                 poController.getMasterModel().setInsTplCd("");

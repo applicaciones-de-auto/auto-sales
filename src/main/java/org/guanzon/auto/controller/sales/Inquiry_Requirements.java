@@ -168,7 +168,7 @@ public class Inquiry_Requirements {
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
             if(paDetail.get(lnCtr).getRequired().equals("1")){
                 if(paDetail.get(lnCtr).getReceived() != null){
-                    if(!paDetail.get(lnCtr).getReceived().isEmpty()){
+                    if(!paDetail.get(lnCtr).getReceived().trim().isEmpty()){
                         lbRqrdChk = true;
                         break;
                     }
@@ -407,10 +407,15 @@ public class Inquiry_Requirements {
     public Object getRequirements(int fnRow, int fnIndex){return paRequirements.get(fnRow).getValue(fnIndex);}
     public Object getRequirements(int fnRow, String fsIndex){return paRequirements.get(fnRow).getValue(fsIndex);}
     
-    public JSONObject searchEmployee(String fsRqrmtCde, String fsDescript) { //, String fsTransNo
+    public JSONObject searchEmployee(String fsRqrmtCde, String fsDescript, String fsRequired) { //, String fsTransNo
         JSONObject lObj = new JSONObject();
         boolean lbExist = false;
         int lnRow = 0;
+        String lsRqrd = "0";
+        
+        if(fsRequired.equals("Y")){
+            lsRqrd = "1";
+        }
         
         String lsSQL =   " SELECT "
                        + " a.sClientID AS sClientID "
@@ -446,6 +451,7 @@ public class Inquiry_Requirements {
                     setDetail(lnRow,"sCompnyNm", (String) lObj.get("sCompnyNm"));
                     setDetail(lnRow,"dReceived", poGRider.getServerDate());
                     setDetail(lnRow,"cSubmittd", "1");
+                    setDetail(lnRow,"cRequired", lsRqrd);
                 } else {
                     addDetail();
                      if (paDetail.size()<=0){
@@ -455,6 +461,7 @@ public class Inquiry_Requirements {
                         setDetail(0,"sCompnyNm", (String) lObj.get("sCompnyNm"));
                         setDetail(0,"dReceived", poGRider.getServerDate());
                         setDetail(0,"cSubmittd", "1");
+                        setDetail(0,"cRequired", lsRqrd);
                      }else {
                         setDetail(paDetail.size()-1,"sRqrmtCde", fsRqrmtCde);
                         setDetail(paDetail.size()-1,"sDescript", fsDescript);
@@ -462,6 +469,7 @@ public class Inquiry_Requirements {
                         setDetail(paDetail.size()-1,"sCompnyNm", (String) lObj.get("sCompnyNm"));
                         setDetail(paDetail.size()-1,"dReceived", poGRider.getServerDate());
                         setDetail(paDetail.size()-1,"cSubmittd", "1");
+                        setDetail(paDetail.size()-1,"cRequired", lsRqrd);
                      }
                 }
                 

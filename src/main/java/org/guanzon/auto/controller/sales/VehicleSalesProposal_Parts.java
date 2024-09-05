@@ -224,6 +224,14 @@ public class VehicleSalesProposal_Parts {
     public Object removeDetail(int fnRow){
         JSONObject loJSON = new JSONObject();
         
+        if(paDetail.get(fnRow).getDSNo() != null){
+            if(!paDetail.get(fnRow).getDSNo().trim().isEmpty()){
+                loJSON.put("result", "error");
+                loJSON.put("message", "Part Description " + paDetail.get(fnRow).getDescript()+ " already linked thru Job Order No. "+paDetail.get(fnRow).getDSNo()+ ".\nDelete row aborted.");
+                return loJSON;
+            }
+        }
+        
         if(paDetail.get(fnRow).getEntryNo() != null){
             if(paDetail.get(fnRow).getEntryNo() != 0){
                 RemoveDetail(fnRow);

@@ -432,8 +432,8 @@ public class Inquiry implements GTransaction{
 //    public Object addRequirements(){ return poRequirements.addDetail();} //poController.getMasterModel().getTransNo()
     //public Object removeRequirements(int fnRow){ return poRequirements.removeDetail(fnRow);}
     
-    public JSONObject searchEmployee(String fsRqrmtCde, String fsDescript) {
-        return poRequirements.searchEmployee(fsRqrmtCde,fsDescript); //,poController.getMasterModel().getTransNo()
+    public JSONObject searchEmployee(String fsRqrmtCde, String fsDescript, String fsRequired) {
+        return poRequirements.searchEmployee(fsRqrmtCde,fsDescript, fsRequired); //,poController.getMasterModel().getTransNo()
     }
     
     public void removeEmployee(String fsRqrmtCde) {

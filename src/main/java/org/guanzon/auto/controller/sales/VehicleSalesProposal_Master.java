@@ -220,7 +220,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
 
         if (poModel.getEditMode() == EditMode.READY
                 || poModel.getEditMode() == EditMode.UPDATE) {
-            try {
+//            try {
                 poJSON = poModel.setTranStat(TransactionStatus.STATE_CANCELLED);
                 if ("error".equals((String) poJSON.get("result"))) {
                     return poJSON;
@@ -234,17 +234,22 @@ public class VehicleSalesProposal_Master implements GTransaction{
                     return poJSON;
                 }
                 
-                CancelForm cancelform = new CancelForm();
-                if (!cancelform.loadCancelWindow(poGRider, poModel.getTransNo(), poModel.getVSPNO(), "VSP")) {
-                    poJSON.put("result", "error");
-                    poJSON.put("message", "Cancellation failed.");
-                    return poJSON;
-                }
+//                CancelForm cancelform = new CancelForm();
+//                if (!cancelform.loadCancelWindow(poGRider, poModel.getTransNo(), poModel.getVSPNO(), "VSP")) {
+//                    poJSON = poModel.setTranStat(TransactionStatus.STATE_OPEN);
+//                    if ("error".equals((String) poJSON.get("result"))) {
+//                        return poJSON;
+//                    }
+//                    
+//                    poJSON.put("result", "error");
+//                    poJSON.put("message", "Cancellation failed.");
+//                    return poJSON;
+//                } 
                 
                 poJSON = poModel.saveRecord();
-            } catch (SQLException ex) {
-                Logger.getLogger(VehicleSalesProposal_Master.class.getName()).log(Level.SEVERE, null, ex);
-            }
+//            } catch (SQLException ex) {
+//                Logger.getLogger(VehicleSalesProposal_Master.class.getName()).log(Level.SEVERE, null, ex);
+//            }
         } else {
             poJSON = new JSONObject();
             poJSON.put("result", "error");
@@ -254,9 +259,9 @@ public class VehicleSalesProposal_Master implements GTransaction{
     }
     
     public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
-        String lsHeader = "VSP Date»VSP No»Customer»CS No»Plate No»Cancelled";
-        String lsColName = "dTransact»sVSPNOxxx»sCompnyNm»sCSNoxxxx»sPlateNox»sTrStatus";
-        String lsSQL = poModel.makeSelectSQL();
+        String lsHeader = "VSP Date»VSP No»Customer»CS No»Plate No»Status"; 
+        String lsColName = "dTransact»sVSPNOxxx»sBuyCltNm»sCSNoxxxx»sPlateNox»sTranStat"; 
+        String lsSQL = poModel.getSQL();
         System.out.println(lsSQL);
         JSONObject loJSON = SearchDialog.jsonSearch(
                     poGRider,
@@ -755,9 +760,12 @@ public class VehicleSalesProposal_Master implements GTransaction{
     
     public JSONObject searchBankApp(String fsValue){
         JSONObject loJSON = new JSONObject();
-        String lsHeader = "Applied Date»Application No»Bank Name»Bank Branch";
-        String lsColName = "dAppliedx»sApplicNo»sBankName»sBrBankNm";
-        String lsCriteria = "a.dAppliedx»a.sApplicNo»c.sBankName»b.sBrBankNm";
+//        String lsHeader = "Applied Date»Application No»Bank Name»Bank Branch";
+//        String lsColName = "dAppliedx»sApplicNo»sBankName»sBrBankNm";
+//        String lsCriteria = "a.dAppliedx»a.sApplicNo»c.sBankName»b.sBrBankNm";
+        String lsHeader = "Applied Date»Application No»Bank";
+        String lsColName = "dAppliedx»sApplicNo»xBankName";
+        String lsCriteria = "a.dAppliedx»a.sApplicNo»CONCAT(c.sBankName, ' ',  b.sBrBankNm)";
         
         String lsSQL =   " SELECT "                                                 
                         + "    a.sTransNox "                                         
@@ -773,6 +781,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
                         + "  , c.sBankIDxx "                                         
                         + "  , c.sBankName "   
                         + "  , c.sBankType " 
+                        + "  , CONCAT(c.sBankName, ' ',b.sBrBankNm) AS xBankName" 
                         + " FROM bank_application a "                                
                         + " LEFT JOIN banks_branches b ON b.sBrBankID = a.sBrBankID "
                         + " LEFT JOIN banks c ON c.sBankIDxx = b.sBankIDxx          "; 
@@ -789,7 +798,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
                     lsHeader,
                     lsColName,
                     lsCriteria,
-                1);
+                2);
 
         if (loJSON != null) {
         } else {
@@ -803,9 +812,9 @@ public class VehicleSalesProposal_Master implements GTransaction{
     
     public JSONObject searchInsurance(String fsValue){
         JSONObject loJSON = new JSONObject();
-        String lsHeader = "Branch ID»Insurance Name»Insurance Branch";
-        String lsColName = "sBrInsIDx»sInsurNme»sBrInsNme";
-        String lsCriteria = "a.sBrInsIDx»b.sInsurNme»a.sBrInsNme";
+        String lsHeader = "Branch ID»Insurance";
+        String lsColName = "sBrInsIDx»sInsrance";
+        String lsCriteria = "a.sBrInsIDx»CONCAT(b.sInsurNme,' ',a.sBrInsNme)";
         
         String lsSQL =   " SELECT "                                                    
                         + "    a.sBrInsIDx "                                            
@@ -814,12 +823,13 @@ public class VehicleSalesProposal_Master implements GTransaction{
                         + "  , a.sCompnyTp "                                            
                         + "  , a.sInsurIDx "                                            
                         + "  , a.cRecdStat "                                             
-                        + "  , b.sInsurNme "                                            
+                        + "  , b.sInsurNme "                                             
+                        + "  , CONCAT(b.sInsurNme,' ',a.sBrInsNme) AS sInsrance "                                             
                         + " FROM insurance_company_branches a "                         
                         + " LEFT JOIN insurance_company b ON b.sInsurIDx = a.sInsurIDx "; 
         
         lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' "
-                                                + " AND b.sInsurNme LIKE " + SQLUtil.toSQL(fsValue + "%"));
+                                                + " AND CONCAT(b.sInsurNme, ' ',  a.sBrInsNme) LIKE " + SQLUtil.toSQL(fsValue + "%"));
         System.out.println("SEARCH INSURANCE: " + lsSQL);
         loJSON = ShowDialogFX.Search(poGRider,
                 lsSQL,

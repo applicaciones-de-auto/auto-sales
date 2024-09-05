@@ -58,7 +58,7 @@ public class VehicleSalesProposal_Finance {
         paDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
         paDetail.get(0).newRecord();
 
-        paDetail.get(0).setValue("sTransNox", fsTransNo);
+//        paDetail.get(0).setValue("sTransNox", fsTransNo);
         poJSON.put("result", "success");
         poJSON.put("message", "VSP Finance add record.");
         return poJSON;
@@ -199,22 +199,23 @@ public class VehicleSalesProposal_Finance {
     
     private JSONObject RemoveDetail(Integer fnRow){
         
-        if(paRemDetail == null){
+//        if(paRemDetail == null){
            paRemDetail = new ArrayList<>();
-        }
+//        }
         
         poJSON = new JSONObject();
-        if (paRemDetail.size()<=0){
+//        if (paRemDetail.size()<=0){
             paRemDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
             paRemDetail.get(0).openRecord(paDetail.get(fnRow).getTransNo());
             poJSON.put("result", "success");
             poJSON.put("message", "added to remove record.");
-        } else {
-            paRemDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
-            paRemDetail.get(paRemDetail.size()-1).openRecord(paDetail.get(fnRow).getTransNo());
-            poJSON.put("result", "success");
-            poJSON.put("message", "added to remove record.");
-        }
+//        } 
+//        else {
+//            paRemDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
+//            paRemDetail.get(paRemDetail.size()-1).openRecord(paDetail.get(fnRow).getTransNo());
+//            poJSON.put("result", "success");
+//            poJSON.put("message", "added to remove record.");
+//        }
         return poJSON;
     }
     
