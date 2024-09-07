@@ -111,6 +111,7 @@ public class VehicleSalesProposal_Labor {
 //                paDetail = new ArrayList<>();
 //                addDetail(fsValue);
                 poJSON.put("result", "error");
+                poJSON.put("continue", true);
                 poJSON.put("message", "No record selected.");
             }
             MiscUtil.close(loRS);
@@ -167,6 +168,11 @@ public class VehicleSalesProposal_Labor {
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
             //if(lnCtr>0){
                 if(paDetail.get(lnCtr).getLaborCde().isEmpty()){
+                    if(lnSize == 0){
+                        obj.put("result", "error");
+                        obj.put("continue", true);
+                        return obj;
+                    }
                     continue; //skip, instead of removing the actual detail
 //                    paDetail.remove(lnCtr);
 //                    lnCtr++;

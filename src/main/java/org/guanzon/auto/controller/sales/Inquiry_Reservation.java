@@ -164,8 +164,17 @@ public class Inquiry_Reservation {
     
     public JSONObject saveDetail(String fsTransNo){
         JSONObject obj = new JSONObject();
-        
         int lnCtr;
+        
+        if(paRemDetail != null){
+            int lnRemSize = paRemDetail.size() -1;
+            if(lnRemSize >= 0){
+                for(lnCtr = 0; lnCtr <= lnRemSize; lnCtr++){
+                    paRemDetail.get(lnCtr).setTransID("");
+                    obj = paRemDetail.get(lnCtr).saveRecord();
+                }
+            }
+        }
         
         if(paDetail == null){
             obj.put("result", "error");
@@ -315,10 +324,39 @@ public class Inquiry_Reservation {
                 }
             }
         } else {
+            if(paDetail.get(fnRow).getTransID() != null){
+                if(!paDetail.get(fnRow).getTransID().trim().isEmpty()){
+                    RemoveDetail(fnRow);
+                }
+            }
+            
             paDetail.remove(fnRow);
+            
         }
         
         return loJSON;
+    }
+    
+    
+    private JSONObject RemoveDetail(Integer fnRow){
+        
+        if(paRemDetail == null){
+           paRemDetail = new ArrayList<>();
+        }
+        
+        poJSON = new JSONObject();
+        if (paRemDetail.size()<=0){
+            paRemDetail.add(new Model_Inquiry_Reservation(poGRider));
+            paRemDetail.get(0).openRecord(paDetail.get(fnRow).getTransNo());
+            poJSON.put("result", "success");
+            poJSON.put("message", "added to remove record.");
+        } else {
+            paRemDetail.add(new Model_Inquiry_Reservation(poGRider));
+            paRemDetail.get(paRemDetail.size()-1).openRecord(paDetail.get(fnRow).getTransNo());
+            poJSON.put("result", "success");
+            poJSON.put("message", "added to remove record.");
+        }
+        return poJSON;
     }
     
     public JSONObject cancelReservation(int fnRow){

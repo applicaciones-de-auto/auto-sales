@@ -608,7 +608,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
                             + " LEFT JOIN client_master b ON b.sClientID = a.sClientID  "             
                             + " LEFT JOIN vehicle_serial c ON c.sSerialID = a.sSerialID "             
                             + " LEFT JOIN vehicle_serial_registration d ON d.sSerialID = a.sSerialID "
-                            + " WHERE a.cTranStat <> '0' "
+                            + " WHERE a.cTranStat <> "+ SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
                             + " AND a.sSerialID = " + SQLUtil.toSQL(fsValue);
             System.out.println("CHECK FOR: DR EXIST: " + lsSQL);
             ResultSet loRS = poGRider.executeQuery(lsSQL);
@@ -649,7 +649,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
                         + " LEFT JOIN client_master b ON b.sClientID = a.sClientID  "             
                         + " LEFT JOIN vehicle_serial c ON c.sSerialID = a.sSerialID "             
                         + " LEFT JOIN vehicle_serial_registration d ON d.sSerialID = a.sSerialID "
-                        + " WHERE a.cTranStat <> '0' "
+                        + " WHERE a.cTranStat <> "+ SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
                         + " AND a.sSerialID = " + SQLUtil.toSQL(fsValue)
                         + " AND a.cIsVhclNw = " + SQLUtil.toSQL(poModel.getIsVhclNw()) ;
             System.out.println("CHECK FOR: VSP EXIST: " + lsSQL);
@@ -667,7 +667,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
 
                 }
                 loJSON.put("result", "error");
-                loJSON.put("message", "Plate No./CS No. " + lsCSPlateNo + " has been SOLD already. SEE VSP No. " + lsID + ".");
+                loJSON.put("message", "Plate No./CS No. " + lsCSPlateNo + " has ongoing Vehicle Sales Proposal. SEE VSP No. " + lsID + ".");
                 return loJSON;
             }
             

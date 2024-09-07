@@ -186,6 +186,8 @@ public class Bank_Application implements GTransaction {
             poJSON.put("message", validator.getMessage());
             return poJSON;
         }
+        
+        poModel.setTargetBranchCd(psTargetBranchCd);
         poJSON =  poModel.saveRecord();
         if("error".equalsIgnoreCase((String)poJSON.get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();

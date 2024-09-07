@@ -273,6 +273,20 @@ public class VehicleSalesProposal implements GTransaction{
     @Override
     public JSONObject cancelTransaction(String fsValue) {
         poJSON =  poController.cancelTransaction(fsValue);
+        if(!"error".equals(poJSON.get("result"))){
+            //Check inquiry reservation linked
+            for(int lnCtr = 0; lnCtr <= getVSPReservationList().size()-1; lnCtr++){
+                poVSPReservation.getDetailModel(lnCtr).setTransID("");
+            }
+            
+            poVSPReservation.setTargetBranchCd(poController.getMasterModel().getBranchCD());
+            poJSON =  poVSPReservation.saveDetail("");
+            if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
+                if (!pbWtParent) poGRider.rollbackTrans();
+                return checkData(poJSON);
+            }
+        }
+        
         return poJSON;
     }
 
@@ -339,7 +353,19 @@ public class VehicleSalesProposal implements GTransaction{
     
     public Inquiry_Reservation getVSPReservationModel(){return poVSPReservation;} 
     public ArrayList getVSPReservationList(){return poVSPReservation.getDetailList();}
-    public Object removeVSPReservation(int fnRow){ return poVSPReservation.removeDetail(fnRow,false);}
+    public JSONObject removeVSPReservation(int fnRow){ 
+        JSONObject loJSON = new JSONObject();
+        if(poVSPReservation.getDetailModel(fnRow).getSourceNo().equals(poController.getMasterModel().getInqTran())){
+            loJSON.put("result", "error");
+            loJSON.put("message", "You are not allowed to remove its actual inquiry reservation.");
+            return loJSON;
+        }
+
+        loJSON = poVSPReservation.removeDetail(fnRow,false);
+        computeAmount();
+        return loJSON;
+    
+    }
     
     /**
      * Add other reservation to VSP Other Reservation
@@ -688,12 +714,20 @@ public class VehicleSalesProposal implements GTransaction{
         String lsQty = ""; 
         int lnCtr;
         
+        BigDecimal ldblResrvAmt = new BigDecimal("0.00");
         BigDecimal ldblLaborAmt = new BigDecimal("0.00"); 
         BigDecimal ldblLaborDsc = new BigDecimal("0.00"); 
         BigDecimal ldblAccesAmt = new BigDecimal("0.00"); 
         BigDecimal ldblAccesDsc = new BigDecimal("0.00"); 
         BigDecimal ldblPartsAmt = new BigDecimal("0.00"); 
         BigDecimal ldblFinAmt = new BigDecimal("0.00");
+        
+        /*Compute Reservation Total*/
+        for (lnCtr = 0; lnCtr <= getVSPReservationList().size()-1; lnCtr++){
+            ldblResrvAmt = ldblResrvAmt.add(poVSPReservation.getDetailModel(lnCtr).getTranAmt());
+        }
+        
+        poController.getMasterModel().setResrvFee(ldblResrvAmt);
         
         /*Compute Labor Total*/
         for (lnCtr = 0; lnCtr <= getVSPLaborList().size()-1; lnCtr++){
@@ -919,6 +953,67 @@ public class VehicleSalesProposal implements GTransaction{
         BigDecimal ldblNetTTotl = poController.getMasterModel().getNetTTotl();
         BigDecimal ldblTranTotl = poController.getMasterModel().getTranTotl();
         
+        if(lsPayModex.equals("2") || lsPayModex.equals("4")){
+            if(poVSPFinance.getVSPFinanceModel().getAcctTerm() == null) {
+                loJSON.put("result", "error");
+                loJSON.put("message", "Finance Term is not set.");
+                return loJSON;
+            } else {
+                if (poVSPFinance.getVSPFinanceModel().getAcctTerm() <= 0.00){
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Finance Term is not set.");
+                    return loJSON;
+                }
+            }
+
+            if(poVSPFinance.getVSPFinanceModel().getAcctRate() == null) {
+                loJSON.put("result", "error");
+                loJSON.put("message", "Finance Rate is not set.");
+                return loJSON;
+            } else {
+                if (poVSPFinance.getVSPFinanceModel().getAcctRate() <= 0.00){
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Finance Rate is not set.");
+                    return loJSON;
+                }
+            }
+            
+            if(poVSPFinance.getVSPFinanceModel().getMonAmort() == null) {
+                loJSON.put("result", "error");
+                loJSON.put("message", "Finance Amortization is not set.");
+                return loJSON;
+            } else {
+                if (poVSPFinance.getVSPFinanceModel().getMonAmort().compareTo(new BigDecimal("0.00")) <= 0){
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Finance Amortization is not set.");
+                    return loJSON;
+                }
+            }
+
+            if(poVSPFinance.getVSPFinanceModel().getPNValue() == null) {
+                loJSON.put("result", "error");
+                loJSON.put("message", "Finance Value is not set.");
+                return loJSON;
+            } else {
+                if (poVSPFinance.getVSPFinanceModel().getPNValue().compareTo(new BigDecimal("0.00")) <= 0){
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Finance Value is not set.");
+                    return loJSON;
+                }
+            }
+
+            if(poVSPFinance.getVSPFinanceModel().getGrsMonth() == null) {
+                loJSON.put("result", "error");
+                loJSON.put("message", "Finance Gross Amount is not set.");
+                return loJSON;
+            } else {
+                if (poVSPFinance.getVSPFinanceModel().getGrsMonth().compareTo(new BigDecimal("0.00")) <= 0){
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Finance Gross Amount is not set.");
+                    return loJSON;
+                }
+            }
+        }
         
         if (ldblTranTotl.compareTo(new BigDecimal("0.00")) < 0){
             loJSON.put("result", "error");

@@ -174,6 +174,8 @@ public class Inquiry_FollowUp implements GTransaction {
         
         System.out.println("get next follow up date" + poModel.getFollowUpDte());
         System.out.println("get next follow up date 2 : " + poModel.getValue("dFollowUp"));
+        
+        poModel.setTargetBranchCd(psTargetBranchCd);
         poJSON =  poModel.saveRecord();
         if("error".equalsIgnoreCase((String)poJSON.get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
