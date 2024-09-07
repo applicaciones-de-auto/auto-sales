@@ -169,8 +169,10 @@ public class Inquiry_Requirements {
             if(paDetail.get(lnCtr).getRequired().equals("1")){
                 if(paDetail.get(lnCtr).getReceived() != null){
                     if(!paDetail.get(lnCtr).getReceived().trim().isEmpty()){
-                        lbRqrdChk = true;
-                        break;
+                        if(paDetail.get(lnCtr).getSubmittd().equals("1")){
+                            lbRqrdChk = true;
+                            break;
+                        }
                     }
                 }
             }

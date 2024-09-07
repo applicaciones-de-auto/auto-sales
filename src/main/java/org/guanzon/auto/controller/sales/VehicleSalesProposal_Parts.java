@@ -267,15 +267,19 @@ public class VehicleSalesProposal_Parts {
         return poJSON;
     }
     
+    
     public JSONObject searchParts(String fsValue) {
         poJSON = new JSONObject();
         String lsHeader = "ID»Description";
         String lsColName = "sBarCodex»sDescript"; 
         String lsCriteria = "sBarCodex»sDescript";
         
-        String lsSQL =   " SELECT "                                             
-                + "   sBarCodex "                                      
-                + " , sDescript "                                      
+        String lsSQL =   " SELECT "                                                
+                + "   sStockIDx "                                           
+                + " , sBarCodex "                                      
+                + " , sDescript "                                       
+                + " , nUnitPrce "                                      
+                + " , nSelPrice "                                     
                 + " , cRecdStat "                                      
                 + " FROM inventory " ; 
         lsSQL = MiscUtil.addCondition(lsSQL,  " cRecdStat = '1' "
@@ -289,7 +293,7 @@ public class VehicleSalesProposal_Parts {
                     lsHeader,
                     lsColName,
                     lsCriteria,
-                1);
+                0);
 
         if (poJSON != null) {
         } else {

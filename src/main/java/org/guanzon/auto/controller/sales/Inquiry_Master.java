@@ -446,7 +446,7 @@ public class Inquiry_Master implements GTransaction {
     public JSONObject searchClient(String fsValue, boolean fbInqClient) {
         String lsHeader = "ID»Name»Address";
         String lsColName = "sClientID»sCompnyNm»sAddressx"; 
-        String lsColCrit = "a.sClientID»a.sCompnyNm»CONCAT(c.sHouseNox, ' ', c.sAddressx,' ', d.sBrgyName, ', ', e.sTownName, ' ', f.sProvName)";
+        String lsColCrit = "a.sClientID»a.sCompnyNm»TRIM(CONCAT(c.sHouseNox, ' ', c.sAddressx,' ', d.sBrgyName, ', ', e.sTownName, ' ', f.sProvName))";
         String lsSQL =    "  SELECT  "                                                                                                
                         + "  a.sClientID "                                                                                             
                         + " , a.sCompnyNm "                                                                                  
@@ -503,7 +503,7 @@ public class Inquiry_Master implements GTransaction {
                     poModel.setMobileNo((String) loJSON.get("sMobileNo"));
                     poModel.setEmailAdd((String) loJSON.get("sEmailAdd"));
                     poModel.setAccount((String) loJSON.get("sAccountx"));
-                    poModel.setAddress((String) loJSON.get("sAddressx"));
+                    poModel.setAddress(((String) loJSON.get("sAddressx")).trim());
                 } else {
                     poModel.setContctID((String) loJSON.get("sClientID"));
                     poModel.setContctNm((String) loJSON.get("sCompnyNm"));

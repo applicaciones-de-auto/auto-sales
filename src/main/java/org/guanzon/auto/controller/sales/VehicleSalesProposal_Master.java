@@ -258,12 +258,23 @@ public class VehicleSalesProposal_Master implements GTransaction{
         return poJSON;
     }
     
-    public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
+    public JSONObject searchTransaction(String fsValue, boolean fbByCode, boolean fbUpdate) {
         String lsHeader = "VSP Date»VSP No»Customer»CS No»Plate No»Status"; 
         String lsColName = "dTransact»sVSPNOxxx»sBuyCltNm»sCSNoxxxx»sPlateNox»sTranStat"; 
         String lsSQL = poModel.getSQL();
+        
+        if(fbByCode){
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.sTransNox = " + SQLUtil.toSQL(fsValue));
+        } 
+        
+        if(fbUpdate){
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED))
+                                                    + " AND a.sTransNox IN (SELECT vsp_parts.sTransNox FROM vsp_parts WHERE vsp_parts.sTransNox = a.sTransNox) ";
+        }
+        
         System.out.println(lsSQL);
-        JSONObject loJSON = SearchDialog.jsonSearch(
+        JSONObject loJSON = new JSONObject();
+        loJSON = SearchDialog.jsonSearch(
                     poGRider,
                     lsSQL,
                     "",
@@ -272,7 +283,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
                 "0.1D»0.2D»0.3D»0.2D»0.2D»0.3D", 
                     "VSP",
                     0);
-            
+
         if (loJSON != null && !"error".equals((String) loJSON.get("result"))) {
         }else {
             loJSON = new JSONObject();
@@ -280,6 +291,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
             loJSON.put("message", "No Transaction loaded.");
             return loJSON;
         }
+        
         return loJSON;
     }
 
@@ -329,17 +341,21 @@ public class VehicleSalesProposal_Master implements GTransaction{
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
-    public JSONObject searchInquiry(String fsValue){
+    public JSONObject searchInquiry(String fsValue, boolean fbByCode){
         JSONObject loJSON = new JSONObject(); //Inquiry Date» dTransact» Customer Address» sAddressx»
-        String lsHeader = "Inquiry ID»Customer Name»Branch»Inquiry Status";
-        String lsColName = "sInqryIDx»sCompnyNm»sBranchNm»sTranStat";
-        String lsCriteria = "a.dTransact»a.sInqryIDx»b.sCompnyNm»"
+        String lsInqID = "sInqryIDx";
+        if(fbByCode){
+            lsInqID = "sTransNox";
+        }
+        String lsHeader = "Inquiry ID»Customer Name»Branch»Payment Mode"; //»Inquiry StatusInquiry Date»
+        String lsColName = lsInqID+"»sCompnyNm»sBranchNm»sPayModex"; //»sTranStat"dTransact»"+
+        String lsCriteria = "a."+lsInqID+"»b.sCompnyNm»" //a.dTransact»
                             + "IFNULL(CONCAT( IFNULL(CONCAT(d.sHouseNox,' ') , ''), "                      
                             + " 	IFNULL(CONCAT(d.sAddressx,' ') , ''),  "                                     
                             + " 	IFNULL(CONCAT(e.sBrgyName,' '), ''),   "                                     
                             + " 	IFNULL(CONCAT(f.sTownName, ', '),''),  "                                     
                             + " 	IFNULL(CONCAT(g.sProvName),'') )	, '')"
-                            + "»p.sBranchNm»cTranStat";
+                            + "»p.sBranchNm»a.cPayModex"; //»a.cTranStat
         
         String lsSQL =    " SELECT "                                                                       
                         + "    a.sTransNox "                                                               
@@ -375,7 +391,14 @@ public class VehicleSalesProposal_Master implements GTransaction{
                         + "  , k.sCompnyNm AS sContctNm "                                                 
                         + "  , p.sBranchNm  "                                              
                         + "  , q.sPlatform  "
-                        + "  , SUM(r.nAmountxx) AS nAmountxx"                                                              
+                        + "  , SUM(r.nAmountxx) AS nAmountxx"                                                             
+                        + "  , CASE "                           
+                        + " 	WHEN a.cPayModex = '1' THEN 'BANK PURCHASE ORDER' "                                   
+                        + " 	WHEN a.cPayModex = '2' THEN 'BANK FINANCING'  "                                   
+                        + " 	WHEN a.cPayModex = '3' THEN 'COMPANY PURCHASE ORDER'   "                                   
+                        + " 	WHEN a.cPayModex = '4' THEN 'COMPANY FINANCING'       "                                     
+                        + " 	ELSE 'CASH'  "                                                          
+                        + "    END AS sPayModex "                                                               
                         + " FROM customer_inquiry a "                                                      
                         + " LEFT JOIN client_master b ON a.sClientID = b.sClientID "                       
                         + " LEFT JOIN client_address c ON c.sClientID = a.sClientID AND c.cPrimaryx = 1  " 
@@ -390,9 +413,16 @@ public class VehicleSalesProposal_Master implements GTransaction{
                         + " LEFT JOIN online_platforms q ON q.sTransNox = a.sTransNox "
                         + " LEFT JOIN customer_inquiry_reservation r ON r.sSourceNo = a.sTransNox AND r.cTranStat = '2' "   ; 
         
-        lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '1' "
+        if(fbByCode){
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '1' "
+                                                + " AND a.sTransNox = " + SQLUtil.toSQL(fsValue)
+                                                + " GROUP BY a.sTransNox ");
+        } else {
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '1' "
                                                 + " AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%")
                                                 + " GROUP BY a.sTransNox ");
+        }
+        
         System.out.println("SEARCH INQUIRY: " + lsSQL);
         loJSON = ShowDialogFX.Search(poGRider,
                 lsSQL,
@@ -400,7 +430,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
                     lsHeader,
                     lsColName,
                     lsCriteria,
-                1);
+                fbByCode ? 0 : 1);
 
         if (loJSON != null) {
         } else {

@@ -234,9 +234,16 @@ public class VehicleSalesProposal implements GTransaction{
         return joValue;
     }
     
-    public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
+    /**
+     * SEARCH Vehicle Sales Proposal
+     * @param fsValue handle the sTranNox when fbByCode is true.
+     * @param fbByCode set true when retrieving the actual data else false when browsing only.
+     * @param fbUpdate set true when browsing thru Parts Update else false when browsing only.
+     * @return 
+     */
+    public JSONObject searchTransaction(String fsValue, boolean fbByCode, boolean fbUpdate) {
         poJSON = new JSONObject();  
-        poJSON = poController.searchTransaction(fsValue, fbByCode);
+        poJSON = poController.searchTransaction(fsValue, fbByCode, fbUpdate);
         if(!"error".equals(poJSON.get("result"))){
             poJSON = openTransaction((String) poJSON.get("sTransNox"));
         }
@@ -351,7 +358,7 @@ public class VehicleSalesProposal implements GTransaction{
         }
         
         loJSON = poVSPReservation.openRecord(fsRsvTrnNo);
-        if("error".equals((String) loJSON.get("resutl"))){
+        if("error".equals((String) loJSON.get("result"))){
             removeVSPReservation(getVSPReservationList().size()-1);
             loJSON.put("result", "error");
             loJSON.put("message", "Cannot add other reservation.");
@@ -392,27 +399,34 @@ public class VehicleSalesProposal implements GTransaction{
     public Inquiry_Reservation getOTHReservationModel(){return poOTHReservation;} 
     public ArrayList getOTHReservationList(){return poOTHReservation.getDetailList();}
     
-    public JSONObject searchInquiry(String fsValue){
+    public JSONObject searchInquiry(String fsValue, boolean fbByCode){
         JSONObject loJSON = new JSONObject();
-        loJSON = poController.searchInquiry(fsValue);
+        JSONObject loJSONRsv = new JSONObject();
+        loJSON = poController.searchInquiry(fsValue, fbByCode);
         if(!"error".equals((String) loJSON.get("result"))){
-            //Buying Customer Default                                                                                                                      
+            //Buying Customer Default         
+            poController.getMasterModel().setInqTran((String) loJSON.get("sTransNox"));          
+            poController.getMasterModel().setInqryID((String) loJSON.get("sInqryIDx"));                                                        
+            poController.getMasterModel().setInqryDte(SQLUtil.toDate((String) loJSON.get("dTransact"), SQLUtil.FORMAT_SHORT_DATE));            
+            System.out.println(getMasterModel().getMasterModel().getInqryDte()); 
+            
             poController.getMasterModel().setClientID((String) loJSON.get("sClientID"));                                                        
             poController.getMasterModel().setBuyCltNm((String) loJSON.get("sCompnyNm"));                                                        
-            poController.getMasterModel().setAddress((String) loJSON.get("sAddressx"));                                                         
+            poController.getMasterModel().setAddress(((String) loJSON.get("sAddressx")).trim());                                                         
             poController.getMasterModel().setPayMode((String) loJSON.get("cPayModex"));                                                         
-            poController.getMasterModel().setIsVhclNw((String) loJSON.get("cIsVhclNw"));                                                        
+            poController.getMasterModel().setIsVhclNw((String) loJSON.get("cIsVhclNw"));  
+            
             if((String) loJSON.get("nAmountxx") == null){                                                                                      
                 poController.getMasterModel().setResrvFee(new BigDecimal("0.00"));                                                             
             } else {                                                                                                                           
                 poController.getMasterModel().setResrvFee(new BigDecimal((String) loJSON.get("nAmountxx")));  
                 
                 //Automatically add reservation to VSP reservation list
-                loJSON = poOTHReservation.openDetail(poController.getMasterModel().getInqTran(),true, false);
-                if(!"success".equals(poJSON.get("result"))){
-                    if(true == (boolean) poJSON.get("continue")){
-                        loJSON.put("result", "success");
-                        loJSON.put("message", "Record loaded succesfully.");
+                loJSONRsv = poOTHReservation.openDetail(poController.getMasterModel().getInqTran(),true, false);
+                if(!"success".equals(loJSONRsv.get("result"))){
+                    if(true == (boolean) loJSONRsv.get("continue")){
+                        loJSONRsv.put("result", "success");
+                        loJSONRsv.put("message", "Record loaded succesfully.");
                     }
                 }
                 
@@ -435,11 +449,7 @@ public class VehicleSalesProposal implements GTransaction{
                 addVSPFinance();
             }
                                                                                                                                                
-            //Inquiring Customer                                                                                                                                                          
-            poController.getMasterModel().setInqTran((String) loJSON.get("sTransNox"));          
-            poController.getMasterModel().setInqryID((String) loJSON.get("sInqryIDx"));                                                        
-            poController.getMasterModel().setInqryDte(SQLUtil.toDate((String) loJSON.get("dTransact"), SQLUtil.FORMAT_SHORT_DATE));            
-            System.out.println(getMasterModel().getMasterModel().getInqryDte());                                                               
+            //Inquiring Customer                                                                                      
             poController.getMasterModel().setInqCltID((String) loJSON.get("sClientID"));                                                       
             poController.getMasterModel().setInqCltNm((String) loJSON.get("sCompnyNm"));                                                       
             poController.getMasterModel().setInqCltTp((String) loJSON.get("cClientTp"));                                                       
@@ -656,11 +666,13 @@ public class VehicleSalesProposal implements GTransaction{
             
             poVSPParts.getDetailModel(fnRow).setStockID((String) loJSON.get("sStockIDx"));
             poVSPParts.getDetailModel(fnRow).setBarCode((String) loJSON.get("sBarCodex"));
-            poVSPParts.getDetailModel(fnRow).setSelPrice(new BigDecimal((String) loJSON.get("nSelPrice")));
+            poVSPParts.getDetailModel(fnRow).setPartDesc((String) loJSON.get("sDescript"));
+            poVSPParts.getDetailModel(fnRow).setUnitPrce(new BigDecimal((String) loJSON.get("nUnitPrce")));
         } else {
             poVSPParts.getDetailModel(fnRow).setStockID("");
             poVSPParts.getDetailModel(fnRow).setBarCode("");
-            poVSPParts.getDetailModel(fnRow).setSelPrice(new BigDecimal("0.00"));
+            poVSPParts.getDetailModel(fnRow).setPartDesc("");
+            poVSPParts.getDetailModel(fnRow).setUnitPrce(new BigDecimal("0.00"));
         }
         return loJSON;
     }
@@ -1016,6 +1028,7 @@ public class VehicleSalesProposal implements GTransaction{
             }
             
             poController.getMasterModel().setAmtPaid(ldblPayment);
+            poController.getMasterModel().setResrvFee(poController.getMasterModel().getResrvFee().add(ldblPayment));
             
         } catch (SQLException ex) {
             Logger.getLogger(VehicleSalesProposal.class.getName()).log(Level.SEVERE, null, ex);

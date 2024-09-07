@@ -58,7 +58,7 @@ public class VehicleSalesProposal_Finance {
         paDetail.add(new Model_VehicleSalesProposal_Finance(poGRider));
         paDetail.get(0).newRecord();
 
-//        paDetail.get(0).setValue("sTransNox", fsTransNo);
+        paDetail.get(0).setValue("sTransNox", fsTransNo);
         poJSON.put("result", "success");
         poJSON.put("message", "VSP Finance add record.");
         return poJSON;
@@ -148,23 +148,24 @@ public class VehicleSalesProposal_Finance {
             }
         }
         
-        for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
-            if(paDetail.get(lnCtr).getTransNo().isEmpty()){
-                continue; //skip, instead of removing the actual detail
-            }
+        //for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
+//            if(paDetail.get(0).getTransNo().isEmpty()){
+//                //continue; //skip, instead of removing the actual detail
+//                return obj;
+//            }
             
-            paDetail.get(lnCtr).setTransNo(fsTransNo);
-            paDetail.get(lnCtr).setTargetBranchCd(psTargetBranchCd);
+            paDetail.get(0).setTransNo(fsTransNo);
+            paDetail.get(0).setTargetBranchCd(psTargetBranchCd);
             
-            ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.VehicleSalesProposal_Finance, paDetail.get(lnCtr));
+            ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.VehicleSalesProposal_Finance, paDetail.get(0));
             validator.setGRider(poGRider);
             if (!validator.isEntryOkay()){
                 obj.put("result", "error");
                 obj.put("message", validator.getMessage());
                 return obj;
             }
-            obj = paDetail.get(lnCtr).saveRecord();
-        }    
+            obj = paDetail.get(0).saveRecord();
+        //}    
         
         return obj;
     }
@@ -187,10 +188,10 @@ public class VehicleSalesProposal_Finance {
     public Object removeDetail(int fnRow){
         JSONObject loJSON = new JSONObject();
         
-        if(paDetail.get(fnRow).getTransNo()!= null){
-            if(paDetail.get(fnRow).getTransNo().trim().isEmpty()){
+        if(paDetail.get(fnRow).getEditMode() == EditMode.UPDATE){ //getTransNo()!= null
+           // if(paDetail.get(fnRow).getTransNo().trim().isEmpty()){
                 RemoveDetail(fnRow);
-            }
+          //  }
         }
         
         paDetail.remove(fnRow);
