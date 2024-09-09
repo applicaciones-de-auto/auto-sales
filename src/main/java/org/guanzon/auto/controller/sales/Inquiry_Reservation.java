@@ -97,7 +97,8 @@ public class Inquiry_Reservation {
                         + " , a.sClientID "                                              
                         + " , a.sSourceNo "                                              
                         + " , a.sTransIDx "                                              
-                        + " , a.sApproved "                                              
+                        + " , a.sApproved "                                               
+                        + " , a.cTranStat "                                            
                         + " , b.sReferNox "                                              
                         + " FROM customer_inquiry_reservation a "                        
                         + " LEFT JOIN si_master_source b ON b.sReferNox = a.sTransNox "  
@@ -109,7 +110,9 @@ public class Inquiry_Reservation {
                 lsSQL = MiscUtil.addCondition(lsSQL, " a.sTransIDx = " + SQLUtil.toSQL(fsValue));
             }
         } else {
-            lsSQL = MiscUtil.addCondition(lsSQL, " a.sApproved = '2' AND (c.sReferNox <> NULL OR TRIM(c.sReferNox) <> '')"
+            lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = '2' "
+                                                  + " AND (c.sReferNox <> NULL OR TRIM(c.sReferNox) <> '')"
+                                                  //+ " AND (a.sTransIDx = NULL OR TRIM(a.sTransIDx) = '')"
                                                   + " AND a.sSourceNo <> " + SQLUtil.toSQL(fsValue));
         }
         

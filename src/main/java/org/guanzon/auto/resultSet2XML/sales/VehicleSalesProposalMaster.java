@@ -9,6 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
+import org.guanzon.appdriver.base.SQLUtil;
+import org.guanzon.appdriver.constant.TransactionStatus;
 
 /**
  *
@@ -168,7 +170,22 @@ public class VehicleSalesProposalMaster {
                         + " , b.sTaxIDNox " 
                         + " , c.cOfficexx " 
                         + " , ba.sMobileNo " 
-                        + " , bb.sEmailAdd "                                                          
+                        + " , bb.sEmailAdd "       
+                        /*TPL PROPOSAL*/                  
+                        + " , zf.sTransNox AS sTPLTrans " 
+                        + " , zf.sReferNox AS sTPLRefrn " 
+        //                + " , zf.dTransact AS sTPLDatex " 
+                        + " , zf.sInsTypID AS sTPLTypex " 
+                        /*COMPRE PROPOSAL*/               
+                        + " , zg.sTransNox AS sCOMTrans " 
+                        + " , zg.sReferNox AS sCOMRefrn " 
+        //                + " , zg.dTransact AS sCOMDatex " 
+                        + " , zg.sInsTypID AS sCOMTypex " 
+                        /*BOTH PROPOSAL*/                 
+                        + " , zh.sTransNox AS sBOTTrans " 
+                        + " , zh.sReferNox AS sBOTRefrn " 
+        //                + " , zh.dTransact AS sBOTDatex " 
+                        + " , zh.sInsTypID AS sBOTTypex " 
                         + " FROM vsp_master a "                                                           
                          /*BUYING CUSTOMER*/                                                              
                         + " LEFT JOIN client_master b ON b.sClientID = a.sClientID "                      
@@ -211,6 +228,9 @@ public class VehicleSalesProposalMaster {
                         + " LEFT JOIN si_master_source zc ON zc.sSourceNo = a.sTransNox "
                         + " LEFT JOIN si_master zd ON zd.sTransNox = zc.sReferNox AND zd.cTranStat = '1'"
                         + " LEFT JOIN vehicle_gatepass ze ON ze.sSourceNo = a.sTransNox "
+                        + " LEFT JOIN insurance_policy_proposal zf ON zf.sVSPNoxxx = a.sTransNox AND zf.sInsTypID = 'y' AND zf.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
+                        + " LEFT JOIN insurance_policy_proposal zg ON zg.sVSPNoxxx = a.sTransNox AND zg.sInsTypID = 'c' AND zg.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
+                        + " LEFT JOIN insurance_policy_proposal zh ON zh.sVSPNoxxx = a.sTransNox AND zh.sInsTypID = 'b' AND zh.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
                         + " WHERE 0=1";
         
         

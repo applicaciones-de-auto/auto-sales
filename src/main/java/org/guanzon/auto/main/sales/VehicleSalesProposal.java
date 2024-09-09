@@ -370,9 +370,10 @@ public class VehicleSalesProposal implements GTransaction{
     /**
      * Add other reservation to VSP Other Reservation
      * @param fsRsvTrnNo
+     * @param fsTransID
      * @return 
      */
-    public JSONObject addToVSPReservation(String fsRsvTrnNo){ 
+    public JSONObject addToVSPReservation(String fsRsvTrnNo, String fsTransID){ 
         JSONObject loJSON = new JSONObject();
         //Check if reservation already exist
         for(int lnCtr = 0; lnCtr <= getVSPReservationList().size() - 1;lnCtr++){
@@ -380,6 +381,16 @@ public class VehicleSalesProposal implements GTransaction{
                 loJSON.put("result", "error");
                 loJSON.put("message", "Reservation already exist.");
                 return loJSON;
+            }
+        }
+         
+        if(fsTransID != null){
+            if(!fsTransID.trim().isEmpty()){
+                if(!(fsTransID).equals(poController.getMasterModel().getTransNo())){
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Reservation already in use. Add aborted.");
+                    return loJSON;
+                }
             }
         }
         
@@ -444,9 +455,7 @@ public class VehicleSalesProposal implements GTransaction{
             
             if((String) loJSON.get("nAmountxx") == null){                                                                                      
                 poController.getMasterModel().setResrvFee(new BigDecimal("0.00"));                                                             
-            } else {                                                                                                                           
-                poController.getMasterModel().setResrvFee(new BigDecimal((String) loJSON.get("nAmountxx")));  
-                
+            } else {          
                 //Automatically add reservation to VSP reservation list
                 loJSONRsv = poOTHReservation.openDetail(poController.getMasterModel().getInqTran(),true, false);
                 if(!"success".equals(loJSONRsv.get("result"))){
@@ -455,14 +464,20 @@ public class VehicleSalesProposal implements GTransaction{
                         loJSONRsv.put("message", "Record loaded succesfully.");
                     }
                 }
-                
+                String lsTransID = "";
                 for(int lnCtr = 0; lnCtr <= poOTHReservation.getDetailList().size() - 1; lnCtr++){
                     //check for approval
                     if(poOTHReservation.getDetailModel(lnCtr).getTranStat().equals("2")){
+                        if(poOTHReservation.getDetailModel(lnCtr).getTransID() != null){
+                            lsTransID = poOTHReservation.getDetailModel(lnCtr).getTransID();
+                        }
                         //check for payment
-                        if(poOTHReservation.getDetailModel(lnCtr).getSINo() != null){
-                            if(!poOTHReservation.getDetailModel(lnCtr).getSINo().trim().isEmpty()){
-                                addToVSPReservation(poOTHReservation.getDetailModel(lnCtr).getTransNo());
+                        if(lsTransID.isEmpty()){
+                            if(poOTHReservation.getDetailModel(lnCtr).getSINo() != null){
+                                if(!poOTHReservation.getDetailModel(lnCtr).getSINo().trim().isEmpty()){
+                                    addToVSPReservation(poOTHReservation.getDetailModel(lnCtr).getTransNo(),poOTHReservation.getDetailModel(lnCtr).getTransID());
+                                    computeAmount();
+                                }
                             }
                         }
                         
