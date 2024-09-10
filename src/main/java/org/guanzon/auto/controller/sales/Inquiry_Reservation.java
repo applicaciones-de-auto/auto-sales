@@ -111,9 +111,9 @@ public class Inquiry_Reservation {
             }
         } else {
             lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = '2' "
-                                                  + " AND (c.sReferNox <> NULL OR TRIM(c.sReferNox) <> '')");
+                                                  + " AND (c.sReferNox <> NULL OR TRIM(c.sReferNox) <> '')"
                                                   //+ " AND (a.sTransIDx = NULL OR TRIM(a.sTransIDx) = '')"
-                                                  //+ " AND a.sSourceNo <> " + SQLUtil.toSQL(fsValue));
+                                                  + " AND a.sSourceNo <> " + SQLUtil.toSQL(fsValue));
         }
         
         
