@@ -64,7 +64,7 @@ public class VehicleDeliveryReceiptMaster {
                         + "  , a.dModified "                                                       
                         + "  , CASE "          
                         + " 	WHEN a.cTranStat = "+ SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)+" THEN 'CANCELLED' "     
-                        + " 	WHEN a.cTranStat = "+ SQLUtil.toSQL(TransactionStatus.STATE_CLOSED)+" THEN 'CLOSED' "        
+                        + " 	WHEN a.cTranStat = "+ SQLUtil.toSQL(TransactionStatus.STATE_CLOSED)+" THEN 'APPROVED' "        
                         + " 	WHEN a.cTranStat = "+ SQLUtil.toSQL(TransactionStatus.STATE_OPEN)+" THEN 'ACTIVE' "          
                         + " 	WHEN a.cTranStat = "+ SQLUtil.toSQL(TransactionStatus.STATE_POSTED)+" THEN 'POSTED' "                             
                         + " 	ELSE 'ACTIVE'  "                                                          
@@ -84,7 +84,8 @@ public class VehicleDeliveryReceiptMaster {
                         + "  , h.cIsVhclNw "                                                                             
                         + "  , DATE(h.dDelvryDt) AS dDelvryDt "                                                                              
                         + "  , h.sInqryIDx "                                                                               
-                        + "  , h.sBranchCD "                                                                              
+                        + "  , h.sBranchCD "                                                                               
+                        + "  , h.cPayModex "                                                                              
                         /*CO-CLIENT*/                                                                                     
                         + "  , i.sCompnyNm AS sCoCltNmx "                                                                 
                         /*VEHICLE INFORMATION*/                                                                           
@@ -93,9 +94,14 @@ public class VehicleDeliveryReceiptMaster {
                         + "  , j.sFrameNox "                                                                              
                         + "  , j.sEngineNo "                                                                              
                         + "  , j.sKeyNoxxx "                                                                              
-                        + "  , l.sDescript AS sVhclDesc "                                                                 
+                        + "  , l.sDescript AS sVhclFDsc "   
+                        + "  ,  TRIM(CONCAT_WS(' ',la.sMakeDesc, lb.sModelDsc, lc.sTypeDesc, l.sTransMsn, l.nYearModl )) AS sVhclDesc "
+                        + "  ,ld.sColorDsc "                                                              
                         /*BRANCH*/                                                                                        
-                        + "  , m.sBranchNm     "                                                                          
+                        + "  , m.sBranchNm    "
+                        /*VSI*/
+                        + " , o.sTransNox AS sSITransx" 
+                        + " , o.sReferNox AS sSINoxxxx "                                                                          
                         + "  FROM udr_master a "                                                                          
                          /*BUYING CUSTOMER*/                                                                              
                         + "  LEFT JOIN client_master b ON b.sClientID = a.sClientID "                                     
@@ -113,9 +119,16 @@ public class VehicleDeliveryReceiptMaster {
                         /*VEHICLE INFORMATION*/                                                                           
                         + "  LEFT JOIN vehicle_serial j ON j.sSerialID = a.sSerialID "                                    
                         + "  LEFT JOIN vehicle_serial_registration k ON k.sSerialID = a.sSerialID "                       
-                        + "  LEFT JOIN vehicle_master l ON l.sVhclIDxx = j.sVhclIDxx "                                    
+                        + "  LEFT JOIN vehicle_master l ON l.sVhclIDxx = j.sVhclIDxx "          
+                        + "  LEFT JOIN vehicle_make la ON la.sMakeIDxx = l.sMakeIDxx  "
+                        + "  LEFT JOIN vehicle_model lb ON lb.sModelIDx = l.sModelIDx "
+                        + "  LEFT JOIN vehicle_type lc ON lc.sTypeIDxx = l.sTypeIDxx  "
+                        + "  LEFT JOIN vehicle_color ld ON ld.sColorIDx = l.sColorIDx "
                         /*BRANCH*/                                                                                        
                         + "  LEFT JOIN branch m ON m.sBranchCd = h.sBranchCD "
+                        /*VSI*/
+                        + "  LEFT JOIN si_master_source n on n.sSourceNo = a.sTransNox "
+                        + "  LEFT JOIN si_master o ON o.sTransNox = n.sTransNox AND o.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
                         + " WHERE 0=1";
         
         

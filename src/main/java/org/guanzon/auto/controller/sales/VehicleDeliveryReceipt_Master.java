@@ -196,7 +196,7 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
             if("error".equalsIgnoreCase((String)poJSON.get("result"))){
                 if (!pbWtParent) poGRider.rollbackTrans();
                 return poJSON;
-            }
+            } 
         }
         
         return poJSON;
@@ -214,6 +214,7 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
             } else { //SUPPLIER
                 lsVhclStat = "1"; //Set Vehicle Status to AVAILABLE  
             }
+            
         } else {
             lsInqStat = "4"; //Set Inquiry Status to 
             lsVhclStat = "3"; //Set Vehicle Status to SOLD
@@ -228,6 +229,9 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
                     loJSON = poINQModel.saveRecord();
                     if("error".equalsIgnoreCase((String)loJSON.get("result"))){
                         return loJSON;
+                    } else {
+                        loJSON.put("result", "success");
+                        loJSON.put("message", "Record saved successfully.");
                     }
                 } else {
                     return loJSON;
@@ -245,6 +249,9 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
                     loJSON = poVHCLModel.saveRecord();
                     if("error".equalsIgnoreCase((String)loJSON.get("result"))){
                         return loJSON;
+                    } else {
+                        loJSON.put("result", "success");
+                        loJSON.put("message", "Record saved successfully.");
                     }
                 } else {
                     return loJSON;
@@ -292,7 +299,7 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
                 } 
 
                 CancelForm cancelform = new CancelForm();
-                if (!cancelform.loadCancelWindow(poGRider, poModel.getReferNo(), poModel.getTransNo(), "VEHICLE DELIVERY RECEIPT")) {
+                if (!cancelform.loadCancelWindow(poGRider, poModel.getReferNo(), poModel.getTransNo(), "VDR")) {
                     poJSON.put("result", "error");
                     poJSON.put("message", "Cancellation failed.");
                     return poJSON;
@@ -330,7 +337,13 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
         return date;
     }
     
-    public JSONObject searchWithCondition(String fsValue, boolean fIsActive) {
+    /**
+     * Search UDR Transaction
+     * @param fsValue Reference No
+     * @param fIsActive if true search for active else false all transaction
+     * @return 
+     */
+    public JSONObject searchTransaction(String fsValue, boolean fIsActive) {
         String lsHeader = "UDR Date»UDR No»Customer»CS No»Plate No»Status"; 
         String lsColName = "dTransact»sReferNox»sBuyCltNm»sCSNoxxxx»sPlateNox»sTranStat"; 
         String lsSQL = poModel.getSQL();
@@ -341,8 +354,7 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
         } 
 
         System.out.println(lsSQL);
-        JSONObject loJSON = new JSONObject();
-        loJSON = SearchDialog.jsonSearch(
+        JSONObject loJSON = SearchDialog.jsonSearch(
                     poGRider,
                     lsSQL,
                     "",
@@ -397,7 +409,7 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
             lsTransNo = "sTransNox";
         }
         String lsHeader = "VSP No»Customer Name";
-        String lsColName = lsTransNo+"»sCompnyNm"; 
+        String lsColName = lsTransNo+"»sBuyCltNm"; 
         String lsCriteria = "h."+lsTransNo+"»b.sCompnyNm»" 
                             + "IFNULL(CONCAT( IFNULL(CONCAT(d.sHouseNox,' ') , ''), "                      
                             + " 	IFNULL(CONCAT(d.sAddressx,' ') , ''),  "                                     
@@ -406,11 +418,11 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
                             + " 	IFNULL(CONCAT(g.sProvName),'') )	, '')";
         
         if(fbByCode){
-            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '1' "
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = " + TransactionStatus.STATE_CLOSED //APPROVE
                                                 + " AND a.sTransNox = " + SQLUtil.toSQL(fsValue)
                                                 + " GROUP BY a.sTransNox ");
         } else {
-            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '1' "
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = " + TransactionStatus.STATE_CLOSED //APPROVE
                                                 + " AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%")
                                                 + " GROUP BY a.sTransNox ");
         }

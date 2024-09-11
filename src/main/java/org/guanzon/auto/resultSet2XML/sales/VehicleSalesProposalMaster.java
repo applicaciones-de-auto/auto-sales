@@ -149,7 +149,9 @@ public class VehicleSalesProposalMaster {
                         + " , p.sFrameNox "                                                               
                         + " , p.sEngineNo "                                                               
                         + " , p.sKeyNoxxx "                                                               
-                        + " , r.sDescript AS sVhclDesc "                                                  
+                        + " , r.sDescript AS sVhclFDsc "
+                        + " , TRIM(CONCAT_WS(' ',ra.sMakeDesc, rb.sModelDsc, rc.sTypeDesc, r.sTransMsn, r.nYearModl )) AS sVhclDesc "
+                        + " , rd.sColorDsc "
                           /*BRANCH*/                                                                      
                         + " , s.sBranchNm "                                                               
                           /*INSURANCE*/                                                                   
@@ -209,7 +211,11 @@ public class VehicleSalesProposalMaster {
                          /*VEHICLE INFORMATION*/                                                          
                         + " LEFT JOIN vehicle_serial p ON p.sSerialID = a.sSerialID "                     
                         + " LEFT JOIN vehicle_serial_registration q ON q.sSerialID = a.sSerialID "        
-                        + " LEFT JOIN vehicle_master r ON r.sVhclIDxx = p.sVhclIDxx "                     
+                        + " LEFT JOIN vehicle_master r ON r.sVhclIDxx = p.sVhclIDxx "   
+                        + " LEFT JOIN vehicle_make ra ON ra.sMakeIDxx = r.sMakeIDxx  "
+                        + " LEFT JOIN vehicle_model rb ON rb.sModelIDx = r.sModelIDx "
+                        + " LEFT JOIN vehicle_type rc ON rc.sTypeIDxx = r.sTypeIDxx  "
+                        + " LEFT JOIN vehicle_color rd ON rd.sColorIDx = r.sColorIDx "
                          /*BRANCH*/                                                                       
                         + " LEFT JOIN branch s ON s.sBranchCd = a.sBranchCD "                             
                          /*TPL INSURANCE*/                                                                
@@ -225,7 +231,7 @@ public class VehicleSalesProposalMaster {
                          /*VSP LINKED THRU THE FOLLOWING FORMS*/                                                             
                         + " LEFT JOIN udr_master za ON za.sSourceNo = a.sTransNox AND za.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)  
                         + " LEFT JOIN diagnostic_master zb ON zb.sSourceNo = a.sTransNox AND zb.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
-                        + " LEFT JOIN si_master_source zc ON zc.sSourceNo = a.sTransNox "
+                        + " LEFT JOIN si_master_source zc ON zc.sSourceNo = za.sTransNox "
                         + " LEFT JOIN si_master zd ON zd.sTransNox = zc.sReferNox AND zd.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
                         + " LEFT JOIN vehicle_gatepass ze ON ze.sSourceNo = a.sTransNox "
                         + " LEFT JOIN insurance_policy_proposal zf ON zf.sVSPNoxxx = a.sTransNox AND zf.sInsTypID = 'y' AND zf.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)

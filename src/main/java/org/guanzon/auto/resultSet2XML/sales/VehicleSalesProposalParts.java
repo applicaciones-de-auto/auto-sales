@@ -9,6 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
+import org.guanzon.appdriver.base.SQLUtil;
+import org.guanzon.appdriver.constant.TransactionStatus;
 
 /**
  *
@@ -54,13 +56,13 @@ public class VehicleSalesProposalParts {
                         + " , a.sAddByxxx "                                                                                                   
                         + " , b.sBarCodex "                                                                                                   
                         + " , b.sDescript AS sPartDesc "                                                                                               
-                        + " , d.sDSNoxxxx "                                                                                                  
-                        + " , d.dTransact "                                                                                                  
+                        + " , c.sDSNoxxxx "                                                                                                  
+                        + " , c.dTransact "                                                                                                  
                         + " , e.sCompnyNm "                                                                                                   
                         + " FROM vsp_parts a "                                                                                               
                         + " LEFT JOIN inventory b ON b.sStockIDx = a.sStockIDx "                                                             
-                        + " LEFT JOIN diagnostic_parts c ON c.sStockIDx = a.sStockIDx "                                                      
-                        + " LEFT JOIN diagnostic_master d ON d.sTransNox = c.sTransNox AND d.sSourceCD = a.sTransNox AND d.cTranStat = '1' " 
+                        + " LEFT JOIN diagnostic_master c ON c.sSourceNo = a.sTransNox AND c.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)  
+                        + " LEFT JOIN diagnostic_parts d ON d.sTransNox = c.sTransNox AND d.sStockIDx = a.sStockIDx "                                                      
                         + " LEFT JOIN GGC_ISysDBF.client_master e ON e.sClientID = a.sAddByxxx "
                         + " WHERE 0=1";
         

@@ -9,6 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
+import org.guanzon.appdriver.base.SQLUtil;
+import org.guanzon.appdriver.constant.TransactionStatus;
 
 /**
  *
@@ -50,13 +52,13 @@ public class VehicleSalesProposalLabor {
                         + " , a.cAddtlxxx "                                                                                                    
                         + " , a.dAddDatex "                                                                                                    
                         + " , a.sAddByxxx "                                                                                                    
-                        + " , c.sDSNoxxxx "                                                                                                    
-                        + " , c.dTransact "                                                                                                    
+                        + " , b.sDSNoxxxx "                                                                                                    
+                        + " , b.dTransact "                                                                                                    
                         + " , d.sCompnyNm "                                                                                                    
-                        + " FROM vsp_labor a "                                                                                                 
-                        + " LEFT JOIN diagnostic_labor b ON b.sLaborCde = a.sLaborCde "                                                        
-                        + " LEFT JOIN diagnostic_master c ON c.sTransNox = b.sTransNox and c.sSourceCD = a.sTransNox AND c.cTranStat = '1' "   
-                        + " LEFT JOIN GGC_ISysDBF.client_master d ON d.sClientID = a.sAddByxxx "
+                        + " FROM vsp_labor a "
+                        + " LEFT JOIN diagnostic_master b ON  b.sSourceNo = a.sTransNox AND b.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
+                        + " LEFT JOIN diagnostic_labor c ON c.sLaborCde = a.sLaborCde AND c.sTransNox = b.sTransNox"                 
+                        + " LEFT JOIN GGC_ISysDBF.client_master d ON d.sClientID = a.sAddByxxx " 
                         + " WHERE 0=1";
         
         

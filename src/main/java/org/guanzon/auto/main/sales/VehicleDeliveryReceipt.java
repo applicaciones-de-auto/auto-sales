@@ -167,6 +167,15 @@ public class VehicleDeliveryReceipt  implements GTransaction{
     public JSONObject cancelTransaction(String fsValue) {
         return poController.cancelTransaction(fsValue);
     }
+    
+    public JSONObject searchTransaction(String fsValue, boolean fIsActive) {
+        poJSON = new JSONObject();  
+        poJSON = poController.searchTransaction(fsValue, fIsActive);
+        if(!"error".equals((String) poJSON.get("result"))){
+            poJSON = openTransaction((String) poJSON.get("sTransNox"));
+        }
+        return poJSON;
+    }
 
     @Override
     public JSONObject searchWithCondition(String string) {
@@ -201,16 +210,28 @@ public class VehicleDeliveryReceipt  implements GTransaction{
     public JSONObject searchVSP(String fsValue, boolean fbByCode) {
         JSONObject loJSON = poController.searchVSP(fsValue, fbByCode);
         if(!"error".equals(loJSON.get("result"))){
+            if(((String) loJSON.get("sUDRNoxxx")) != null){
+                if(!((String) loJSON.get("sUDRNoxxx")).trim().isEmpty()){
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "VSP No. "+(String) loJSON.get("sVSPNOxxx")+" has existing DR No. " + (String) loJSON.get("sUDRNoxxx") 
+                                            + "\n\nLinking aborted.");
+                    return loJSON;
+                }
+            }
+            
             poController.getMasterModel().setClientID((String) loJSON.get("sClientID"));                                                        
             poController.getMasterModel().setBuyCltNm((String) loJSON.get("sBuyCltNm"));                                                           
             poController.getMasterModel().setAddress((String) loJSON.get("sAddressx"));                                                  
             poController.getMasterModel().setCoCltNm((String) loJSON.get("sCoCltNmx"));                                                       
             poController.getMasterModel().setIsVhclNw((String) loJSON.get("cIsVhclNw"));             
-            poController.getMasterModel().setVSPTrans((String) loJSON.get("sVSPTrans")); 
+            poController.getMasterModel().setVSPTrans((String) loJSON.get("sTransNox"));          
+            poController.getMasterModel().setSourceNo((String) loJSON.get("sTransNox")); 
             poController.getMasterModel().setVSPNO((String) loJSON.get("sVSPNOxxx"));
             poController.getMasterModel().setInqTran((String) loJSON.get("sInqryIDx")); 
             poController.getMasterModel().setBranchCD((String) loJSON.get("sBranchCD"));
-            poController.getMasterModel().setVSPDate(SQLUtil.toDate((String) loJSON.get("dVSPDatex"), SQLUtil.FORMAT_SHORT_DATE) ); 
+            poController.getMasterModel().setBranchNm((String) loJSON.get("sBranchNm"));
+            poController.getMasterModel().setPayMode((String) loJSON.get("cPayModex"));
+            poController.getMasterModel().setVSPDate(SQLUtil.toDate((String) loJSON.get("dTransact"), SQLUtil.FORMAT_SHORT_DATE) ); 
             poController.getMasterModel().setDelvryDte(SQLUtil.toDate((String) loJSON.get("dDelvryDt"), SQLUtil.FORMAT_SHORT_DATE) ); 
             
             BigDecimal ldblInsurDsc =new BigDecimal("0.00");
@@ -222,8 +243,15 @@ public class VehicleDeliveryReceipt  implements GTransaction{
             poController.getMasterModel().setGrossAmt(new BigDecimal((String) loJSON.get("nTranTotl")));
             poController.getMasterModel().setTranTotl(new BigDecimal((String) loJSON.get("nNetTTotl")));
             
-        } else {
+            poController.getMasterModel().setSerialID((String) loJSON.get("sSerialID"));
+            poController.getMasterModel().setCSNo((String) loJSON.get("sCSNoxxxx"));
+            poController.getMasterModel().setPlateNo((String) loJSON.get("sPlateNox")); 
+            poController.getMasterModel().setFrameNo((String) loJSON.get("sFrameNox"));
+            poController.getMasterModel().setEngineNo((String) loJSON.get("sEngineNo"));
+            poController.getMasterModel().setKeyNo((String) loJSON.get("sKeyNoxxx"));
+            poController.getMasterModel().setVhclDesc((String) loJSON.get("sVhclDesc"));
             
+        } else {
             poController.getMasterModel().setClientID("");                                                        
             poController.getMasterModel().setBuyCltNm("");                                                           
             poController.getMasterModel().setAddress("");                                                  
@@ -232,13 +260,18 @@ public class VehicleDeliveryReceipt  implements GTransaction{
             poController.getMasterModel().setVSPTrans(""); 
             poController.getMasterModel().setVSPNO("");
             poController.getMasterModel().setInqTran(""); 
-            poController.getMasterModel().setBranchCD("");                                              
-            poController.getMasterModel().setVSPDate(SQLUtil.toDate("1900-01-01", SQLUtil.FORMAT_SHORT_DATE));                                        
+            poController.getMasterModel().setBranchCD("");  
+             poController.getMasterModel().setVSPDate(SQLUtil.toDate("1900-01-01", SQLUtil.FORMAT_SHORT_DATE));                                        
             poController.getMasterModel().setDelvryDte(SQLUtil.toDate("1900-01-01", SQLUtil.FORMAT_SHORT_DATE));      
-            
             poController.getMasterModel().setGrossAmt(new BigDecimal("0.00"));
-            poController.getMasterModel().setDiscount(new BigDecimal("0.00"));
+            poController.getMasterModel().setDiscount(new BigDecimal("0.00"));          
             poController.getMasterModel().setTranTotl(new BigDecimal("0.00"));
+            poController.getMasterModel().setCSNo("");
+            poController.getMasterModel().setPlateNo(""); 
+            poController.getMasterModel().setFrameNo("");
+            poController.getMasterModel().setEngineNo("");
+            poController.getMasterModel().setKeyNo("");
+            poController.getMasterModel().setVhclDesc("");
             
         }
         
