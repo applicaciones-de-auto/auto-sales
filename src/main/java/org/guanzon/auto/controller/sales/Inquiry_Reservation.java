@@ -100,7 +100,6 @@ public class Inquiry_Reservation {
                         + " , a.sTransIDx "                                              
                         + " , a.sApproved "                                               
                         + " , a.cTranStat "                                            
-                        + " , b.sReferNox "                                              
                         + " , b.sReferNox "                                            
                         + " , d.cTranStat "                                              
                         + " FROM customer_inquiry_reservation a "                        
