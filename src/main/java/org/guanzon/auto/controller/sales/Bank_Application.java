@@ -32,6 +32,7 @@ public class Bank_Application implements GTransaction {
     final String XML = "Model_Bank_Application.xml";
     GRider poGRider;
     String psBranchCd;
+    String psTargetBranchCd;
     boolean pbWtParent;
     int pnEditMode;
     String psTransStat;
@@ -60,8 +61,6 @@ public class Bank_Application implements GTransaction {
         return poModel;
     }
     
-    
-
     @Override
     public JSONObject setMaster(int fnCol, Object foData) {
         JSONObject obj = new JSONObject();
@@ -166,6 +165,20 @@ public class Bank_Application implements GTransaction {
     public JSONObject saveTransaction() {
         poJSON = new JSONObject();  
         
+        if(psTargetBranchCd == null){
+            poJSON.put("result", "error");
+            poJSON.put("continue", false);
+            poJSON.put("message", "Target Branch code for bank application cannot be empty.");
+            return poJSON;
+        } else {
+            if(psTargetBranchCd.isEmpty()){
+                poJSON.put("result", "error");
+                poJSON.put("continue", false);
+                poJSON.put("message", "Target Branch code for bank application cannot be empty.");
+                return poJSON;
+            }
+        }
+        
         ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Inquiry_BankApplication, poModel);
         validator.setGRider(poGRider);
         if (!validator.isEntryOkay()){
@@ -174,6 +187,7 @@ public class Bank_Application implements GTransaction {
             return poJSON;
         }
         
+        poModel.setTargetBranchCd(psTargetBranchCd);
         poJSON =  poModel.saveRecord();
         if("error".equalsIgnoreCase((String)poJSON.get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
@@ -182,7 +196,11 @@ public class Bank_Application implements GTransaction {
         
         return poJSON;
     }
-
+    
+    public void setTargetBranchCd(String fsBranchCd){
+        psTargetBranchCd = fsBranchCd; 
+    }
+    
     @Override
     public JSONObject deleteTransaction(String string) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

@@ -28,7 +28,7 @@ import org.json.simple.JSONObject;
 public class Inquiry_Reservation {
     final String XML = "Model_Inquiry_Promo.xml";
     GRider poGRider;
-    String psBranchCd;
+    String psTargetBranchCd = "";
     boolean pbWtParent;
     
     int pnEditMode;
@@ -80,17 +80,43 @@ public class Inquiry_Reservation {
         return poJSON;
     }
     
-    public JSONObject openDetail(String fsValue){
+    /**
+     * LOAD INQUIRY RESERVATION
+     * @param fsValue store Inquiry sTransNox or VSP sTransNox
+     * @param fbIsInq set true when retrieving for Inquiry else false when retrieving for VSP
+     * @param fbOthRsv set true when retrieving for other reservation that is not equal to actual Inquiry sTransNox
+     * @return 
+     */
+    public JSONObject openDetail(String fsValue, boolean fbIsInq, boolean fbOthRsv){
         paDetail = new ArrayList<>();
         paRemDetail = new ArrayList<>();
         poJSON = new JSONObject();
-        String lsSQL =    "  SELECT "                                                  
-                        + "  sTransNox "                                             
-                        + ", sReferNox "                                             
-                        + ", sClientID "                                             
-                        + ", sSourceNo "                                            
-                        + "  FROM customer_inquiry_reservation "  ;
-        lsSQL = MiscUtil.addCondition(lsSQL, " sSourceNo = " + SQLUtil.toSQL(fsValue));
+        String lsSQL =    " SELECT "                                                     
+                        + "   a.sTransNox "                                              
+                        + " , a.sReferNox "                                              
+                        + " , a.sClientID "                                              
+                        + " , a.sSourceNo "                                              
+                        + " , a.sTransIDx "                                              
+                        + " , a.sApproved "                                               
+                        + " , a.cTranStat "                                            
+                        + " , b.sReferNox "                                              
+                        + " FROM customer_inquiry_reservation a "                        
+                        + " LEFT JOIN si_master_source b ON b.sReferNox = a.sTransNox "  
+                        + " LEFT JOIN si_master c ON c.sTransNox = b.sTransNox "         ;
+        if(!fbOthRsv){
+            if(fbIsInq){
+                lsSQL = MiscUtil.addCondition(lsSQL, " a.sSourceNo = " + SQLUtil.toSQL(fsValue));
+            } else {
+                lsSQL = MiscUtil.addCondition(lsSQL, " a.sTransIDx = " + SQLUtil.toSQL(fsValue));
+            }
+        } else {
+            lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = '2' "
+                                                  + " AND (c.sReferNox <> NULL OR TRIM(c.sReferNox) <> '')"
+                                                  //+ " AND (a.sTransIDx = NULL OR TRIM(a.sTransIDx) = '')"
+                                                  + " AND a.sSourceNo <> " + SQLUtil.toSQL(fsValue));
+        }
+        
+        
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
         System.out.println(lsSQL);
@@ -122,10 +148,37 @@ public class Inquiry_Reservation {
         return poJSON;
     }
     
+    public JSONObject openRecord(String fsValue){
+        if(paDetail == null){
+           paDetail = new ArrayList<>();
+        }
+        
+        poJSON = new JSONObject();
+        paDetail.add(new Model_Inquiry_Reservation(poGRider));
+        poJSON = paDetail.get(paDetail.size() - 1).openRecord(fsValue);
+        
+        if(!"error".equals((String) poJSON.get("result"))){
+            pnEditMode = EditMode.UPDATE;
+            poJSON.put("result", "success");
+            poJSON.put("message", "Record loaded successfully.");
+        }
+        
+        return poJSON;
+    }
+    
     public JSONObject saveDetail(String fsTransNo){
         JSONObject obj = new JSONObject();
-        
         int lnCtr;
+        
+        if(paRemDetail != null){
+            int lnRemSize = paRemDetail.size() -1;
+            if(lnRemSize >= 0){
+                for(lnCtr = 0; lnCtr <= lnRemSize; lnCtr++){
+                    paRemDetail.get(lnCtr).setTransID("");
+                    obj = paRemDetail.get(lnCtr).saveRecord();
+                }
+            }
+        }
         
         if(paDetail == null){
             obj.put("result", "error");
@@ -146,6 +199,20 @@ public class Inquiry_Reservation {
             return obj;
         }
         
+        if(psTargetBranchCd == null){
+            obj.put("result", "error");
+            obj.put("continue", false);
+            obj.put("message", "Target Branch code for reservation cannot be empty.");
+            return obj;
+        } else {
+            if(psTargetBranchCd.isEmpty()){
+                obj.put("result", "error");
+                obj.put("continue", false);
+                obj.put("message", "Target Branch code for reservation cannot be empty.");
+                return obj;
+            }
+        }
+        
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
             if(paDetail.get(lnCtr).getAmount() == null ){
                 continue; //skip, instead of removing the actual detail
@@ -159,6 +226,10 @@ public class Inquiry_Reservation {
                 continue; //skip, instead of removing the actual detail
             }
             
+            
+            paDetail.get(lnCtr).setTargetBranchCd(psTargetBranchCd);
+//            paDetail.get(lnCtr).setReferNo(MiscUtil.getNextCode(paDetail.get(lnCtr).getTable(), "sReferNox", true, poGRider.getConnection(), poGRider.getBranchCode()));
+               
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Inquiry_Reservation, paDetail.get(lnCtr));
             validator.setGRider(poGRider);
             if (!validator.isEntryOkay()){
@@ -172,6 +243,9 @@ public class Inquiry_Reservation {
         return obj;
     }
     
+    public void setTargetBranchCd(String fsBranchCd){
+        psTargetBranchCd = fsBranchCd; 
+    }
     
     private JSONObject validateReservationSum(){
         JSONObject loJSON = new JSONObject();
@@ -205,11 +279,11 @@ public class Inquiry_Reservation {
             }
         }
         
-        if(ldblRsvSum <= 0 || ldblRsvSum <= 0.00){
-            loJSON.put("result", "error");
-            loJSON.put("message", "Invalid reservation amount");
-            return loJSON;
-        }
+//        if(ldblRsvSum <= 0 || ldblRsvSum <= 0.00){
+//            loJSON.put("result", "error");
+//            loJSON.put("message", "Invalid reservation amount");
+//            return loJSON;
+//        }
         
         DecimalFormat lDcmFmt = new DecimalFormat("#,##0.00");
         if(ldblRsvSum > Double.parseDouble(lsValue)){
@@ -234,28 +308,76 @@ public class Inquiry_Reservation {
     public Object getDetail(int fnRow, int fnIndex){return paDetail.get(fnRow).getValue(fnIndex);}
     public Object getDetail(int fnRow, String fsIndex){return paDetail.get(fnRow).getValue(fsIndex);}
     
+    public Model_Inquiry_Reservation getDetailModel(int fnRow) {
+        return paDetail.get(fnRow);
+    }
     
-    public JSONObject removeDetail(int fnRow){
+    public JSONObject removeDetail(int fnRow, boolean fbIsInq){
         JSONObject loJSON = new JSONObject();
         
-        if(paDetail.get(fnRow).getEntryBy()== null){
-            paDetail.remove(fnRow);
-        } else {
-            if(paDetail.get(fnRow).getEntryBy().trim().isEmpty()){
+        if(fbIsInq){
+            if(paDetail.get(fnRow).getEntryBy()== null){
                 paDetail.remove(fnRow);
             } else {
-                loJSON.put("result", "error");
-                loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already saved.\n\nCancel reservation instead.");
-                return loJSON;
+                if(paDetail.get(fnRow).getEntryBy().trim().isEmpty()){
+                    paDetail.remove(fnRow);
+                } else {
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already saved.\n\nCancel reservation instead.");
+                    return loJSON;
+                }
             }
+        } else {
+            if(paDetail.get(fnRow).getTransID() != null){
+                if(!paDetail.get(fnRow).getTransID().trim().isEmpty()){
+                    RemoveDetail(fnRow);
+                }
+            }
+            
+            paDetail.remove(fnRow);
+            
         }
         
         return loJSON;
     }
     
+    
+    private JSONObject RemoveDetail(Integer fnRow){
+        
+        if(paRemDetail == null){
+           paRemDetail = new ArrayList<>();
+        }
+        
+        poJSON = new JSONObject();
+        if (paRemDetail.size()<=0){
+            paRemDetail.add(new Model_Inquiry_Reservation(poGRider));
+            paRemDetail.get(0).openRecord(paDetail.get(fnRow).getTransNo());
+            poJSON.put("result", "success");
+            poJSON.put("message", "added to remove record.");
+        } else {
+            paRemDetail.add(new Model_Inquiry_Reservation(poGRider));
+            paRemDetail.get(paRemDetail.size()-1).openRecord(paDetail.get(fnRow).getTransNo());
+            poJSON.put("result", "success");
+            poJSON.put("message", "added to remove record.");
+        }
+        return poJSON;
+    }
+    
     public JSONObject cancelReservation(int fnRow){
         JSONObject loJSON = new JSONObject();
+        int lnRsvRow = fnRow + 1;
         try {
+            if(paDetail.get(fnRow).getReferNo() == null){
+                loJSON.put("result", "error");
+                loJSON.put("message", "Reservation row "+lnRsvRow+" is not yet save.\n\nRemove this instead.");
+                return loJSON;
+            } else {
+                if(paDetail.get(fnRow).getReferNo().isEmpty()){
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Reservation row "+lnRsvRow+" is not yet save.\n\nRemove this instead.");
+                    return loJSON;
+                }
+            }
             
             if(paDetail.get(fnRow).getTranStat().equals("2")){
                 loJSON.put("result", "error");
@@ -267,8 +389,8 @@ public class Inquiry_Reservation {
                 loJSON.put("result", "error");
                 loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already cancelled.");
                 return loJSON;
-            }
-            
+            } 
+           
             CancelForm cancelform = new CancelForm();
             if (!cancelform.loadCancelWindow(poGRider, paDetail.get(fnRow).getReferNo(), paDetail.get(fnRow).getTransNo(), "RESERVATION")) {
                 poJSON.put("result", "error");
@@ -277,6 +399,7 @@ public class Inquiry_Reservation {
             }
             
             paDetail.get(fnRow).setTranStat("0");
+            paDetail.get(fnRow).setTargetBranchCd(psTargetBranchCd);
             loJSON = paDetail.get(fnRow).saveRecord(); //paDetail.get(fnRow).getTransNo());
             
         } catch (SQLException ex) {

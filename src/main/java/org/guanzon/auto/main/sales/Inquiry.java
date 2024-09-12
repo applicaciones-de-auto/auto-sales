@@ -135,7 +135,7 @@ public class Inquiry implements GTransaction{
             }
         }
         
-        poJSON = poReservation.openDetail(fsValue);
+        poJSON = poReservation.openDetail(fsValue,true, false);
         if(!"success".equals(poJSON.get("result"))){
             if(true == (boolean) poJSON.get("continue")){
                 poJSON.put("result", "success");
@@ -178,24 +178,28 @@ public class Inquiry implements GTransaction{
             return checkData(poJSON);
         }
         
+        poVehiclePriority.setTargetBranchCd(poController.getMasterModel().getBranchCd());
         poJSON =  poVehiclePriority.saveDetail((String) poController.getMasterModel().getTransNo());
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
         }
         
+        poPromo.setTargetBranchCd(poController.getMasterModel().getBranchCd());
         poJSON =  poPromo.saveDetail((String) poController.getMasterModel().getTransNo());
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
         }
         
+        poRequirements.setTargetBranchCd(poController.getMasterModel().getBranchCd());
         poJSON =  poRequirements.saveDetail((String) poController.getMasterModel().getTransNo());
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(poJSON);
         }
         
+        poReservation.setTargetBranchCd(poController.getMasterModel().getBranchCd());
         poJSON =  poReservation.saveDetail((String) poController.getMasterModel().getTransNo());
         if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
@@ -313,14 +317,39 @@ public class Inquiry implements GTransaction{
     
     public JSONObject searchAvlVhcl(String fsValue) {
         JSONObject loJSON = new JSONObject();
+        JSONObject loJSONCheck = new JSONObject();
+        
         loJSON = poController.searchAvlVhcl(fsValue);
-        if(!"error".equals(loJSON.get("result"))){
-            poController.getMasterModel().setSerialID((String) loJSON.get("sSerialID"));
-            poController.getMasterModel().setFrameNo((String) loJSON.get("sFrameNox"));
-            poController.getMasterModel().setEngineNo((String) loJSON.get("sEngineNo"));
-            poController.getMasterModel().setCSNo((String) loJSON.get("sCSNoxxxx"));
-            poController.getMasterModel().setPlateNo((String) loJSON.get("sPlateNox"));
-            poController.getMasterModel().setDescript((String) loJSON.get("sDescript"));
+        
+        if(!"error".equals((String) loJSON.get("result"))){
+            
+            //Check Vehicle Availability
+            loJSONCheck = poController.checkVhclAvailability((String) loJSON.get("sSerialID"));
+            if(!"error".equals((String) loJSONCheck.get("result"))){
+                poController.getMasterModel().setSerialID((String) loJSON.get("sSerialID"));
+                poController.getMasterModel().setFrameNo((String) loJSON.get("sFrameNox"));
+                poController.getMasterModel().setEngineNo((String) loJSON.get("sEngineNo"));
+                poController.getMasterModel().setDescript((String) loJSON.get("sDescript"));
+                
+                if((String) loJSON.get("sCSNoxxxx") == null){
+                    poController.getMasterModel().setCSNo("");
+                } else {
+                    poController.getMasterModel().setCSNo((String) loJSON.get("sCSNoxxxx"));
+                }
+                if((String) loJSON.get("sPlateNox") == null){
+                    poController.getMasterModel().setPlateNo("");
+                } else {
+                    poController.getMasterModel().setPlateNo((String) loJSON.get("sPlateNox"));
+                }
+            } else {
+                poController.getMasterModel().setSerialID("");
+                poController.getMasterModel().setFrameNo("");
+                poController.getMasterModel().setEngineNo("");
+                poController.getMasterModel().setCSNo("");
+                poController.getMasterModel().setPlateNo("");
+                poController.getMasterModel().setDescript("");
+                return loJSONCheck;
+            }
         } else {
             poController.getMasterModel().setSerialID("");
             poController.getMasterModel().setFrameNo("");
@@ -329,6 +358,7 @@ public class Inquiry implements GTransaction{
             poController.getMasterModel().setPlateNo("");
             poController.getMasterModel().setDescript("");
         }
+        
         return loJSON ;
     }
     
@@ -402,8 +432,8 @@ public class Inquiry implements GTransaction{
 //    public Object addRequirements(){ return poRequirements.addDetail();} //poController.getMasterModel().getTransNo()
     //public Object removeRequirements(int fnRow){ return poRequirements.removeDetail(fnRow);}
     
-    public JSONObject searchEmployee(String fsRqrmtCde, String fsDescript) {
-        return poRequirements.searchEmployee(fsRqrmtCde,fsDescript); //,poController.getMasterModel().getTransNo()
+    public JSONObject searchEmployee(String fsRqrmtCde, String fsDescript, String fsRequired) {
+        return poRequirements.searchEmployee(fsRqrmtCde,fsDescript, fsRequired); //,poController.getMasterModel().getTransNo()
     }
     
     public void removeEmployee(String fsRqrmtCde) {
@@ -450,15 +480,16 @@ public class Inquiry implements GTransaction{
     public Object getReservation(int fnRow, String fsIndex){return poReservation.getDetail(fnRow, fsIndex);}
     
     public Object addReservation(){ return poReservation.addDetail("VINQ",poController.getMasterModel().getTransNo(),poController.getMasterModel().getClientID());}
-    public Object removeReservation(int fnRow){ return poReservation.removeDetail(fnRow);}
+    public Object removeReservation(int fnRow){ return poReservation.removeDetail(fnRow,true);}
     
     public JSONObject cancelReservation(int fnRow) {
+        poReservation.setTargetBranchCd(poController.getMasterModel().getBranchCd());
         return poReservation.cancelReservation(fnRow);
     }
     
     public JSONObject loadReservationList() {
         JSONObject loJSON = new JSONObject();
-        loJSON = poReservation.openDetail(poController.getMasterModel().getTransNo());
+        loJSON = poReservation.openDetail(poController.getMasterModel().getTransNo(),true,false);
         if(!"success".equals(poJSON.get("result"))){
             if(true == (boolean) poJSON.get("continue")){
                 loJSON.put("result", "success");

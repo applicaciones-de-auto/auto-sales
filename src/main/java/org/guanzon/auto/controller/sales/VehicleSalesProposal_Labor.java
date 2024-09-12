@@ -5,17 +5,17 @@
  */
 package org.guanzon.auto.controller.sales;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import org.guanzon.appdriver.agent.ShowDialogFX;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
-import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.model.sales.Model_VehicleSalesProposal_Labor;
-import org.guanzon.auto.model.sales.Model_VehicleSalesProposal_Master;
+import org.guanzon.auto.validator.sales.ValidatorFactory;
+import org.guanzon.auto.validator.sales.ValidatorInterface;
 import org.json.simple.JSONObject;
 
 /**
@@ -23,58 +23,83 @@ import org.json.simple.JSONObject;
  * @author Arsiela
  */
 public class VehicleSalesProposal_Labor {
-    final String XML = "Model_VehicleSalesProposal_Master.xml";
-    final String MOBILE_XML = "Model_VehicleSalesProposal_Labor.xml";
+    final String XML = "Model_VehicleSalesProposal_Labor.xml";
     GRider poGRider;
-    String psBranchCd;
+    String psTargetBranchCd = "";
     boolean pbWtParent;
     
     int pnEditMode;
     String psMessagex;
-    String psClientType = "0";
-    
-    Model_VehicleSalesProposal_Master poMaster;
-    ArrayList<Model_VehicleSalesProposal_Labor> paVSPLabor;
-    
     public JSONObject poJSON;
     
-    public JSONObject addVSPLabor(String fsValue){
+    ArrayList<Model_VehicleSalesProposal_Labor> paDetail;
+    ArrayList<Model_VehicleSalesProposal_Labor> paRemDetail;
+    
+    public VehicleSalesProposal_Labor(GRider foAppDrver){
+        poGRider = foAppDrver;
+    }
+    
+    public int getEditMode() {
+        return pnEditMode;
+    }
+
+    public Model_VehicleSalesProposal_Labor getVSPLabor(int fnIndex){
+        if (fnIndex > paDetail.size() - 1 || fnIndex < 0) return null;
+        
+        return paDetail.get(fnIndex);
+    }
+    
+    public JSONObject addDetail(String fsTransNo){
+        if(paDetail == null){
+           paDetail = new ArrayList<>();
+        }
+        
         poJSON = new JSONObject();
-        if (paVSPLabor.isEmpty()){
-            paVSPLabor.add(new Model_VehicleSalesProposal_Labor(poGRider));
-            paVSPLabor.get(0).newRecord();
-            paVSPLabor.get(0).setTransactionNo(fsValue);
+        if (paDetail.size()<=0){
+            paDetail.add(new Model_VehicleSalesProposal_Labor(poGRider));
+            paDetail.get(0).newRecord();
+            
+            paDetail.get(0).setTransNo(fsTransNo);
+            paDetail.get(0).setEntryNo(0);
+            paDetail.get(0).setAddDate(poGRider.getServerDate());
+            paDetail.get(0).setAddBy(poGRider.getUserID());
             poJSON.put("result", "success");
-            poJSON.put("message", "Social media add record.");
+            poJSON.put("message", "VSP Labor add record.");
         } else {
-            //ValidatorInterface validator = ValidatorFactory.make(types,  ValidatorFactory.TYPE.Client_Social_Media, paSocMed.get(paSocMed.size()-1));
-//            if (!validator.isEntryOkay()){
-//                poJSON.put("result", "error");
-//                poJSON.put("message", validator.getMessage());
-//                return poJSON;
-//            }
-            paVSPLabor.add(new Model_VehicleSalesProposal_Labor( poGRider));
-            paVSPLabor.get(paVSPLabor.size()-1).newRecord();
-            paVSPLabor.get(paVSPLabor.size()-1).setTransactionNo(fsValue);
+            paDetail.add(new Model_VehicleSalesProposal_Labor(poGRider));
+            paDetail.get(paDetail.size()-1).newRecord();
+
+            paDetail.get(paDetail.size()-1).setTransNo(fsTransNo);
+            paDetail.get(paDetail.size()-1).setEntryNo(0);
+            paDetail.get(paDetail.size()-1).setAddDate(poGRider.getServerDate());
+            paDetail.get(paDetail.size()-1).setAddBy(poGRider.getUserID());
+            
             poJSON.put("result", "success");
-            poJSON.put("message", "Social media add record.");
+            poJSON.put("message", "VSP Labor add record.");
         }
         return poJSON;
     }
     
-    public JSONObject openVSPLabor(String fsValue){
-        String lsSQL = getSQL();
-        lsSQL = MiscUtil.addCondition(lsSQL, "sTransNox = " + SQLUtil.toSQL(fsValue));
+    public JSONObject openDetail(String fsValue){
+        paDetail = new ArrayList<>();
+        paRemDetail = new ArrayList<>();
+        poJSON = new JSONObject();
+        String lsSQL =    "  SELECT "                                                  
+                        + "   sTransNox "   
+                        + " , nEntryNox "   
+                        + " , sLaborCde "                                               
+                        + "  FROM vsp_labor " ;
+        lsSQL = MiscUtil.addCondition(lsSQL, " sTransNox = " + SQLUtil.toSQL(fsValue))
+                                                + "  ORDER BY nEntryNox ASC " ;
+        System.out.println(lsSQL);
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
-        System.out.println(lsSQL);
-       try {
+        try {
             int lnctr = 0;
             if (MiscUtil.RecordCount(loRS) > 0) {
-                paVSPLabor = new ArrayList<>();
                 while(loRS.next()){
-                        paVSPLabor.add(new Model_VehicleSalesProposal_Labor(poGRider));
-                        paVSPLabor.get(paVSPLabor.size() - 1).openRecord(loRS.getString("sTransNox"));
+                        paDetail.add(new Model_VehicleSalesProposal_Labor(poGRider));
+                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"), loRS.getString("sLaborCde"));
                         
                         pnEditMode = EditMode.UPDATE;
                         lnctr++;
@@ -82,10 +107,9 @@ public class VehicleSalesProposal_Labor {
                         poJSON.put("message", "Record loaded successfully.");
                     } 
                 
-                System.out.println("lnctr = " + lnctr);
             }else{
-                paVSPLabor = new ArrayList<>();
-                addVSPLabor(fsValue);
+//                paDetail = new ArrayList<>();
+//                addDetail(fsValue);
                 poJSON.put("result", "error");
                 poJSON.put("continue", true);
                 poJSON.put("message", "No record selected.");
@@ -95,92 +119,185 @@ public class VehicleSalesProposal_Labor {
             poJSON.put("result", "error");
             poJSON.put("message", e.getMessage());
         }
-        return checkData(poJSON);
-    }
-    
-    public JSONObject saveVSPLabor (String fsValue) {
-        poJSON = new JSONObject();
-        
-        int lnCtr;
-        String lsSQL;
-        
-        for (lnCtr = 0; lnCtr <= paVSPLabor.size() -1; lnCtr++){
-            paVSPLabor.get(lnCtr).setTransactionNo(fsValue);
-            if(lnCtr>0){
-                if(paVSPLabor.get(lnCtr).getValue("sLaborCde").toString().isEmpty()){
-                    paVSPLabor.remove(lnCtr);
-                }
-            }
-            
-//            ValidatorInterface validator = ValidatorFactory.make(types,  ValidatorFactory.TYPE.Client_Social_Media, paSocMed.get(lnCtr));
-//            if (!validator.isEntryOkay()){
-//                poJSON.put("result", "error");
-//                poJSON.put("message", validator.getMessage());
-//                return poJSON;
-//            }
-            
-            poJSON = paVSPLabor.get(lnCtr).saveRecord();
-        }    
-        
         return poJSON;
     }
     
-    public Model_VehicleSalesProposal_Labor getVSPLabor(int fnIndex){
-        if (fnIndex > paVSPLabor.size() - 1 || fnIndex < 0) return null;
+    public JSONObject saveDetail(String fsTransNo){
+        JSONObject obj = new JSONObject();
         
-        return paVSPLabor.get(fnIndex);
-    }
-    
-    public ArrayList<Model_VehicleSalesProposal_Labor> getVSPLaborList(){return paVSPLabor;}
-    public void setVSPLaborList(ArrayList<Model_VehicleSalesProposal_Labor> foObj){this.paVSPLabor = foObj;}
-    
-    public void setVSPLabor(int fnRow, int fnIndex, Object foValue){ paVSPLabor.get(fnRow).setValue(fnIndex, foValue);}
-    public void setVSPLabor(int fnRow, String fsIndex, Object foValue){ paVSPLabor.get(fnRow).setValue(fsIndex, foValue);}
-    public Object getVSPLabor(int fnRow, int fnIndex){return paVSPLabor.get(fnRow).getValue(fnIndex);}
-    public Object getVSPLabor(int fnRow, String fsIndex){return paVSPLabor.get(fnRow).getValue(fsIndex);}
-    
-    private Connection setConnection(){
-        Connection foConn;
-        
-        if (pbWtParent){
-            foConn = (Connection) poGRider.getConnection();
-            if (foConn == null) foConn = (Connection) poGRider.doConnect();
-        }else foConn = (Connection) poGRider.doConnect();
-        
-        return foConn;
-    }
-    
-    private JSONObject checkData(JSONObject joValue){
-        if(pnEditMode == EditMode.READY || pnEditMode == EditMode.UPDATE){
-            if(joValue.containsKey("continue")){
-                if(true == (boolean)joValue.get("continue")){
-                    joValue.put("result", "success");
-                    joValue.put("message", "Record saved successfully.");
+        int lnCtr;
+        if(paRemDetail != null){
+            int lnRemSize = paRemDetail.size() -1;
+            if(lnRemSize >= 0){
+                for(lnCtr = 0; lnCtr <= lnRemSize; lnCtr++){
+                    obj = paRemDetail.get(lnCtr).deleteRecord();
+                    if("error".equals((String) obj.get("result"))){
+                        return obj;
+                    }
                 }
             }
         }
-        return joValue;
+        
+        if(paDetail == null){
+            obj.put("result", "error");
+            obj.put("continue", true);
+            return obj;
+        }
+        
+        int lnSize = paDetail.size() -1;
+        if(lnSize < 0){
+            obj.put("result", "error");
+            obj.put("continue", true);
+            return obj;
+        }
+        
+        if(psTargetBranchCd == null){
+            obj.put("result", "error");
+            obj.put("continue", false);
+            obj.put("message", "Target Branch code for vsp labor cannot be empty.");
+            return obj;
+        } else {
+            if(psTargetBranchCd.isEmpty()){
+                obj.put("result", "error");
+                obj.put("continue", false);
+                obj.put("message", "Target Branch code for vsp labor cannot be empty.");
+                return obj;
+            }
+        }
+        
+        for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
+            //if(lnCtr>0){
+                if(paDetail.get(lnCtr).getLaborCde().isEmpty()){
+                    if(lnSize == 0){
+                        obj.put("result", "error");
+                        obj.put("continue", true);
+                        return obj;
+                    }
+                    continue; //skip, instead of removing the actual detail
+//                    paDetail.remove(lnCtr);
+//                    lnCtr++;
+//                    if(lnCtr > lnSize){
+//                        break;
+//                    } 
+                }
+            //}
+            
+            paDetail.get(lnCtr).setTransNo(fsTransNo);
+            paDetail.get(lnCtr).setEntryNo(lnCtr+1);
+            paDetail.get(lnCtr).setTargetBranchCd(psTargetBranchCd);
+            
+            ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.VehicleSalesProposal_Labor, paDetail.get(lnCtr));
+            validator.setGRider(poGRider);
+            if (!validator.isEntryOkay()){
+                obj.put("result", "error");
+                obj.put("message", validator.getMessage());
+                return obj;
+            }
+            obj = paDetail.get(lnCtr).saveRecord();
+        }    
+        
+        return obj;
+    }
+    public void setTargetBranchCd(String fsBranchCd){
+        psTargetBranchCd = fsBranchCd;
     }
     
-    public String getSQL(){
-        return " SELECT " +
-                "  IFNULL(a.sTransNox, '') AS sTransNox" + //1
-                " , a.nEntryNox" + //2
-                " , IFNULL(a.sLaborCde, '') AS sLaborCde" + //3
-                " , a.nLaborAmt" + //4
-                " , IFNULL(a.sChrgeTyp, '') AS sChrgeTyp" + //5
-                " , IFNULL(a.sRemarksx, '') AS sRemarksx" + //6
-                " , IFNULL(a.sLaborDsc, '') AS sLaborDsc" + //7
-                " , a.cAddtlxxx" + //8
-                " , a.dAddDatex" + //9
-                " , IFNULL(a.sAddByxxx, '') AS sAddByxxx" + //10
-                " , IFNULL(GROUP_CONCAT( DISTINCT c.sDSNoxxxx), '') AS sDSNoxxxx " + //11
-                " , IFNULL(a.sApproved, '') AS sApproved " + //12
-                " , a.dApproved" + //13
-                " , IFNULL(d.sCompnyNm, '') AS sApprovBy " + //14
-                " FROM vsp_labor a "+
-                " LEFT JOIN diagnostic_labor b ON b.sLaborCde = a.sLaborCde " +
-                " LEFT JOIN diagnostic_master c ON c.sTransNox = b.sTransNox and c.sSourceCD = a.sTransNox AND c.cTranStat = '1' "  +
-                " LEFT JOIN GGC_ISysDBF.client_master d ON d.sClientID = a.sApproved " ;
+    public ArrayList<Model_VehicleSalesProposal_Labor> getDetailList(){
+        if(paDetail == null){
+           paDetail = new ArrayList<>();
+        }
+        return paDetail;
+    }
+    public void setDetailList(ArrayList<Model_VehicleSalesProposal_Labor> foObj){this.paDetail = foObj;}
+    
+    public void setDetail(int fnRow, int fnIndex, Object foValue){ paDetail.get(fnRow).setValue(fnIndex, foValue);}
+    public void setDetail(int fnRow, String fsIndex, Object foValue){ paDetail.get(fnRow).setValue(fsIndex, foValue);}
+    public Object getDetail(int fnRow, int fnIndex){return paDetail.get(fnRow).getValue(fnIndex);}
+    public Object getDetail(int fnRow, String fsIndex){return paDetail.get(fnRow).getValue(fsIndex);}
+    
+    public Model_VehicleSalesProposal_Labor getDetailModel(int fnRow) {
+        return paDetail.get(fnRow);
+    }
+    
+    public Object removeDetail(int fnRow){
+        JSONObject loJSON = new JSONObject();
+        
+        if(paDetail.get(fnRow).getDSNo() != null){
+            if(!paDetail.get(fnRow).getDSNo().trim().isEmpty()){
+                loJSON.put("result", "error");
+                loJSON.put("message", "Labor " + paDetail.get(fnRow).getLaborDsc() + " already linked thru job order.\nDelete row aborted.");
+                return loJSON;
+            }
+        }
+        
+        if(paDetail.get(fnRow).getEntryNo() != null){
+            if(paDetail.get(fnRow).getEntryNo() != 0){
+                RemoveDetail(fnRow);
+            }
+        }
+        
+        paDetail.remove(fnRow);
+        return loJSON;
+    }
+    
+    private JSONObject RemoveDetail(Integer fnRow){
+        
+        if(paRemDetail == null){
+           paRemDetail = new ArrayList<>();
+        }
+        
+        poJSON = new JSONObject();
+        if (paRemDetail.size()<=0){
+            paRemDetail.add(new Model_VehicleSalesProposal_Labor(poGRider));
+            paRemDetail.get(0).openRecord(paDetail.get(fnRow).getTransNo(),paDetail.get(fnRow).getLaborCde());
+            poJSON.put("result", "success");
+            poJSON.put("message", "added to remove record.");
+        } else {
+            paRemDetail.add(new Model_VehicleSalesProposal_Labor(poGRider));
+            paRemDetail.get(paRemDetail.size()-1).openRecord(paDetail.get(fnRow).getTransNo(),paDetail.get(fnRow).getLaborCde());
+            poJSON.put("result", "success");
+            poJSON.put("message", "added to remove record.");
+        }
+        return poJSON;
+    }
+    
+    public JSONObject searchLabor(String fsValue, boolean withUI) {
+        poJSON = new JSONObject();
+        String lsHeader = "ID»Description";
+        String lsColName = "sLaborCde»sLaborDsc"; 
+        String lsCriteria = "sLaborCde»sLaborDsc";
+        
+        String lsSQL =   " SELECT "                                             
+                + "   sLaborCde "                                      
+                + " , sLaborDsc "                                      
+                + " , cRecdStat "                                      
+                + " FROM labor " ; 
+        if(withUI){
+            lsSQL = MiscUtil.addCondition(lsSQL,  " cRecdStat = '1' "
+                                                + " AND sLaborDsc LIKE " + SQLUtil.toSQL(fsValue + "%"));
+        } else {
+            lsSQL = MiscUtil.addCondition(lsSQL,  " cRecdStat = '1' "
+                                                + " AND TRIM(REPLACE(sLaborDsc, ' ', '')) = " + SQLUtil.toSQL(fsValue.replace(" ", "")))
+                                                + " LIMIT 1 ";
+        }
+        
+        System.out.println("SEARCH LABOR: " + lsSQL);
+        poJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                    lsHeader,
+                    lsColName,
+                    lsCriteria,
+                1);
+
+        if (poJSON != null) {
+        } else {
+            poJSON = new JSONObject();
+            poJSON.put("result", "error");
+            poJSON.put("message", "No record loaded.");
+            return poJSON;
+        }
+        
+        return poJSON;
     }
 }

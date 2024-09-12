@@ -29,7 +29,7 @@ public class Inquiry_Requirements {
     
     final String XML = "Model_Inquiry_Requirements.xml";
     GRider poGRider;
-    String psBranchCd;
+    String psTargetBranchCd;
     boolean pbWtParent;
     
     int pnEditMode;
@@ -149,7 +149,42 @@ public class Inquiry_Requirements {
             return obj;
         }
         
-
+        if(psTargetBranchCd == null){
+            obj.put("result", "error");
+            obj.put("continue", false);
+            obj.put("message", "Target Branch code for inquiry requirements cannot be empty.");
+            return obj;
+        } else {
+            if(psTargetBranchCd.isEmpty()){
+                obj.put("result", "error");
+                obj.put("continue", false);
+                obj.put("message", "Target Branch code for inquiry requirements cannot be empty.");
+                return obj;
+            }
+        }
+        
+        //validate atleast 1 required requirements must sent
+        boolean lbRqrdChk = false;
+        for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
+            if(paDetail.get(lnCtr).getRequired().equals("1")){
+                if(paDetail.get(lnCtr).getReceived() != null){
+                    if(!paDetail.get(lnCtr).getReceived().trim().isEmpty()){
+                        if(paDetail.get(lnCtr).getSubmittd().equals("1")){
+                            lbRqrdChk = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        if(!lbRqrdChk){
+            obj.put("result", "error");
+            obj.put("continue", false);
+            obj.put("message", "Client must submit atleast 1 required requirement to proceed to on process.\nOtherwise inquiry must be approve for VIP clients.");
+            return obj;
+        }
+        
         int lnEntryNo = 1;
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
             if(paDetail.get(lnCtr).getReceived().trim().isEmpty()){
@@ -159,6 +194,7 @@ public class Inquiry_Requirements {
             
             paDetail.get(lnCtr).setTransNo(fsTransNo);
             paDetail.get(lnCtr).setEntryNo(lnEntryNo);
+            paDetail.get(lnCtr).setTargetBranchCd(psTargetBranchCd);
 
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Inquiry_Requirements, paDetail.get(lnCtr));
             validator.setGRider(poGRider);
@@ -172,6 +208,10 @@ public class Inquiry_Requirements {
         }    
         
         return obj;
+    }
+    
+    public void setTargetBranchCd(String fsBranchCd){
+        psTargetBranchCd = fsBranchCd; 
     }
     
     public ArrayList<Model_Inquiry_Requirements> getDetailList(){
@@ -304,6 +344,7 @@ public class Inquiry_Requirements {
                         + "  , b.sRqrmtIDx "                                                      
                         + "  , b.cPayModex "                                                      
                         + "  , b.cCustGrpx "                                                      
+                        + "  , b.cRequired "                                                      
                         + " FROM requirement_source a "                                           
                         + " LEFT JOIN requirement_source_pergroup b ON b.sRqrmtCde = a.sRqrmtCde " ;  
         lsSQL = MiscUtil.addCondition(lsSQL, " b.cPayModex = " + SQLUtil.toSQL(fsPaymode)
@@ -318,6 +359,7 @@ public class Inquiry_Requirements {
                     addRequirements();
                     setRequirements(paRequirements.size()-1,"sRqrmtCde", (String) loRS.getString("sRqrmtCde"));
                     setRequirements(paRequirements.size()-1,"sDescript", (String) loRS.getString("sDescript"));
+                    setRequirements(paRequirements.size()-1,"cRequired", (String) loRS.getString("cRequired"));
                     
                     for (int lnCtr = 0; lnCtr <= paDetail.size()-1;lnCtr++){
                         if(paDetail.get(lnCtr).getRqrmtCde().equals( loRS.getString("sRqrmtCde"))){
@@ -367,10 +409,15 @@ public class Inquiry_Requirements {
     public Object getRequirements(int fnRow, int fnIndex){return paRequirements.get(fnRow).getValue(fnIndex);}
     public Object getRequirements(int fnRow, String fsIndex){return paRequirements.get(fnRow).getValue(fsIndex);}
     
-    public JSONObject searchEmployee(String fsRqrmtCde, String fsDescript) { //, String fsTransNo
+    public JSONObject searchEmployee(String fsRqrmtCde, String fsDescript, String fsRequired) { //, String fsTransNo
         JSONObject lObj = new JSONObject();
         boolean lbExist = false;
         int lnRow = 0;
+        String lsRqrd = "0";
+        
+        if(fsRequired.equals("Y")){
+            lsRqrd = "1";
+        }
         
         String lsSQL =   " SELECT "
                        + " a.sClientID AS sClientID "
@@ -406,6 +453,7 @@ public class Inquiry_Requirements {
                     setDetail(lnRow,"sCompnyNm", (String) lObj.get("sCompnyNm"));
                     setDetail(lnRow,"dReceived", poGRider.getServerDate());
                     setDetail(lnRow,"cSubmittd", "1");
+                    setDetail(lnRow,"cRequired", lsRqrd);
                 } else {
                     addDetail();
                      if (paDetail.size()<=0){
@@ -415,6 +463,7 @@ public class Inquiry_Requirements {
                         setDetail(0,"sCompnyNm", (String) lObj.get("sCompnyNm"));
                         setDetail(0,"dReceived", poGRider.getServerDate());
                         setDetail(0,"cSubmittd", "1");
+                        setDetail(0,"cRequired", lsRqrd);
                      }else {
                         setDetail(paDetail.size()-1,"sRqrmtCde", fsRqrmtCde);
                         setDetail(paDetail.size()-1,"sDescript", fsDescript);
@@ -422,6 +471,7 @@ public class Inquiry_Requirements {
                         setDetail(paDetail.size()-1,"sCompnyNm", (String) lObj.get("sCompnyNm"));
                         setDetail(paDetail.size()-1,"dReceived", poGRider.getServerDate());
                         setDetail(paDetail.size()-1,"cSubmittd", "1");
+                        setDetail(paDetail.size()-1,"cRequired", lsRqrd);
                      }
                 }
                 

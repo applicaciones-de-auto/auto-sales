@@ -27,7 +27,7 @@ import org.json.simple.JSONObject;
 public class Inquiry_Promo {
     final String XML = "Model_Inquiry_Promo.xml";
     GRider poGRider;
-    String psBranchCd;
+    String psTargetBranchCd = "";
     boolean pbWtParent;
     
     int pnEditMode;
@@ -144,6 +144,21 @@ public class Inquiry_Promo {
             return obj;
         }
         
+        
+        if(psTargetBranchCd == null){
+            obj.put("result", "error");
+            obj.put("continue", false);
+            obj.put("message", "Target Branch code for inquiry promo cannot be empty.");
+            return obj;
+        } else {
+            if(psTargetBranchCd.isEmpty()){
+                obj.put("result", "error");
+                obj.put("continue", false);
+                obj.put("message", "Target Branch code for inquiry promo cannot be empty.");
+                return obj;
+            }
+        }
+        
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
             if(paDetail.get(lnCtr).getPromoID().isEmpty()){
                 continue; //skip instead of removing the actual detail
@@ -155,6 +170,7 @@ public class Inquiry_Promo {
             }
             
             paDetail.get(lnCtr).setTransNo(fsTransNo);
+            paDetail.get(lnCtr).setTargetBranchCd(psTargetBranchCd);
             
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Inquiry_Promo, paDetail.get(lnCtr));
             validator.setGRider(poGRider);
@@ -167,6 +183,10 @@ public class Inquiry_Promo {
         }    
         
         return obj;
+    }
+    
+    public void setTargetBranchCd(String fsBranchCd){
+        psTargetBranchCd = fsBranchCd; 
     }
     
     public ArrayList<Model_Inquiry_Promo> getDetailList(){

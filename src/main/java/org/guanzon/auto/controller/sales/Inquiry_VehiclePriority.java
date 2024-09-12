@@ -26,7 +26,7 @@ import org.json.simple.JSONObject;
 public class Inquiry_VehiclePriority {
     final String XML = "Model_Inquiry_VehiclePriority.xml";
     GRider poGRider;
-    String psBranchCd;
+    String psTargetBranchCd = "";
     boolean pbWtParent;
     
     int pnEditMode;
@@ -146,6 +146,20 @@ public class Inquiry_VehiclePriority {
             return obj;
         }
         
+        if(psTargetBranchCd == null){
+            obj.put("result", "error");
+            obj.put("continue", false);
+            obj.put("message", "Target Branch code for vehicle priority cannot be empty.");
+            return obj;
+        } else {
+            if(psTargetBranchCd.isEmpty()){
+                obj.put("result", "error");
+                obj.put("continue", false);
+                obj.put("message", "Target Branch code for vehicle priority cannot be empty.");
+                return obj;
+            }
+        }
+        
         for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
             //if(lnCtr>0){
                 if(paDetail.get(lnCtr).getVhclID().isEmpty()){
@@ -159,6 +173,7 @@ public class Inquiry_VehiclePriority {
             //}
             
             paDetail.get(lnCtr).setTransNo(fsTransNo);
+            paDetail.get(lnCtr).setTargetBranchCd(psTargetBranchCd);
             
             ValidatorInterface validator = ValidatorFactory.make(ValidatorFactory.TYPE.Inquiry_Vehicle_Priority, paDetail.get(lnCtr));
             validator.setGRider(poGRider);
@@ -171,6 +186,10 @@ public class Inquiry_VehiclePriority {
         }    
         
         return obj;
+    }
+    
+    public void setTargetBranchCd(String fsBranchCd){
+        psTargetBranchCd = fsBranchCd; 
     }
     
     public ArrayList<Model_Inquiry_VehiclePriority> getDetailList(){
