@@ -15,6 +15,7 @@ import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
+import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.auto.general.CancelForm;
 import org.guanzon.auto.model.sales.Model_Inquiry_Reservation;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
@@ -100,9 +101,12 @@ public class Inquiry_Reservation {
                         + " , a.sApproved "                                               
                         + " , a.cTranStat "                                            
                         + " , b.sReferNox "                                              
+                        + " , b.sReferNox "                                            
+                        + " , d.cTranStat "                                              
                         + " FROM customer_inquiry_reservation a "                        
                         + " LEFT JOIN si_master_source b ON b.sReferNox = a.sTransNox "  
-                        + " LEFT JOIN si_master c ON c.sTransNox = b.sTransNox "         ;
+                        + " LEFT JOIN si_master c ON c.sTransNox = b.sTransNox "         
+                        + " LEFT JOIN customer_inquiry d ON d.sTransNox = a.sSourceNo "  ;
         if(!fbOthRsv){
             if(fbIsInq){
                 lsSQL = MiscUtil.addCondition(lsSQL, " a.sSourceNo = " + SQLUtil.toSQL(fsValue));
@@ -111,9 +115,11 @@ public class Inquiry_Reservation {
             }
         } else {
             lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = '2' "
-                                                  + " AND (c.sReferNox <> NULL OR TRIM(c.sReferNox) <> '')"
+                                                  +  " AND  d.cTranStat = '2' " //ONLY LOAD OTHER INQUIRY RESERVATION TAGGED AS LOST SALE
+                                                  +  " AND  c.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)   
+                                                  +  " AND (c.sReferNox <> NULL OR TRIM(c.sReferNox) <> '')"
                                                   //+ " AND (a.sTransIDx = NULL OR TRIM(a.sTransIDx) = '')"
-                                                  + " AND a.sSourceNo <> " + SQLUtil.toSQL(fsValue));
+                                                  +  " AND a.sSourceNo <> " + SQLUtil.toSQL(fsValue));
         }
         
         

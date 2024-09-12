@@ -264,7 +264,8 @@ public class VehicleSalesProposal_Master implements GTransaction{
         String lsSQL = poModel.getSQL();
         
         if(fbByCode){
-            lsSQL = MiscUtil.addCondition(lsSQL,  " a.sTransNox = " + SQLUtil.toSQL(fsValue));
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.sTransNox = " + SQLUtil.toSQL(fsValue))
+                                                    + " GROUP BY a.sTransNox ";
         } 
         
         if(fbUpdate){

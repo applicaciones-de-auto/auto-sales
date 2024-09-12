@@ -11,6 +11,7 @@ org\guanzon\auto\controller\sales\Inquiry_Reservation.class
 org\guanzon\auto\resultSet2XML\sales\InquiryReservation.class
 org\guanzon\auto\resultSet2XML\sales\InquiryPromo.class
 org\guanzon\auto\main\sales\FollowUp.class
+org\guanzon\auto\resultSet2XML\sales\VehicleDeliveryReceiptMaster.class
 org\guanzon\auto\resultSet2XML\sales\VehicleSalesProposalParts.class
 org\guanzon\auto\controller\sales\Inquiry_Master.class
 org\guanzon\auto\main\sales\BankApplication.class

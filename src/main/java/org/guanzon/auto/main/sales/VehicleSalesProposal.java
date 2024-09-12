@@ -930,6 +930,22 @@ public class VehicleSalesProposal implements GTransaction{
                 System.out.println("ldblGrsMonth : " + ldblGrsMonth);
                 System.out.println("lnAcctTerm : " + lnAcctTerm);
                 System.out.println("ldblPNValuex : " + ldblPNValuex);
+                
+                //Compute Dealer and Sales Executive Incentives
+                Double ldblDIRate = 0.00;
+                if(poController.getMasterModel().getDealrRte() != null){
+                    ldblDIRate = poController.getMasterModel().getDealrRte() / 100;
+                    poController.getMasterModel().setDealrAmt((new BigDecimal(ldblDIRate).multiply(ldblFinAmt)).setScale(2, BigDecimal.ROUND_HALF_UP)); 
+                }
+                Double ldblSIRate = 0.00; 
+                if(poController.getMasterModel().getSlsInRte() != null){
+                    ldblSIRate = poController.getMasterModel().getSlsInRte() / 100;
+                    poController.getMasterModel().setSlsInAmt((new BigDecimal(ldblSIRate).multiply(ldblFinAmt)).setScale(2, BigDecimal.ROUND_HALF_UP)); 
+                }
+                
+                System.out.println("nFinAmtxx : " + getVSPFinanceModel().getVSPFinanceModel().getFinAmt());
+                System.out.println("nDealrAmt : " + poController.getMasterModel().getDealrAmt());
+                System.out.println("nSlsInAmt : " + poController.getMasterModel().getSlsInAmt());
             }
         }
         

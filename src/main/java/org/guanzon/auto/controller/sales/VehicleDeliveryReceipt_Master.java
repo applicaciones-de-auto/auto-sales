@@ -307,8 +307,11 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
 
                 poJSON = poModel.saveRecord();
                 if ("success".equals((String) poJSON.get("result"))) {
-                    poJSON.put("result", "success");
-                    poJSON.put("message", "Cancellation success.");
+                    poJSON = updateTables();
+                    if(!"error".equalsIgnoreCase((String)poJSON.get("result"))){
+                        poJSON.put("result", "success");
+                        poJSON.put("message", "Cancellation success.");
+                    } 
                 } else {
                     poJSON.put("result", "error");
                     poJSON.put("message", "Cancellation failed.");

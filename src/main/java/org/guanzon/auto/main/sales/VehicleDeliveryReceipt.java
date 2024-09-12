@@ -165,7 +165,18 @@ public class VehicleDeliveryReceipt  implements GTransaction{
 
     @Override
     public JSONObject cancelTransaction(String fsValue) {
-        return poController.cancelTransaction(fsValue);
+        poJSON = new JSONObject();  
+        
+        if (!pbWtParent) poGRider.beginTrans();
+        
+        poJSON =   poController.cancelTransaction(fsValue);
+        if("error".equalsIgnoreCase((String) poJSON.get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return poJSON;
+        }
+        if (!pbWtParent) poGRider.commitTrans();
+        
+        return poJSON;
     }
     
     public JSONObject searchTransaction(String fsValue, boolean fIsActive) {
