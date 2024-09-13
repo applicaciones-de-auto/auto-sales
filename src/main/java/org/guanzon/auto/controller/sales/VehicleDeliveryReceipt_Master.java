@@ -421,11 +421,13 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
                             + " 	IFNULL(CONCAT(g.sProvName),'') )	, '')";
         
         if(fbByCode){
-            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = " + TransactionStatus.STATE_CLOSED //APPROVE
+            lsSQL = MiscUtil.addCondition(lsSQL,  " (a.sSerialID <> NULL OR a.sSerialID <> '') "
+                                                + " AND a.cTranStat = " + TransactionStatus.STATE_CLOSED //APPROVE
                                                 + " AND a.sTransNox = " + SQLUtil.toSQL(fsValue)
                                                 + " GROUP BY a.sTransNox ");
         } else {
-            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = " + TransactionStatus.STATE_CLOSED //APPROVE
+            lsSQL = MiscUtil.addCondition(lsSQL,  " (a.sSerialID <> NULL OR a.sSerialID <> '') "
+                                                + " AND a.cTranStat = " + TransactionStatus.STATE_CLOSED //APPROVE
                                                 + " AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%")
                                                 + " GROUP BY a.sTransNox ");
         }
