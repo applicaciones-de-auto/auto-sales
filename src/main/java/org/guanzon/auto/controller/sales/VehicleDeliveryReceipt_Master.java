@@ -259,6 +259,23 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
             }
         }
         
+        if(poModel.getSourceNo()!= null){
+            if(!poModel.getSourceNo().trim().isEmpty() && poModel.getCustType().equals("0")){
+                loJSON = poVSPModel.openRecord(poModel.getSourceNo());
+                if(!"error".equalsIgnoreCase((String)loJSON.get("result"))){
+                    poVSPModel.setDelvryDt(poModel.getTransactDte());
+                    loJSON = poVSPModel.saveRecord();
+                    if("error".equalsIgnoreCase((String)loJSON.get("result"))){
+                        return loJSON;
+                    } else {
+                        loJSON.put("result", "success");
+                        loJSON.put("message", "Record saved successfully.");
+                    }
+                } else {
+                    return loJSON;
+                }
+            }
+        }
         return loJSON;
     }
     

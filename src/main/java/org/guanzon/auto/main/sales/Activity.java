@@ -219,12 +219,15 @@ public class Activity implements GRecord{
         return joValue;
     }
     
+    public Activity_Location getLocationModel(){return poActLocation;}
     public ArrayList getActLocationList(){return poActLocation.getDetailList();}
     public void setActLocationList(ArrayList foObj){this.poActLocation.setDetailList(foObj);}
     
+    public Activity_Member getMemberModel(){return poActMember;}
     public ArrayList getActMemberList(){return poActMember.getDetailList();}
     public void setActMemberList(ArrayList foObj){this.poActMember.setDetailList(foObj);}
     
+    public Activity_Vehicle getVehicleModel(){return poActVehicle;}
     public ArrayList getActVehicleList(){return poActVehicle.getDetailList();}
     public void setActVehicleList(ArrayList foObj){this.poActVehicle.setDetailList(foObj);}
     
@@ -286,7 +289,7 @@ public class Activity implements GRecord{
         
         boolean lbEmpOrg = false;
         for(int lnCtr = 0; lnCtr <= lnSize; lnCtr++){
-            if("1".equals(poActMember.getDetail(lnCtr).getOriginal())){
+            if("1".equals(poActMember.getDetailModel(lnCtr).getOriginal())){
                 lbEmpOrg = true;
                 break;
             }

@@ -23,6 +23,8 @@ import org.guanzon.auto.controller.sales.VehicleSalesProposal_Finance;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Labor;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Master;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Parts;
+import org.guanzon.auto.validator.sales.ValidatorFactory;
+import org.guanzon.auto.validator.sales.ValidatorInterface;
 import org.json.simple.JSONObject;
 
 /**
@@ -1098,8 +1100,45 @@ public class VehicleSalesProposal implements GTransaction{
                 }
             }
         }
+        
+//        loJSON = validateDetail();
+//        if("error".equals((String) loJSON.get("result"))){
+//            return loJSON;
+//        }
+        
         return loJSON;
     }
+    
+//    private JSONObject validateDetail(){
+//        JSONObject loJSON = new JSONObject();
+//        ValidatorInterface validator;
+//        int lnSize = 0;
+//        
+//        lnSize = poVSPLabor.getDetailList().size() -1;
+//        for (int lnCtr = 0; lnCtr <= lnSize; lnCtr++){
+//            poVSPLabor.getDetailModel(lnCtr).setTransNo(poController.getMasterModel().getTransNo());
+//            validator = ValidatorFactory.make(ValidatorFactory.TYPE.VehicleSalesProposal_Labor, poVSPLabor.getDetailModel(lnCtr));
+//            validator.setGRider(poGRider);
+//            if (!validator.isEntryOkay()){
+//                loJSON.put("result", "error");
+//                loJSON.put("message", validator.getMessage());
+//                return loJSON;
+//            }
+//        }
+//        
+//        lnSize = poVSPParts.getDetailList().size() -1;
+//        for (int lnCtr = 0; lnCtr <= lnSize; lnCtr++){
+//            poVSPParts.getDetailModel(lnCtr).setTransNo(poController.getMasterModel().getTransNo());
+//            validator = ValidatorFactory.make(ValidatorFactory.TYPE.VehicleSalesProposal_Parts, poVSPParts.getDetailModel(lnCtr));
+//            validator.setGRider(poGRider);
+//            if (!validator.isEntryOkay()){
+//                loJSON.put("result", "error");
+//                loJSON.put("message", validator.getMessage());
+//                return loJSON;
+//            }
+//        }
+//        return loJSON;
+//    }
     
     //TODO
     private boolean computeTotlAmtPaid(){
