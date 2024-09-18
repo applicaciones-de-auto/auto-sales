@@ -85,7 +85,8 @@ public class VehicleDeliveryReceiptMaster {
                         + "  , DATE(h.dDelvryDt) AS dDelvryDt "                                                                              
                         + "  , h.sInqryIDx "                                                                               
                         + "  , h.sBranchCD "                                                                               
-                        + "  , h.cPayModex "                                                                              
+                        + "  , h.cPayModex "                                            
+                        + " ,  q.sCompnyNm AS sSENamexx "                                                                               
                         /*CO-CLIENT*/                                                                                     
                         + "  , i.sCompnyNm AS sCoCltNmx "                                                                 
                         /*VEHICLE INFORMATION*/                                                                           
@@ -113,7 +114,7 @@ public class VehicleDeliveryReceiptMaster {
                         + "  LEFT JOIN client_mobile ba ON ba.sClientID = b.sClientID AND ba.cPrimaryx = 1 "              
                         + "  LEFT JOIN client_email_address bb ON bb.sClientID = b.sClientID AND bb.cPrimaryx = 1 "       
                         /*VSP*/                                                                                           
-                        + "  LEFT JOIN vsp_master h ON h.sTransNox = a.sSourceNo "                                        
+                        + "  LEFT JOIN vsp_master h ON h.sTransNox = a.sSourceNo "                                       
                         /*CO CLIENT*/                                                                                     
                         + "  LEFT JOIN client_master i ON i.sClientID = h.sCoCltIDx "                                     
                         /*VEHICLE INFORMATION*/                                                                           
@@ -123,13 +124,16 @@ public class VehicleDeliveryReceiptMaster {
                         + "  LEFT JOIN vehicle_make la ON la.sMakeIDxx = l.sMakeIDxx  "
                         + "  LEFT JOIN vehicle_model lb ON lb.sModelIDx = l.sModelIDx "
                         + "  LEFT JOIN vehicle_type lc ON lc.sTypeIDxx = l.sTypeIDxx  "
-                        + "  LEFT JOIN vehicle_color ld ON ld.sColorIDx = l.sColorIDx "
+                        + "  LEFT JOIN vehicle_color ld ON ld.sColorIDx = l.sColorIDx "                                    
                         /*BRANCH*/                                                                                        
                         + "  LEFT JOIN branch m ON m.sBranchCd = h.sBranchCD "
                         /*VSI*/
-                        + "  LEFT JOIN si_master_source n on n.sSourceNo = a.sTransNox "
-                        + "  LEFT JOIN si_master o ON o.sTransNox = n.sTransNox AND o.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
-                        + " WHERE 0=1";
+                        + "  LEFT JOIN si_master_source n on n.sReferNox = a.sTransNox "
+                        + "  LEFT JOIN si_master o ON o.sTransNox = n.sTransNox AND o.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED) 
+                        /*INQUIRY*/                
+                        + "  LEFT JOIN customer_inquiry p ON p.sTransNox = h.sInqryIDx "    
+                        + "  LEFT JOIN ggc_isysdbf.client_master q ON q.sClientID = p.sEmployID "
+                        + "  WHERE 0=1";
         
         
         ResultSet loRS = instance.executeQuery(lsSQL);
