@@ -86,7 +86,13 @@ public class VehicleDeliveryReceiptMaster {
                         + "  , h.sInqryIDx "                                                                               
                         + "  , h.sBranchCD "                                                                               
                         + "  , h.cPayModex "                                            
-                        + " ,  q.sCompnyNm AS sSENamexx "                                                                               
+                        + "  , q.sCompnyNm AS sSENamexx "                                                                          
+                        + "  , h.nUnitPrce "                                                                               
+                        + "  , h.nPromoDsc "                                                                       
+                        + "  , h.nFleetDsc "                                                                       
+                        + "  , h.nSPFltDsc "                                                                       
+                        + "  , h.nBndleDsc "                                                                       
+                        + "  , h.nAddlDscx "  
                         /*CO-CLIENT*/                                                                                     
                         + "  , i.sCompnyNm AS sCoCltNmx "                                                                 
                         /*VEHICLE INFORMATION*/                                                                           
