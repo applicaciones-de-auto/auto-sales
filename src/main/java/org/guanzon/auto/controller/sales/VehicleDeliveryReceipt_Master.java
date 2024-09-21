@@ -261,18 +261,21 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
         
         if(poModel.getSourceNo()!= null){
             if(!poModel.getSourceNo().trim().isEmpty() && poModel.getCustType().equals("0")){
-                loJSON = poVSPModel.openRecord(poModel.getSourceNo());
-                if(!"error".equalsIgnoreCase((String)loJSON.get("result"))){
-                    poVSPModel.setDelvryDt(poModel.getTransactDte());
-                    loJSON = poVSPModel.saveRecord();
-                    if("error".equalsIgnoreCase((String)loJSON.get("result"))){
-                        return loJSON;
+                if(!poModel.getTranStat().equals(TransactionStatus.STATE_CANCELLED)){
+                    loJSON = poVSPModel.openRecord(poModel.getSourceNo());
+                    if(!"error".equalsIgnoreCase((String)loJSON.get("result"))){
+                        poVSPModel.setTranStat(TransactionStatus.STATE_POSTED);
+                        poVSPModel.setDelvryDt(poModel.getTransactDte());
+                        loJSON = poVSPModel.saveRecord();
+                        if("error".equalsIgnoreCase((String)loJSON.get("result"))){
+                            return loJSON;
+                        } else {
+                            loJSON.put("result", "success");
+                            loJSON.put("message", "Record saved successfully.");
+                        }
                     } else {
-                        loJSON.put("result", "success");
-                        loJSON.put("message", "Record saved successfully.");
+                        return loJSON;
                     }
-                } else {
-                    return loJSON;
                 }
             }
         }
@@ -377,10 +380,10 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
         JSONObject loJSON = SearchDialog.jsonSearch(
                     poGRider,
                     lsSQL,
-                    "",
+                    "GROUP BY a.sTransNox",
                     lsHeader,
                     lsColName,
-                "0.1D»0.2D»0.3D»0.2D»0.2D»0.3D", 
+                "0.1D»0.2D»0.4D»0.1D»0.1D»0.2D", 
                     "VDR",
                     0);
 

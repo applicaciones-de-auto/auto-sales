@@ -261,6 +261,7 @@ public class VehicleDeliveryReceipt  implements GTransaction{
             poController.getMasterModel().setEngineNo((String) loJSON.get("sEngineNo"));
             poController.getMasterModel().setKeyNo((String) loJSON.get("sKeyNoxxx"));
             poController.getMasterModel().setVhclDesc((String) loJSON.get("sVhclDesc"));
+            poController.getMasterModel().setVhclFDsc((String) loJSON.get("sVhclFDsc"));
             
         } else {
             poController.getMasterModel().setClientID("");                                                        
@@ -283,6 +284,7 @@ public class VehicleDeliveryReceipt  implements GTransaction{
             poController.getMasterModel().setEngineNo("");
             poController.getMasterModel().setKeyNo("");
             poController.getMasterModel().setVhclDesc("");
+            poController.getMasterModel().setVhclFDsc("");
             
         }
         
