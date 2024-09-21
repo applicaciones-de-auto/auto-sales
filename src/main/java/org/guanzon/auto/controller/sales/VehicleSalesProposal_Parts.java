@@ -8,12 +8,17 @@ package org.guanzon.auto.controller.sales;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.guanzon.appdriver.agent.ShowDialogFX;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
+import org.guanzon.appdriver.constant.TransactionStatus;
+import org.guanzon.auto.main.sales.VehicleSalesProposal;
 import org.guanzon.auto.model.sales.Model_VehicleSalesProposal_Parts;
+import org.guanzon.auto.model.service.Model_JobOrder_Parts;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
 import org.guanzon.auto.validator.sales.ValidatorInterface;
 import org.json.simple.JSONObject;
@@ -310,5 +315,42 @@ public class VehicleSalesProposal_Parts {
         }
         
         return poJSON;
+    }
+    
+    
+    /**
+     * Check VSP Parts Quantity linked to JO
+     * @param fsValue parts Stock ID
+     * @param fnInputQty parts quantity to be input
+     * @param fnRow VSP Parts row
+    */
+    public JSONObject checkVSPJOParts(String fsValue, int fnInputQty, int fnRow) {
+        JSONObject loJSON = new JSONObject();
+        Model_JobOrder_Parts loEntity = new Model_JobOrder_Parts(poGRider);
+        String lsSQL = loEntity.makeSelectSQL();
+        lsSQL = MiscUtil.addCondition(lsSQL, " sStockIDx = " + SQLUtil.toSQL(fsValue)) 
+                                                + " AND sTransNox IN (SELECT diagnostic_master.sTransNox FROM diagnostic_master " 
+                                                +                    " WHERE diagnostic_master.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED) 
+                                                                    + " AND diagnostic_master.sSourceNo = " + SQLUtil.toSQL(paDetail.get(fnRow).getTransNo()) + ")" ;
+       
+        System.out.println(lsSQL);
+        int nTotalQty = 0;
+        ResultSet loRS = poGRider.executeQuery(lsSQL);
+        if (MiscUtil.RecordCount(loRS) > 0){
+            try {
+                while(loRS.next()){
+                    nTotalQty = nTotalQty + Integer.valueOf(loRS.getString("nQtyEstmt")) ;
+                }
+                MiscUtil.close(loRS);
+                if (fnInputQty < nTotalQty){
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Quantity input to JO Parts cannot be less than the VSP Parts Quantity.");
+                    return loJSON;
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(VehicleSalesProposal_Parts.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }      
+        return loJSON;
     }
 }

@@ -71,7 +71,8 @@ public class VehicleDeliveryReceiptMaster {
                         + "    END AS sTranStat "                                                                                
                         /*BUYING COSTUMER*/                                                                               
                         + "  , b.sCompnyNm AS sBuyCltNm "                                                                 
-                        + "  , b.cClientTp "                                                                              
+                        + "  , b.cClientTp "                                                                        
+                        + "  , b.sTaxIDNox "                                                                            
                         + "  , TRIM(IFNULL(CONCAT( IFNULL(CONCAT(d.sHouseNox,' ') , ''), "                                
                         + "     IFNULL(CONCAT(d.sAddressx,' ') , ''),                    "                                
                         + "     IFNULL(CONCAT(e.sBrgyName,' '), ''),                     "                                
@@ -86,13 +87,13 @@ public class VehicleDeliveryReceiptMaster {
                         + "  , h.sInqryIDx "                                                                               
                         + "  , h.sBranchCD "                                                                               
                         + "  , h.cPayModex "                                            
-                        + "  , q.sCompnyNm AS sSENamexx "                                                                          
+                        + "  , q.sCompnyNm AS sSENamexx "                                                                           
                         + "  , h.nUnitPrce "                                                                               
                         + "  , h.nPromoDsc "                                                                       
                         + "  , h.nFleetDsc "                                                                       
                         + "  , h.nSPFltDsc "                                                                       
                         + "  , h.nBndleDsc "                                                                       
-                        + "  , h.nAddlDscx "  
+                        + "  , h.nAddlDscx "      
                         /*CO-CLIENT*/                                                                                     
                         + "  , i.sCompnyNm AS sCoCltNmx "                                                                 
                         /*VEHICLE INFORMATION*/                                                                           

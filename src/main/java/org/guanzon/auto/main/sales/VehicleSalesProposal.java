@@ -17,6 +17,7 @@ import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
+import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.controller.sales.Inquiry_Reservation;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Finance;
@@ -455,9 +456,13 @@ public class VehicleSalesProposal implements GTransaction{
             poController.getMasterModel().setPayMode((String) loJSON.get("cPayModex"));                                                         
             poController.getMasterModel().setIsVhclNw((String) loJSON.get("cIsVhclNw"));  
             
+            //Clear reservation details
+            poOTHReservation.resetDetail();
+            poVSPReservation.resetDetail();
+            
             if((String) loJSON.get("nAmountxx") == null){                                                                                      
                 poController.getMasterModel().setResrvFee(new BigDecimal("0.00"));                                                             
-            } else {          
+            } else {   
                 //Automatically add reservation to VSP reservation list
                 loJSONRsv = poOTHReservation.openDetail(poController.getMasterModel().getInqTran(),true, false);
                 if(!"success".equals(loJSONRsv.get("result"))){
@@ -466,6 +471,7 @@ public class VehicleSalesProposal implements GTransaction{
                         loJSONRsv.put("message", "Record loaded succesfully.");
                     }
                 }
+                
                 String lsTransID = "";
                 for(int lnCtr = 0; lnCtr <= poOTHReservation.getDetailList().size() - 1; lnCtr++){
                     //check for approval
@@ -718,6 +724,16 @@ public class VehicleSalesProposal implements GTransaction{
             poVSPParts.getDetailModel(fnRow).setUnitPrce(new BigDecimal("0.00"));
         }
         return loJSON;
+    }
+    
+    /**
+     * Check VSP Parts Quantity linked to JO
+     * @param fsValue parts Stock ID
+     * @param fnInputQty parts quantity to be input
+     * @param fnRow
+    */
+    public JSONObject checkVSPJOParts(String fsValue, int fnInputQty, int fnRow) {
+        return poVSPParts.checkVSPJOParts(fsValue, fnInputQty, fnRow);
     }
     
     /**

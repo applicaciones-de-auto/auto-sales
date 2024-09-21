@@ -281,7 +281,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
                     "GROUP BY a.sTransNox", //Group By to be add at last
                     lsHeader,
                     lsColName,
-                "0.1D»0.2D»0.3D»0.2D»0.2D»0.3D", 
+                "0.1D»0.2D»0.4D»0.1D»0.1D»0.2D", 
                     "VSP",
                     0);
 

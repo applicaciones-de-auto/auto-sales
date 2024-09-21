@@ -413,4 +413,8 @@ public class Inquiry_Reservation {
         return loJSON;
     }
     
+    public void resetDetail(){
+        paDetail = new ArrayList<>();
+        paRemDetail = new ArrayList<>();
+    }
 }
