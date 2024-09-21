@@ -17,12 +17,15 @@ import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
+import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.controller.sales.Inquiry_Reservation;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Finance;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Labor;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Master;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Parts;
+import org.guanzon.auto.validator.sales.ValidatorFactory;
+import org.guanzon.auto.validator.sales.ValidatorInterface;
 import org.json.simple.JSONObject;
 
 /**
@@ -453,9 +456,13 @@ public class VehicleSalesProposal implements GTransaction{
             poController.getMasterModel().setPayMode((String) loJSON.get("cPayModex"));                                                         
             poController.getMasterModel().setIsVhclNw((String) loJSON.get("cIsVhclNw"));  
             
+            //Clear reservation details
+            poOTHReservation.resetDetail();
+            poVSPReservation.resetDetail();
+            
             if((String) loJSON.get("nAmountxx") == null){                                                                                      
                 poController.getMasterModel().setResrvFee(new BigDecimal("0.00"));                                                             
-            } else {          
+            } else {   
                 //Automatically add reservation to VSP reservation list
                 loJSONRsv = poOTHReservation.openDetail(poController.getMasterModel().getInqTran(),true, false);
                 if(!"success".equals(loJSONRsv.get("result"))){
@@ -464,6 +471,7 @@ public class VehicleSalesProposal implements GTransaction{
                         loJSONRsv.put("message", "Record loaded succesfully.");
                     }
                 }
+                
                 String lsTransID = "";
                 for(int lnCtr = 0; lnCtr <= poOTHReservation.getDetailList().size() - 1; lnCtr++){
                     //check for approval
@@ -719,6 +727,16 @@ public class VehicleSalesProposal implements GTransaction{
     }
     
     /**
+     * Check VSP Parts Quantity linked to JO
+     * @param fsValue parts Stock ID
+     * @param fnInputQty parts quantity to be input
+     * @param fnRow
+    */
+    public JSONObject checkVSPJOParts(String fsValue, int fnInputQty, int fnRow) {
+        return poVSPParts.checkVSPJOParts(fsValue, fnInputQty, fnRow);
+    }
+    
+    /**
      * Compute amounts on VSP Transaction.
      * This method performs the computation of amount that has been input to the VSP Record.
      * 
@@ -930,6 +948,22 @@ public class VehicleSalesProposal implements GTransaction{
                 System.out.println("ldblGrsMonth : " + ldblGrsMonth);
                 System.out.println("lnAcctTerm : " + lnAcctTerm);
                 System.out.println("ldblPNValuex : " + ldblPNValuex);
+                
+                //Compute Dealer and Sales Executive Incentives
+                Double ldblDIRate = 0.00;
+                if(poController.getMasterModel().getDealrRte() != null){
+                    ldblDIRate = poController.getMasterModel().getDealrRte() / 100;
+                    poController.getMasterModel().setDealrAmt((new BigDecimal(ldblDIRate).multiply(ldblFinAmt)).setScale(2, BigDecimal.ROUND_HALF_UP)); 
+                }
+                Double ldblSIRate = 0.00; 
+                if(poController.getMasterModel().getSlsInRte() != null){
+                    ldblSIRate = poController.getMasterModel().getSlsInRte() / 100;
+                    poController.getMasterModel().setSlsInAmt((new BigDecimal(ldblSIRate).multiply(ldblFinAmt)).setScale(2, BigDecimal.ROUND_HALF_UP)); 
+                }
+                
+                System.out.println("nFinAmtxx : " + getVSPFinanceModel().getVSPFinanceModel().getFinAmt());
+                System.out.println("nDealrAmt : " + poController.getMasterModel().getDealrAmt());
+                System.out.println("nSlsInAmt : " + poController.getMasterModel().getSlsInAmt());
             }
         }
         
@@ -1082,8 +1116,45 @@ public class VehicleSalesProposal implements GTransaction{
                 }
             }
         }
+        
+//        loJSON = validateDetail();
+//        if("error".equals((String) loJSON.get("result"))){
+//            return loJSON;
+//        }
+        
         return loJSON;
     }
+    
+//    private JSONObject validateDetail(){
+//        JSONObject loJSON = new JSONObject();
+//        ValidatorInterface validator;
+//        int lnSize = 0;
+//        
+//        lnSize = poVSPLabor.getDetailList().size() -1;
+//        for (int lnCtr = 0; lnCtr <= lnSize; lnCtr++){
+//            poVSPLabor.getDetailModel(lnCtr).setTransNo(poController.getMasterModel().getTransNo());
+//            validator = ValidatorFactory.make(ValidatorFactory.TYPE.VehicleSalesProposal_Labor, poVSPLabor.getDetailModel(lnCtr));
+//            validator.setGRider(poGRider);
+//            if (!validator.isEntryOkay()){
+//                loJSON.put("result", "error");
+//                loJSON.put("message", validator.getMessage());
+//                return loJSON;
+//            }
+//        }
+//        
+//        lnSize = poVSPParts.getDetailList().size() -1;
+//        for (int lnCtr = 0; lnCtr <= lnSize; lnCtr++){
+//            poVSPParts.getDetailModel(lnCtr).setTransNo(poController.getMasterModel().getTransNo());
+//            validator = ValidatorFactory.make(ValidatorFactory.TYPE.VehicleSalesProposal_Parts, poVSPParts.getDetailModel(lnCtr));
+//            validator.setGRider(poGRider);
+//            if (!validator.isEntryOkay()){
+//                loJSON.put("result", "error");
+//                loJSON.put("message", validator.getMessage());
+//                return loJSON;
+//            }
+//        }
+//        return loJSON;
+//    }
     
     //TODO
     private boolean computeTotlAmtPaid(){

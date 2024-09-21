@@ -2,4 +2,5 @@ FollowUpTest.class
 ActivityTest.class
 BankApplicationTest.class
 InquiryTest.class
+VehicleDeliveryReceiptTest.class
 VehicleSalesProposalTest.class

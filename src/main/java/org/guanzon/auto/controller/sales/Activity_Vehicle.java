@@ -46,7 +46,7 @@ public class Activity_Vehicle  {
         return pnEditMode;
     }
     
-    public Model_Activity_Vehicle getDetail(int fnIndex){
+    public Model_Activity_Vehicle getDetailModel(int fnIndex){
         if (fnIndex > paDetail.size() - 1 || fnIndex < 0) return null;
         
         return paDetail.get(fnIndex);

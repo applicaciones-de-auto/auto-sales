@@ -165,7 +165,18 @@ public class VehicleDeliveryReceipt  implements GTransaction{
 
     @Override
     public JSONObject cancelTransaction(String fsValue) {
-        return poController.cancelTransaction(fsValue);
+        poJSON = new JSONObject();  
+        
+        if (!pbWtParent) poGRider.beginTrans();
+        
+        poJSON =   poController.cancelTransaction(fsValue);
+        if("error".equalsIgnoreCase((String) poJSON.get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return poJSON;
+        }
+        if (!pbWtParent) poGRider.commitTrans();
+        
+        return poJSON;
     }
     
     public JSONObject searchTransaction(String fsValue, boolean fIsActive) {
@@ -250,6 +261,7 @@ public class VehicleDeliveryReceipt  implements GTransaction{
             poController.getMasterModel().setEngineNo((String) loJSON.get("sEngineNo"));
             poController.getMasterModel().setKeyNo((String) loJSON.get("sKeyNoxxx"));
             poController.getMasterModel().setVhclDesc((String) loJSON.get("sVhclDesc"));
+            poController.getMasterModel().setVhclFDsc((String) loJSON.get("sVhclFDsc"));
             
         } else {
             poController.getMasterModel().setClientID("");                                                        
@@ -272,6 +284,7 @@ public class VehicleDeliveryReceipt  implements GTransaction{
             poController.getMasterModel().setEngineNo("");
             poController.getMasterModel().setKeyNo("");
             poController.getMasterModel().setVhclDesc("");
+            poController.getMasterModel().setVhclFDsc("");
             
         }
         

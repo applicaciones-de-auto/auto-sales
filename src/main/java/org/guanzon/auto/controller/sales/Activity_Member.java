@@ -48,7 +48,7 @@ public class Activity_Member {
         return pnEditMode;
     }
     
-    public Model_Activity_Member getDetail(int fnIndex){
+    public Model_Activity_Member getDetailModel(int fnIndex){
         if (fnIndex > paDetail.size() - 1 || fnIndex < 0) return null;
         
         return paDetail.get(fnIndex);

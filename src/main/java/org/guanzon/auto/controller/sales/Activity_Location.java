@@ -43,7 +43,7 @@ public class Activity_Location {
         return pnEditMode;
     }
     
-    public Model_Activity_Location getDetail(int fnIndex){
+    public Model_Activity_Location getDetailModel(int fnIndex){
         if (fnIndex > paDetail.size() - 1 || fnIndex < 0) return null;
         
         return paDetail.get(fnIndex);

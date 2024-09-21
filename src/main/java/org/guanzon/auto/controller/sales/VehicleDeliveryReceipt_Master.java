@@ -259,6 +259,26 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
             }
         }
         
+        if(poModel.getSourceNo()!= null){
+            if(!poModel.getSourceNo().trim().isEmpty() && poModel.getCustType().equals("0")){
+                if(!poModel.getTranStat().equals(TransactionStatus.STATE_CANCELLED)){
+                    loJSON = poVSPModel.openRecord(poModel.getSourceNo());
+                    if(!"error".equalsIgnoreCase((String)loJSON.get("result"))){
+                        poVSPModel.setTranStat(TransactionStatus.STATE_POSTED);
+                        poVSPModel.setDelvryDt(poModel.getTransactDte());
+                        loJSON = poVSPModel.saveRecord();
+                        if("error".equalsIgnoreCase((String)loJSON.get("result"))){
+                            return loJSON;
+                        } else {
+                            loJSON.put("result", "success");
+                            loJSON.put("message", "Record saved successfully.");
+                        }
+                    } else {
+                        return loJSON;
+                    }
+                }
+            }
+        }
         return loJSON;
     }
     
@@ -307,8 +327,11 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
 
                 poJSON = poModel.saveRecord();
                 if ("success".equals((String) poJSON.get("result"))) {
-                    poJSON.put("result", "success");
-                    poJSON.put("message", "Cancellation success.");
+                    poJSON = updateTables();
+                    if(!"error".equalsIgnoreCase((String)poJSON.get("result"))){
+                        poJSON.put("result", "success");
+                        poJSON.put("message", "Cancellation success.");
+                    } 
                 } else {
                     poJSON.put("result", "error");
                     poJSON.put("message", "Cancellation failed.");
@@ -357,10 +380,10 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
         JSONObject loJSON = SearchDialog.jsonSearch(
                     poGRider,
                     lsSQL,
-                    "",
+                    "GROUP BY a.sTransNox",
                     lsHeader,
                     lsColName,
-                "0.1D»0.2D»0.3D»0.2D»0.2D»0.3D", 
+                "0.1D»0.2D»0.4D»0.1D»0.1D»0.2D", 
                     "VDR",
                     0);
 
@@ -418,11 +441,13 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
                             + " 	IFNULL(CONCAT(g.sProvName),'') )	, '')";
         
         if(fbByCode){
-            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = " + TransactionStatus.STATE_CLOSED //APPROVE
+            lsSQL = MiscUtil.addCondition(lsSQL,  " (a.sSerialID <> NULL OR a.sSerialID <> '') "
+                                                + " AND a.cTranStat = " + TransactionStatus.STATE_CLOSED //APPROVE
                                                 + " AND a.sTransNox = " + SQLUtil.toSQL(fsValue)
                                                 + " GROUP BY a.sTransNox ");
         } else {
-            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = " + TransactionStatus.STATE_CLOSED //APPROVE
+            lsSQL = MiscUtil.addCondition(lsSQL,  " (a.sSerialID <> NULL OR a.sSerialID <> '') "
+                                                + " AND a.cTranStat = " + TransactionStatus.STATE_CLOSED //APPROVE
                                                 + " AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%")
                                                 + " GROUP BY a.sTransNox ");
         }
