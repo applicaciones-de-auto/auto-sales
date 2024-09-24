@@ -361,13 +361,13 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
     }
     
     /**
-     * Search UDR Transaction
+     * Search VDR Transaction
      * @param fsValue Reference No
      * @param fIsActive if true search for active else false all transaction
      * @return 
      */
     public JSONObject searchTransaction(String fsValue, boolean fIsActive) {
-        String lsHeader = "UDR Date»UDR No»Customer»CS No»Plate No»Status"; 
+        String lsHeader = "VDR Date»VDR No»Customer»CS No»Plate No»Status"; 
         String lsColName = "dTransact»sReferNox»sBuyCltNm»sCSNoxxxx»sPlateNox»sTranStat"; 
         String lsSQL = poModel.getSQL();
         
