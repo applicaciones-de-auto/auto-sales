@@ -563,6 +563,30 @@ public class Inquiry implements GTransaction{
             return jObj;
         }
         
+        //validate atleast 1 required requirements must sent
+        if(!poController.getMasterModel().getTranStat().equals("0")){
+//            boolean lbRqrdChk = false;
+//            for (lnCtr = 0; lnCtr <= lnSize; lnCtr++){
+//                if(paDetail.get(lnCtr).getRequired().equals("1")){
+//                    if(paDetail.get(lnCtr).getReceived() != null){
+//                        if(!paDetail.get(lnCtr).getReceived().trim().isEmpty()){
+//                            if(paDetail.get(lnCtr).getSubmittd().equals("1")){
+//                                lbRqrdChk = true;
+//                                break;
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//            if(!lbRqrdChk){
+//                obj.put("result", "error");
+//                obj.put("continue", false);
+//                obj.put("message", "Client must submit atleast 1 required requirement to proceed to on process.\nOtherwise inquiry must be approve for VIP clients.");
+//                return obj;
+//            }
+        }
+        
         return jObj;
     }
     

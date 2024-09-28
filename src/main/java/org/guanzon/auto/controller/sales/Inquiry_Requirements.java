@@ -138,7 +138,8 @@ public class Inquiry_Requirements {
         
         if(paDetail == null){
             obj.put("result", "error");
-            obj.put("continue", true);
+            obj.put("continue", false);
+            obj.put("message", "Client must submit atleast 1 required requirement to proceed to on process.\nOtherwise inquiry must be approve for VIP clients.");
             return obj;
         }
         
