@@ -39,7 +39,7 @@ public class VehicleSalesProposalMaster {
         System.setProperty("sys.default.path.metadata", "D:/GGC_Maven_Systems/config/metadata/Model_VehicleSalesProposal_Master.xml");
         
         
-        String lsSQL =    " SELECT DISTINCT "                                                                      
+        String lsSQL =   " SELECT DISTINCT "                                                                      
                         + "   a.sTransNox "                                                               
                         + " , a.dTransact "                                                               
                         + " , a.sVSPNOxxx "                                                               
@@ -113,9 +113,11 @@ public class VehicleSalesProposalMaster {
                         + " , a.sModified "                                                               
                         + " , a.dModified "                                                        
                         + "  , CASE "          
-                        + " 	WHEN a.cTranStat = '2' THEN 'APPROVE' "                     
-                        + " 	WHEN a.cTranStat = '3' THEN 'CANCELLED' "                                       
-                        + " 	ELSE 'OPEN'  "                                                          
+                        + " 	WHEN a.cTranStat = "+SQLUtil.toSQL(TransactionStatus.STATE_CLOSED)+" THEN 'APPROVE' "                     
+                        + " 	WHEN a.cTranStat = "+SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)+" THEN 'CANCELLED' "                  
+                        + " 	WHEN a.cTranStat = "+SQLUtil.toSQL(TransactionStatus.STATE_OPEN)+" THEN 'ACTIVE' "                    
+                        + " 	WHEN a.cTranStat = "+SQLUtil.toSQL(TransactionStatus.STATE_POSTED)+" THEN 'POSTED' "                                      
+                        + " 	ELSE 'ACTIVE'  "                                                          
                         + "    END AS sTranStat "   
                           /*BUYING COSTUMER*/                                                             
                         + " , b.sCompnyNm AS sBuyCltNm"                                                               
@@ -165,8 +167,9 @@ public class VehicleSalesProposalMaster {
                         + " , z.sBankName " 
                          /*VSP LINKED THRU THE FOLLOWING FORMS*/     
                         + " , za.sReferNox AS sUDRNoxxx "
-                        + " , CONCAT(zb.sDSNoxxxx) AS sJONoxxxx "
-                        + " , CONCAT(zd.sReferNox) AS sSINoxxxx "    
+                        + " , DATE(za.dTransact) AS sUDRDatex "
+                        + " , GROUP_CONCAT( DISTINCT zb.sDSNoxxxx) AS sJONoxxxx "
+                        + " , GROUP_CONCAT( DISTINCT zd.sReferNox) AS sSINoxxxx "    
                         + " , ze.sTransNox AS sGatePsNo "
                         + " , b.dBirthDte " 
                         + " , b.sTaxIDNox " 
@@ -187,7 +190,10 @@ public class VehicleSalesProposalMaster {
                         + " , zh.sTransNox AS sBOTTrans " 
                         + " , zh.sReferNox AS sBOTRefrn " 
         //                + " , zh.dTransact AS sBOTDatex " 
-                        + " , zh.sInsTypID AS sBOTTypex " 
+                        + " , zh.sInsTypID AS sBOTTypex "
+                        + "  , r.cVhclSize "
+                        + "  , rb.sUnitType "
+                        + "  , rb.sBodyType "
                         + " FROM vsp_master a "                                                           
                          /*BUYING CUSTOMER*/                                                              
                         + " LEFT JOIN client_master b ON b.sClientID = a.sClientID "                      
@@ -233,7 +239,7 @@ public class VehicleSalesProposalMaster {
                         + " LEFT JOIN diagnostic_master zb ON zb.sSourceNo = a.sTransNox AND zb.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
                         + " LEFT JOIN si_master_source zc ON zc.sReferNox = za.sTransNox  "
                         + " LEFT JOIN si_master zd ON zd.sTransNox = zc.sTransNox AND zd.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
-                        + " LEFT JOIN vehicle_gatepass ze ON ze.sSourceNo = a.sTransNox "
+                        + " LEFT JOIN vehicle_gatepass ze ON ze.sSourceCD = a.sTransNox AND ze.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)  
                         + " LEFT JOIN insurance_policy_proposal zf ON zf.sVSPNoxxx = a.sTransNox AND zf.sInsTypID = 'y' AND zf.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
                         + " LEFT JOIN insurance_policy_proposal zg ON zg.sVSPNoxxx = a.sTransNox AND zg.sInsTypID = 'c' AND zg.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
                         + " LEFT JOIN insurance_policy_proposal zh ON zh.sVSPNoxxx = a.sTransNox AND zh.sInsTypID = 'b' AND zh.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)

@@ -300,4 +300,36 @@ public class VehicleSalesProposal_Labor {
         
         return poJSON;
     }
+    
+    public JSONObject searchVSPLabor(String fsValue, String fsTransNo) {
+        JSONObject loJSON = new JSONObject();
+        String lsHeader = "ID»Description";
+        String lsColName = "sLaborCde»sLaborDsc"; 
+        String lsCriteria = "sLaborCde»sLaborDsc";
+        
+        Model_VehicleSalesProposal_Labor loEntity = new Model_VehicleSalesProposal_Labor(poGRider);
+        String lsSQL =  loEntity.getSQL() ; 
+        lsSQL = MiscUtil.addCondition(lsSQL,  " a.sLaborDsc LIKE  " + SQLUtil.toSQL(fsValue + "%")
+                                                + " AND a.sTransNox = " + SQLUtil.toSQL(fsTransNo))
+                                                + " GROUP BY a.sLaborCde ";
+        
+        System.out.println("SEARCH VSP LABOR: " + lsSQL);
+        loJSON = ShowDialogFX.Search(poGRider,
+                lsSQL,
+                fsValue,
+                    lsHeader,
+                    lsColName,
+                    lsCriteria,
+                1);
+
+        if (loJSON != null) {
+        } else {
+            loJSON = new JSONObject();
+            loJSON.put("result", "error");
+            loJSON.put("message", "No record loaded.");
+            return loJSON;
+        }
+        
+        return loJSON;
+    }
 }
