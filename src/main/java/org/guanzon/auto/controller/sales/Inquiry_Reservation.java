@@ -17,6 +17,7 @@ import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.auto.general.CancelForm;
+import org.guanzon.auto.general.TransactionStatusHistory;
 import org.guanzon.auto.model.sales.Model_Inquiry_Reservation;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
 import org.guanzon.auto.validator.sales.ValidatorInterface;
@@ -416,5 +417,66 @@ public class Inquiry_Reservation {
     public void resetDetail(){
         paDetail = new ArrayList<>();
         paRemDetail = new ArrayList<>();
+    }
+    
+    public JSONObject loadForApproval(){
+        paDetail = new ArrayList<>();
+        poJSON = new JSONObject();
+        Model_Inquiry_Reservation loEntity = new Model_Inquiry_Reservation(poGRider);
+        String lsSQL = MiscUtil.addCondition(loEntity.getSQL(), " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_OPEN)); 
+        ResultSet loRS = poGRider.executeQuery(lsSQL);
+        
+        System.out.println(lsSQL);
+       try {
+            int lnctr = 0;
+            if (MiscUtil.RecordCount(loRS) > 0) {
+                while(loRS.next()){
+                        paDetail.add(new Model_Inquiry_Reservation(poGRider));
+                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"));
+                        
+                        pnEditMode = EditMode.UPDATE;
+                        lnctr++;
+                        poJSON.put("result", "success");
+                        poJSON.put("message", "Record loaded successfully.");
+                    } 
+                
+            }else{
+//                paDetail = new ArrayList<>();
+//                addDetail(fsValue);
+                poJSON.put("result", "error");
+                poJSON.put("continue", true);
+                poJSON.put("message", "No record selected.");
+            }
+            MiscUtil.close(loRS);
+        } catch (SQLException e) {
+            poJSON.put("result", "error");
+            poJSON.put("message", e.getMessage());
+        }
+        return poJSON;
+    }
+    
+    public JSONObject approveTransaction(int fnRow){
+        JSONObject loJSON = new JSONObject();
+        paDetail.get(fnRow).setTranStat(TransactionStatus.STATE_CLOSED);
+        loJSON = paDetail.get(fnRow).saveRecord();
+        if(!"error".equals((String) loJSON.get("result"))){
+            TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+            loJSON = loEntity.newTransaction();
+            if(!"error".equals((String) loJSON.get("result"))){
+                loEntity.getMasterModel().setApproved(poGRider.getUserID());
+                loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
+                loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getTransNo());
+                loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
+                loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
+                
+                loJSON = loEntity.saveTransaction();
+                if("error".equals((String) loJSON.get("result"))){
+                    return loJSON;
+                }
+                
+            }
+        
+        }
+        return loJSON;
     }
 }

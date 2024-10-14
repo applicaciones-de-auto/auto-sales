@@ -473,6 +473,7 @@ public class Inquiry implements GTransaction{
     
     public ArrayList getReservationList(){return poReservation.getDetailList();}
     public void setReservationList(ArrayList foObj){this.poReservation.setDetailList(foObj);}
+    public Inquiry_Reservation getReservationModel(){return poReservation;} 
     
     public void setReservation(int fnRow, int fnIndex, Object foValue){ poReservation.setDetail(fnRow, fnIndex, foValue);}
     public void setReservation(int fnRow, String fsIndex, Object foValue){ poReservation.setDetail(fnRow, fsIndex, foValue);}
@@ -497,6 +498,44 @@ public class Inquiry implements GTransaction{
             }
         }
         return loJSON;
+    }
+    
+    /**
+     * Load for approval reservation
+     * @return 
+     */
+    public JSONObject loadReservationForApproval(){
+        return poReservation.loadForApproval();
+    }
+    
+    /**
+     * Reservation Approve
+     * @param fnRow selected row of reservation to be approved
+     * @return 
+     */
+    public JSONObject approveReservation(int fnRow){
+        return poReservation.approveTransaction(fnRow);
+    }
+    
+    
+    public ArrayList getInquiryList(){return poController.getDetailList();}
+    public Inquiry_Master getInquiryModel(){return poController;} 
+    
+    /**
+     * Load for approval inquiry for VIP Clients
+     * @return 
+     */
+    public JSONObject loadInquiryForApproval(){
+        return poController.loadForApproval();
+    }
+    
+    /**
+     * VIP Inquiry Approve
+     * @param fnRow selected row of Inquiry to be approved
+     * @return 
+     */
+    public JSONObject approveInquiry(int fnRow){
+        return poController.approveTransaction(fnRow);
     }
     
 //    public JSONObject loadSelectedReservation(int lnRow) {

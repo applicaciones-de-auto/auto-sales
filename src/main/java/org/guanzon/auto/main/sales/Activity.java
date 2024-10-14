@@ -432,6 +432,24 @@ public class Activity implements GRecord{
     public Object getVehicleCSNo(int fnRow, int fnIndex){return poActVehicle.getVehicleCSNo(fnRow, fnIndex);}
     public Object getVehicleCSNo(int fnRow, String fsIndex){return poActVehicle.getVehicleCSNo(fnRow, fsIndex);}
 
+    public ArrayList getActivityList(){return poController.getDetailList();}
+    public Activity_Master getActivityModel(){return poController;} 
     
+    /**
+     * Load for approval transaction
+     * @return 
+     */
+    public JSONObject loadActivityForApproval(){
+        return poController.loadForApproval();
+    }
+    
+    /**
+     * Transaction Approve
+     * @param fnRow selected row of transaction to be approved
+     * @return 
+     */
+    public JSONObject approveActivity(int fnRow){
+        return poController.approveTransaction(fnRow);
+    }
     
 }
