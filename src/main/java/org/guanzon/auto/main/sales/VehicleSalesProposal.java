@@ -1231,4 +1231,23 @@ public class VehicleSalesProposal implements GTransaction{
         return loJSON;
     } 
     
+    public ArrayList getVSPList(){return poController.getDetailList();}
+    public VehicleSalesProposal_Master getVSPModel(){return poController;} 
+    
+    /**
+     * Load for approval transaction
+     * @return 
+     */
+    public JSONObject loadVSPForApproval(){
+        return poController.loadForApproval();
+    }
+    
+    /**
+     * VSP Approve
+     * @param fnRow selected row of Inquiry to be approved
+     * @return 
+     */
+    public JSONObject approveVSP(int fnRow){
+        return poController.approveTransaction(fnRow);
+    }
 }

@@ -593,7 +593,9 @@ public class Activity_Master implements GRecord {
         paDetail = new ArrayList<>();
         poJSON = new JSONObject();
         Model_Activity_Master loEntity = new Model_Activity_Master(poGRider);
-        String lsSQL = MiscUtil.addCondition(loEntity.getSQL(), " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_OPEN)); 
+        String lsSQL = MiscUtil.addCondition(loEntity.getSQL(), " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_OPEN)
+                                                                + " ORDER BY a.sActNoxxx ASC "
+                                    ); 
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
         System.out.println(lsSQL);
@@ -602,7 +604,7 @@ public class Activity_Master implements GRecord {
             if (MiscUtil.RecordCount(loRS) > 0) {
                 while(loRS.next()){
                         paDetail.add(new Model_Activity_Master(poGRider));
-                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"));
+                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sActvtyID"));
                         
                         pnEditMode = EditMode.UPDATE;
                         lnctr++;
@@ -627,26 +629,27 @@ public class Activity_Master implements GRecord {
     
     public JSONObject approveTransaction(int fnRow){
         JSONObject loJSON = new JSONObject();
-        paDetail.get(fnRow).setTranStat(TransactionStatus.STATE_CLOSED);
-        loJSON = paDetail.get(fnRow).saveRecord();
-        if(!"error".equals((String) loJSON.get("result"))){
-            TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-            loJSON = loEntity.newTransaction();
+//        System.out.println(index + " : " + fsValue);
+//        if(index >= 0){
+            paDetail.get(fnRow).setTranStat(TransactionStatus.STATE_CLOSED);
+            loJSON = paDetail.get(fnRow).saveRecord();
             if(!"error".equals((String) loJSON.get("result"))){
-                loEntity.getMasterModel().setApproved(poGRider.getUserID());
-                loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
-                loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getActvtyID());
-                loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
-                loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
-                
-                loJSON = loEntity.saveTransaction();
-                if("error".equals((String) loJSON.get("result"))){
-                    return loJSON;
+                TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+                loJSON = loEntity.newTransaction();
+                if(!"error".equals((String) loJSON.get("result"))){
+                    loEntity.getMasterModel().setApproved(poGRider.getUserID());
+                    loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
+                    loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getActvtyID());
+                    loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
+                    loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
+
+                    loJSON = loEntity.saveTransaction();
+                    if("error".equals((String) loJSON.get("result"))){
+                        return loJSON;
+                    }
                 }
-                
             }
-        
-        }
+//        }
         return loJSON;
     }
 }

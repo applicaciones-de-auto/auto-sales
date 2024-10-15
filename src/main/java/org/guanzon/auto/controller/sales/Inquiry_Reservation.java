@@ -423,7 +423,8 @@ public class Inquiry_Reservation {
         paDetail = new ArrayList<>();
         poJSON = new JSONObject();
         Model_Inquiry_Reservation loEntity = new Model_Inquiry_Reservation(poGRider);
-        String lsSQL = MiscUtil.addCondition(loEntity.getSQL(), " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_OPEN)); 
+        String lsSQL = MiscUtil.addCondition(loEntity.getSQL(), " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_OPEN)
+                                                                    + " ORDER BY a.sTransNox ASC "); 
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
         System.out.println(lsSQL);

@@ -517,7 +517,6 @@ public class Inquiry implements GTransaction{
         return poReservation.approveTransaction(fnRow);
     }
     
-    
     public ArrayList getInquiryList(){return poController.getDetailList();}
     public Inquiry_Master getInquiryModel(){return poController;} 
     

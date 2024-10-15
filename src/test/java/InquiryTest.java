@@ -67,6 +67,40 @@ public class InquiryTest {
      * ARSIELA 08-03-2024
      */
     
+//    @Test 
+//    public void test00loadForApproval(){
+//        System.out.println("--------------------------------------------------------------------");
+//        System.out.println("------------------------------LOAD FOR APPROVAL--------------------------------------");
+//        System.out.println("--------------------------------------------------------------------");
+//        
+//        json = model.loadInquiryForApproval();
+//        if(!"error".equals((String) json.get("result"))){
+//            for(int lnCtr=0;lnCtr <= model.getInquiryList().size()-1;lnCtr++){
+//                System.out.println("sTransNox  :  " + model.getInquiryModel().getDetailModel(lnCtr).getTransNo());
+//            }
+//        } 
+//        
+//        assertTrue(true);
+//    
+//    }
+    
+//        @Test 
+//    public void test00loadReservationForApproval(){
+//        System.out.println("--------------------------------------------------------------------");
+//        System.out.println("------------------------------LOAD FOR APPROVAL--------------------------------------");
+//        System.out.println("--------------------------------------------------------------------");
+//        
+//        json = model.loadReservationForApproval();
+//        if(!"error".equals((String) json.get("result"))){
+//            for(int lnCtr=0;lnCtr <= model.getReservationList().size()-1;lnCtr++){
+//                System.out.println("sTransNox  :  " + model.getReservationModel().getDetailModel(lnCtr).getTransNo());
+//            }
+//        } 
+//        
+//        assertTrue(true);
+//    
+//    }
+    
 //    @Test
 //    public void test01NewRecord() throws SQLException{
 //        System.out.println("--------------------------------------------------------------------");

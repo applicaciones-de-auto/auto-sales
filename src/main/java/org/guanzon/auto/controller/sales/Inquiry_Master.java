@@ -1497,7 +1497,48 @@ public class Inquiry_Master implements GTransaction {
         paDetail = new ArrayList<>();
         poJSON = new JSONObject();
         Model_Inquiry_Master loEntity = new Model_Inquiry_Master(poGRider);
-        String lsSQL = MiscUtil.addCondition(loEntity.getSQL(), " a.cTranStat = '0' "); //Load for follow up inquiries
+        String lsSQL =  " SELECT "                                                                       
+                        + "    a.sTransNox "                                                               
+                        + "  , a.sInqryIDx "                                                                
+                        + "  , a.sBranchCd "                                                               
+                        + "  , DATE(a.dTransact) AS dTransact"                                                               
+                        + "  , a.sEmployID "                                                               
+                        + "  , a.sClientID "                                                                
+                        + "  , a.sContctID "                                                               
+                        + "  , a.sAgentIDx "                                                               
+                        + "  , a.dTargetDt "                                                               
+                        + "  , a.cTranStat "                                                               
+                        + "  , CASE WHEN a.cTranStat = '0' THEN 'FOR FOLLOW-UP'"                           
+                        + " 	WHEN a.cTranStat = '1' THEN 'ON PROCESS' "                                   
+                        + " 	WHEN a.cTranStat = '2' THEN 'LOST SALE'  "                                   
+                        + " 	WHEN a.cTranStat = '3' THEN 'WITH VSP'   "                                   
+                        + " 	WHEN a.cTranStat = '4' THEN 'SOLD'       "                                     
+                        + " 	ELSE 'CANCELLED'  "                                                          
+                        + "    END AS sTranStat "                                                          
+                        + "  , b.sCompnyNm      "                                                          
+                        + "  , b.cClientTp      "                                                          
+                        + "  , IFNULL(CONCAT( IFNULL(CONCAT(d.sHouseNox,' ') , ''), "                      
+                        + " 	IFNULL(CONCAT(d.sAddressx,' ') , ''),  "                                     
+                        + " 	IFNULL(CONCAT(e.sBrgyName,' '), ''),   "                                     
+                        + " 	IFNULL(CONCAT(f.sTownName, ', '),''),  "                                     
+                        + " 	IFNULL(CONCAT(g.sProvName),'') )	, '') AS sAddressx "                       
+                        + "  , l.sCompnyNm AS sSalesExe "                                                  
+                        + "  , m.sCompnyNm AS sSalesAgn "                                                  
+                        + "  , p.sBranchNm  "                                                              
+                        + " FROM customer_inquiry a "                                                      
+                        + " LEFT JOIN client_master b ON a.sClientID = b.sClientID "                       
+                        + " LEFT JOIN client_address c ON c.sClientID = a.sClientID AND c.cPrimaryx = 1  " 
+                        + " LEFT JOIN addresses d ON d.sAddrssID = c.sAddrssID "                           
+                        + " LEFT JOIN barangay e ON e.sBrgyIDxx = d.sBrgyIDxx  "                           
+                        + " LEFT JOIN towncity f ON f.sTownIDxx = d.sTownIDxx  "                           
+                        + " LEFT JOIN province g ON g.sProvIDxx = f.sProvIDxx   "                           
+                        + " LEFT JOIN client_master k ON k.sClientID = a.sContctID  "                       
+                        + " LEFT JOIN ggc_isysdbf.client_master l ON l.sClientID = a.sEmployID "            
+                        + " LEFT JOIN client_master m ON m.sClientID = a.sAgentIDx "                        
+                        + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd "                        
+                        + " WHERE a.cTranStat = '0' "
+                        + " ORDER BY a.sTransNox ASC ";
+                
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
         System.out.println(lsSQL);
@@ -1506,7 +1547,7 @@ public class Inquiry_Master implements GTransaction {
             if (MiscUtil.RecordCount(loRS) > 0) {
                 while(loRS.next()){
                         paDetail.add(new Model_Inquiry_Master(poGRider));
-                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"));
+                        paDetail.get(paDetail.size() - 1).openRecord( loRS.getString("sTransNox"));
                         
                         pnEditMode = EditMode.UPDATE;
                         lnctr++;
