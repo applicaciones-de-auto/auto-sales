@@ -1493,6 +1493,7 @@ public class Inquiry_Master implements GTransaction {
         -cTranStat	3	VSP
         -cTranStat	4	Sold
         -cTranStat	5	Cancelled
+        -cTranStat	6	For Approval
         */
         paDetail = new ArrayList<>();
         poJSON = new JSONObject();
@@ -1507,14 +1508,7 @@ public class Inquiry_Master implements GTransaction {
                         + "  , a.sContctID "                                                               
                         + "  , a.sAgentIDx "                                                               
                         + "  , a.dTargetDt "                                                               
-                        + "  , a.cTranStat "                                                               
-                        + "  , CASE WHEN a.cTranStat = '0' THEN 'FOR FOLLOW-UP'"                           
-                        + " 	WHEN a.cTranStat = '1' THEN 'ON PROCESS' "                                   
-                        + " 	WHEN a.cTranStat = '2' THEN 'LOST SALE'  "                                   
-                        + " 	WHEN a.cTranStat = '3' THEN 'WITH VSP'   "                                   
-                        + " 	WHEN a.cTranStat = '4' THEN 'SOLD'       "                                     
-                        + " 	ELSE 'CANCELLED'  "                                                          
-                        + "    END AS sTranStat "                                                          
+                        + "  , a.cTranStat "                                                              
                         + "  , b.sCompnyNm      "                                                          
                         + "  , b.cClientTp      "                                                          
                         + "  , IFNULL(CONCAT( IFNULL(CONCAT(d.sHouseNox,' ') , ''), "                      
@@ -1536,7 +1530,7 @@ public class Inquiry_Master implements GTransaction {
                         + " LEFT JOIN ggc_isysdbf.client_master l ON l.sClientID = a.sEmployID "            
                         + " LEFT JOIN client_master m ON m.sClientID = a.sAgentIDx "                        
                         + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd "                        
-                        + " WHERE a.cTranStat = '0' "
+                        + " WHERE a.cTranStat = '6' " //FOR APPROVAL
                         + " ORDER BY a.sTransNox ASC ";
                 
         ResultSet loRS = poGRider.executeQuery(lsSQL);
@@ -1576,19 +1570,23 @@ public class Inquiry_Master implements GTransaction {
         loJSON = paDetail.get(fnRow).saveRecord();
         if(!"error".equals((String) loJSON.get("result"))){
             TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-            loJSON = loEntity.newTransaction();
+            //Update to cancel all previous approvements
+            loJSON = loEntity.cancelTransaction(paDetail.get(fnRow).getTransNo());
             if(!"error".equals((String) loJSON.get("result"))){
-                loEntity.getMasterModel().setApproved(poGRider.getUserID());
-                loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
-                loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getTransNo());
-                loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
-                loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
-                
-                loJSON = loEntity.saveTransaction();
-                if("error".equals((String) loJSON.get("result"))){
-                    return loJSON;
+                loJSON = loEntity.newTransaction();
+                if(!"error".equals((String) loJSON.get("result"))){
+                    loEntity.getMasterModel().setApproved(poGRider.getUserID());
+                    loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
+                    loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getTransNo());
+                    loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
+                    loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
+
+                    loJSON = loEntity.saveTransaction();
+                    if("error".equals((String) loJSON.get("result"))){
+                        return loJSON;
+                    }
+
                 }
-                
             }
         
         }

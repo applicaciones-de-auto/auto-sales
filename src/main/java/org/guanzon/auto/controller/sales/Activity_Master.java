@@ -496,26 +496,6 @@ public class Activity_Master implements GRecord {
         return poJSON;
     }
     
-    public JSONObject loadTransactionForApproval() {
-        poJSON = new JSONObject();
-        if (poGRider == null) {
-            poJSON.put("result", "error");
-            poJSON.put("message", "Application driver is not set.");
-            return poJSON;
-        }
-
-        String lsSQL = MiscUtil.addCondition(poModel.getSQL(), " a.cTranStat <> '1' AND (a.sApproved IS NULL OR a.sApproved = '') ORDER BY dDateFrom DESC ");
-        System.out.println(lsSQL);
-//        
-//        loRS = poGRider.executeQuery(lsSQL);
-//        poModel = factory.createCachedRowSet();
-//        poModel.populate(loRS);
-//        MiscUtil.close(loRS);
-
-        return poJSON;
-    
-    }
-    
     public JSONObject validateExistingRecord(){
         JSONObject loJSON = new JSONObject();
         String lsID = "";
@@ -635,17 +615,21 @@ public class Activity_Master implements GRecord {
             loJSON = paDetail.get(fnRow).saveRecord();
             if(!"error".equals((String) loJSON.get("result"))){
                 TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-                loJSON = loEntity.newTransaction();
+                //Update to cancel all previous approvements
+                loJSON = loEntity.cancelTransaction(paDetail.get(fnRow).getActvtyID());
                 if(!"error".equals((String) loJSON.get("result"))){
-                    loEntity.getMasterModel().setApproved(poGRider.getUserID());
-                    loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
-                    loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getActvtyID());
-                    loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
-                    loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
+                    loJSON = loEntity.newTransaction();
+                    if(!"error".equals((String) loJSON.get("result"))){
+                        loEntity.getMasterModel().setApproved(poGRider.getUserID());
+                        loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
+                        loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getActvtyID());
+                        loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
+                        loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
 
-                    loJSON = loEntity.saveTransaction();
-                    if("error".equals((String) loJSON.get("result"))){
-                        return loJSON;
+                        loJSON = loEntity.saveTransaction();
+                        if("error".equals((String) loJSON.get("result"))){
+                            return loJSON;
+                        }
                     }
                 }
             }

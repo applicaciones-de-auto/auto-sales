@@ -10,6 +10,8 @@ import java.sql.SQLException;
 import javax.xml.crypto.KeySelector;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
+import org.guanzon.appdriver.base.SQLUtil;
+import org.guanzon.appdriver.constant.TransactionStatus;
 
 /**
  *
@@ -71,14 +73,14 @@ public class InquiryModel {
                         + " , a.dModified "                                                                        
                         + " , b.sCompnyNm AS sClientNm"                                                                        
                         + " , b.cClientTp "                                                                        
-                        + " , IFNULL(CONCAT( IFNULL(CONCAT(d.sHouseNox,' ') , ''), "                               
+                        + " , TRIM(IFNULL(CONCAT( IFNULL(CONCAT(d.sHouseNox,' ') , ''), "                               
                         + "	IFNULL(CONCAT(d.sAddressx,' ') , ''),  "                                               
                         + "	IFNULL(CONCAT(e.sBrgyName,' '), ''),   "                                               
                         + "	IFNULL(CONCAT(f.sTownName, ', '),''),  "                                               
-                        + "	IFNULL(CONCAT(g.sProvName),'') )	, '') AS sAddressx  "                                
+                        + "	IFNULL(CONCAT(g.sProvName),'') )	, '')) AS sAddressx  "                                
                         + " , h.sMobileNo "                                                                        
-                        + " , i.sEmailAdd "                         
-                        + " , IFNULL(GROUP_CONCAT(DISTINCT j.sAccountx),'') AS sAccountx  "                                                                     
+                        + " , i.sEmailAdd "                                                                        
+                        + " , IFNULL(GROUP_CONCAT(DISTINCT j.sAccountx),'') AS sAccountx  " 
                         + " , k.sCompnyNm AS sContctNm "                                                           
                         + " , l.sCompnyNm AS sSalesExe "                                                           
                         + " , m.sCompnyNm AS sSalesAgn "                                                           
@@ -89,7 +91,9 @@ public class InquiryModel {
                         + " , q.sEngineNo "                                                                                                        
                         + " , q.sCSNoxxxx "                                                                                   
                         + " , r.sPlateNox "                                                                                            
-                        + " , s.sDescript "                                                                      
+                        + " , s.sDescript "                                                                                             
+                        + " , DATE(t.dApproved) AS dApprovex "                                                                           
+                        + " , u.sCompnyNm AS sApprover "                                                                    
                         + " FROM customer_inquiry a "                                                              
                         + " LEFT JOIN client_master b ON a.sClientID = b.sClientID   "                             
                         + " LEFT JOIN client_address c ON c.sClientID = a.sClientID AND c.cPrimaryx = 1 "          
@@ -108,7 +112,9 @@ public class InquiryModel {
                         + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd           "                             
                         + " LEFT JOIN vehicle_serial q ON q.sSerialID = a.sSerialID           "    
                         + " LEFT JOIN vehicle_serial_registration r ON r.sSerialID = a.sSerialID "              
-                        + " LEFT JOIN vehicle_master s ON s.sVhclIDxx = q.sVhclIDxx "   
+                        + " LEFT JOIN vehicle_master s ON s.sVhclIDxx = q.sVhclIDxx " 
+                        + " LEFT JOIN transaction_status_history t ON t.sSourceNo = a.sTransNox AND t.cTranStat <> "+ SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
+                        + " LEFT JOIN ggc_isysdbf.client_master u ON u.sClientID = t.sApproved "  
                         + " WHERE 0=1";
         
         
