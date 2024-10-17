@@ -224,10 +224,12 @@ public class VehicleSalesProposal implements GTransaction{
         if (!pbWtParent) poGRider.commitTrans();
         
         //Save Cashier Receivables
-        CashierReceivables loCAR = new CashierReceivables(poGRider, pbWtParent, psBranchCd);
-        JSONObject loJSONCAR = loCAR.generateCAR("VSP", poController.getMasterModel().getTransNo());
-        if("error".equals((String) loJSONCAR.get("result"))){
-            return loJSONCAR;
+        if(poController.getMasterModel().getTranStat().equals(TransactionStatus.STATE_CLOSED)){
+            CashierReceivables loCAR = new CashierReceivables(poGRider, pbWtParent, psBranchCd);
+            JSONObject loJSONCAR = loCAR.generateCAR("VSP", poController.getMasterModel().getTransNo());
+            if("error".equals((String) loJSONCAR.get("result"))){
+                return loJSONCAR;
+            }
         }
         
         return poJSON;
@@ -1248,6 +1250,17 @@ public class VehicleSalesProposal implements GTransaction{
      * @return 
      */
     public JSONObject approveVSP(int fnRow){
-        return poController.approveTransaction(fnRow);
+        JSONObject loJSON = new JSONObject();
+        if (!pbWtParent) poGRider.beginTrans();
+        
+        loJSON = poController.approveTransaction(fnRow);
+        if("error".equalsIgnoreCase((String) loJSON.get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return checkData(loJSON);
+        }
+        
+        if (!pbWtParent) poGRider.commitTrans();
+        
+        return loJSON;
     }
 }
