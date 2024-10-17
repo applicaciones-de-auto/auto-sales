@@ -114,7 +114,7 @@ public class Inquiry_Reservation {
                 lsSQL = MiscUtil.addCondition(lsSQL, " a.sTransIDx = " + SQLUtil.toSQL(fsValue));
             }
         } else {
-            lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = '2' "
+            lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_CLOSED) //Load only approved reservation
                                                   +  " AND  d.cTranStat = '2' " //ONLY LOAD OTHER INQUIRY RESERVATION TAGGED AS LOST SALE
                                                   +  " AND  c.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)   
                                                   +  " AND (c.sReferNox <> NULL OR TRIM(c.sReferNox) <> '')"
@@ -280,7 +280,7 @@ public class Inquiry_Reservation {
         //sum reservation amount should not be greater than the setted maximum amount on vehicle advances
         double ldblRsvSum = 0.00;
         for (int lnCtr = 0; lnCtr <= paDetail.size() -1; lnCtr++){
-            if(!paDetail.get(lnCtr).getTranStat().equals("0")){
+            if(!paDetail.get(lnCtr).getTranStat().equals(TransactionStatus.STATE_CANCELLED)){
                 ldblRsvSum = ldblRsvSum + paDetail.get(lnCtr).getAmount();
             }
         }
@@ -385,13 +385,13 @@ public class Inquiry_Reservation {
                 }
             }
             
-            if(paDetail.get(fnRow).getTranStat().equals("2")){
+            if(paDetail.get(fnRow).getTranStat().equals(TransactionStatus.STATE_CLOSED)){
                 loJSON.put("result", "error");
                 loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already approved.\n\nCancellation aborted.");
                 return loJSON;
             }
             
-            if(paDetail.get(fnRow).getTranStat().equals("0")){
+            if(paDetail.get(fnRow).getTranStat().equals(TransactionStatus.STATE_CANCELLED)){
                 loJSON.put("result", "error");
                 loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already cancelled.");
                 return loJSON;
@@ -420,11 +420,22 @@ public class Inquiry_Reservation {
     }
     
     public JSONObject loadForApproval(){
+         /* INQUIRY STATUS
+        -cTranStat	0	For Follow-up
+        -cTranStat	1	On Process
+        -cTranStat	2	Lost Sale
+        -cTranStat	3	VSP
+        -cTranStat	4	Sold
+        -cTranStat	5	Cancelled
+        -cTranStat	6	For Approval
+        */
+         
         paDetail = new ArrayList<>();
         poJSON = new JSONObject();
         Model_Inquiry_Reservation loEntity = new Model_Inquiry_Reservation(poGRider);
         String lsSQL = MiscUtil.addCondition(loEntity.getSQL(), " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_OPEN)
-                                                                    + " ORDER BY a.sTransNox ASC "); 
+                                                                  + " AND a.sSourceNo IN (SELECT a.sTransNox FROM customer_inquiry a WHERE (a.cTranStat = '1' OR a.cTranStat = '3')) "
+                                                                + " ORDER BY a.sTransNox ASC "); 
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
         System.out.println(lsSQL);

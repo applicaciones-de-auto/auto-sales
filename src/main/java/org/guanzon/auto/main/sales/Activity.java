@@ -449,7 +449,19 @@ public class Activity implements GRecord{
      * @return 
      */
     public JSONObject approveActivity(int fnRow){
-        return poController.approveTransaction(fnRow);
+        JSONObject loJSON = new JSONObject();
+        
+        if (!pbWtParent) poGRider.beginTrans();
+        
+        loJSON = poController.approveTransaction(fnRow);
+        if("error".equalsIgnoreCase((String) loJSON.get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return checkData(loJSON);
+        }
+        
+        if (!pbWtParent) poGRider.commitTrans();
+        
+        return loJSON;
     }
     
 }

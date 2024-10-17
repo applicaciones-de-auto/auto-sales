@@ -514,7 +514,18 @@ public class Inquiry implements GTransaction{
      * @return 
      */
     public JSONObject approveReservation(int fnRow){
-        return poReservation.approveTransaction(fnRow);
+        JSONObject loJSON = new JSONObject();
+        if (!pbWtParent) poGRider.beginTrans();
+        
+        loJSON = poReservation.approveTransaction(fnRow);
+        if("error".equalsIgnoreCase((String) loJSON.get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return checkData(loJSON);
+        }
+        
+        if (!pbWtParent) poGRider.commitTrans();
+        
+        return loJSON;
     }
     
     public ArrayList getInquiryList(){return poController.getDetailList();}
@@ -534,7 +545,18 @@ public class Inquiry implements GTransaction{
      * @return 
      */
     public JSONObject approveInquiry(int fnRow){
-        return poController.approveTransaction(fnRow);
+        JSONObject loJSON = new JSONObject();
+        if (!pbWtParent) poGRider.beginTrans();
+        
+        loJSON = poController.approveTransaction(fnRow);
+        if("error".equalsIgnoreCase((String) loJSON.get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return checkData(loJSON);
+        }
+        
+        if (!pbWtParent) poGRider.commitTrans();
+        
+        return loJSON;
     }
     
 //    public JSONObject loadSelectedReservation(int lnRow) {

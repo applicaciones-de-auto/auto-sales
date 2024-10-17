@@ -18,6 +18,7 @@ import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
+import org.guanzon.appdriver.constant.RecordStatus;
 import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.appdriver.iface.GRecord;
 import org.guanzon.appdriver.iface.GTransaction;
@@ -447,13 +448,13 @@ public class Activity_Master implements GRecord {
                 poModel.setActSrce((String) poJSON.get("sActTypDs"));
             } else {
                 poModel.setActTypID("");
-                poModel.setEventTyp("");
+//                poModel.setEventTyp("");
                 poModel.setActTypDs("");
                 poModel.setActSrce("");
             }
         } else {
             poModel.setActTypID("");
-            poModel.setEventTyp("");
+//            poModel.setEventTyp("");
             poModel.setActTypDs("");
             poModel.setActSrce("");
             poJSON = new JSONObject();
@@ -573,7 +574,7 @@ public class Activity_Master implements GRecord {
         paDetail = new ArrayList<>();
         poJSON = new JSONObject();
         Model_Activity_Master loEntity = new Model_Activity_Master(poGRider);
-        String lsSQL = MiscUtil.addCondition(loEntity.getSQL(), " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_OPEN)
+        String lsSQL = MiscUtil.addCondition(loEntity.getSQL(), " a.cTranStat = " + SQLUtil.toSQL(RecordStatus.ACTIVE)
                                                                 + " ORDER BY a.sActNoxxx ASC "
                                     ); 
         ResultSet loRS = poGRider.executeQuery(lsSQL);
@@ -609,9 +610,10 @@ public class Activity_Master implements GRecord {
     
     public JSONObject approveTransaction(int fnRow){
         JSONObject loJSON = new JSONObject();
+        //Active: 1; Deactive: 0; Cancelled: 2; Approved: 3;
 //        System.out.println(index + " : " + fsValue);
 //        if(index >= 0){
-            paDetail.get(fnRow).setTranStat(TransactionStatus.STATE_CLOSED);
+            paDetail.get(fnRow).setTranStat("3");
             loJSON = paDetail.get(fnRow).saveRecord();
             if(!"error".equals((String) loJSON.get("result"))){
                 TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);

@@ -1037,7 +1037,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
         paDetail = new ArrayList<>();
         poJSON = new JSONObject();
         Model_VehicleSalesProposal_Master loEntity = new Model_VehicleSalesProposal_Master(poGRider);
-        String lsSQL = MiscUtil.addCondition(poModel.getSQL(), " a.sTransNox = " + SQLUtil.toSQL(TransactionStatus.STATE_OPEN)
+        String lsSQL = MiscUtil.addCondition(poModel.getSQL(), " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_OPEN)
                                                 + " GROUP BY a.sTransNox "
                                                 + " ORDER BY a.sTransNox ASC "
                                                 );
