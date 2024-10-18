@@ -256,7 +256,7 @@ public class Activity_Master implements GRecord {
             lsSQL = MiscUtil.addCondition(lsSQL, " a.sActTitle LIKE " + SQLUtil.toSQL(fsValue + "%"));
         }
         
-        System.out.println(lsSQL);
+        System.out.println("ACTIVITY : searchRecord " + lsSQL);
         JSONObject loJSON = SearchDialog.jsonSearch(
                     poGRider,
                     lsSQL,
@@ -579,7 +579,7 @@ public class Activity_Master implements GRecord {
                                     ); 
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
-        System.out.println(lsSQL);
+        System.out.println("ACTIVITY : loadForApproval " + lsSQL);
        try {
             int lnctr = 0;
             if (MiscUtil.RecordCount(loRS) > 0) {

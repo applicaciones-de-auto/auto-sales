@@ -53,8 +53,8 @@ public class InquiryReservation {
                         + "  , a.cResrvTyp "                                                             
                         + "  , a.sTransIDx "    //where the reservation has been linked                                                           
                         + "  , a.cTranStat "                                                              
-                        + "  , a.sApproved "                                                              
-                        + "  , a.dApproved "                                                              
+        //                + "  , a.sApproved "                                                              
+        //                + "  , a.dApproved "                                                              
                         + "  , a.sEntryByx "                                                              
                         + "  , a.dEntryDte "                                                              
                         + "  , a.sModified "                                                              
@@ -81,7 +81,7 @@ public class InquiryReservation {
                         + " LEFT JOIN si_master_source h ON h.sReferNox = a.sTransNox " 
                         + " LEFT JOIN si_master i ON i.sTransNox = h.sTransNox  " 
                         + " LEFT JOIN transaction_status_history j ON j.sSourceNo = a.sTransNox AND j.cTranStat <> "+ SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
-                        + " LEFT JOIN ggc_isysdbf.client_master k ON k.sClientID = j.sApproved " 
+                        + " LEFT JOIN ggc_isysdbf.client_master k ON k.sClientID = j.sApproved "
                         + " WHERE 0=1";
         
         

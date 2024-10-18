@@ -55,7 +55,7 @@ public class VehicleDeliveryReceiptMaster {
                         + "  , a.sSourceNo "                                                                              
                         + "  , a.cPrintedx "                                                                              
                         + "  , a.sPrepared "                                                                              
-                        + "  , a.sApproved "                                                                              
+        //                        + "  , a.sApproved "                                                                              
                         + "  , a.cCallStat "                                                                              
                         + "  , a.cTranStat "                                                                              
                         + "  , a.sEntryByx "                                                                              

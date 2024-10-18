@@ -125,7 +125,7 @@ public class Inquiry_Reservation {
         
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
-        System.out.println(lsSQL);
+        System.out.println("RESERVATION : openDetail " + lsSQL);
        try {
             int lnctr = 0;
             if (MiscUtil.RecordCount(loRS) > 0) {
@@ -438,7 +438,7 @@ public class Inquiry_Reservation {
                                                                 + " ORDER BY a.sTransNox ASC "); 
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
-        System.out.println(lsSQL);
+        System.out.println("RESERVATION : loadForApproval " + lsSQL);
        try {
             int lnctr = 0;
             if (MiscUtil.RecordCount(loRS) > 0) {

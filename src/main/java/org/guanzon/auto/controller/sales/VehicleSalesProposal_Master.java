@@ -229,6 +229,9 @@ public class VehicleSalesProposal_Master implements GTransaction{
                     return poJSON;
                 }
                 
+                poModel.setCancelld(poGRider.getUserID());
+                poModel.setCancelldDte(poGRider.getServerDate());
+                
                 ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.VehicleSalesProposal_Master, poModel);
                 validator.setGRider(poGRider);
                 if (!validator.isEntryOkay()){

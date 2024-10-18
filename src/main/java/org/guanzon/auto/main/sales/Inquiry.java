@@ -607,31 +607,38 @@ public class Inquiry implements GTransaction{
     }
     
     public JSONObject validateEntry() {
-        JSONObject jObj = new JSONObject();
+        JSONObject loJSON = new JSONObject();
         
         //VALIDATE : Vehicle Priority
         if(poVehiclePriority.getDetailList() == null){
-            jObj.put("result", "error");
-            jObj.put("message", "No Vehicle Priority detected. Please encode vehicle priority.");
-            return jObj;
+            loJSON.put("result", "error");
+            loJSON.put("message", "No Vehicle Priority detected. Please encode vehicle priority.");
+            return loJSON;
         }
         
         int lnSize = poVehiclePriority.getDetailList().size() -1;
         if (lnSize < 0){
-            jObj.put("result", "error");
-            jObj.put("message", "No Vehicle Priority detected. Please encode vehicle priority.");
-            return jObj;
+            loJSON.put("result", "error");
+            loJSON.put("message", "No Vehicle Priority detected. Please encode vehicle priority.");
+            return loJSON;
         }
         
         //validate atleast 1 required requirements must sent
-        if(!poController.getMasterModel().getTranStat().equals("0")){
+        if(!poController.getMasterModel().getTranStat().equals("0") && !poController.getMasterModel().getTranStat().equals("6")){
+            //Do not validate requirements when VIP Client
+            if(poController.getMasterModel().getApprover() != null){
+                if(!poController.getMasterModel().getApprover().isEmpty()) {
+                    return loJSON;
+                }
+            } 
+            
             lnSize = poRequirements.getDetailList().size() -1;
             if (lnSize < 0){
-                jObj.put("result", "error");
-                jObj.put("message", "Client must submit atleast 1 required requirement to proceed to on process.\nOtherwise inquiry must be approve for VIP clients.");
-                return jObj;
+                loJSON.put("result", "error");
+                loJSON.put("message", "Client must submit atleast 1 required requirement to proceed to on process.\nOtherwise inquiry must be approve for VIP clients.");
+                return loJSON;
             }
-            
+
             boolean lbRqrdChk = false;
             for (int lnCtr = 0; lnCtr <= lnSize; lnCtr++){
                 if(poRequirements.getRequirementsList().get(lnCtr).getRequired().equals("1")){
@@ -647,14 +654,15 @@ public class Inquiry implements GTransaction{
             }
 
             if(!lbRqrdChk){
-                jObj.put("result", "error");
-                jObj.put("continue", false);
-                jObj.put("message", "Client must submit atleast 1 required requirement to proceed to on process.\nOtherwise inquiry must be approve for VIP clients.");
-                return jObj;
+                loJSON.put("result", "error");
+                loJSON.put("continue", false);
+                loJSON.put("message", "Client must submit atleast 1 required requirement to proceed to on process.\nOtherwise inquiry must be approve for VIP clients.");
+                return loJSON;
             }
+            
         }
         
-        return jObj;
+        return loJSON;
     }
     
     public JSONObject checkExistingTransaction(boolean fbisClient) {

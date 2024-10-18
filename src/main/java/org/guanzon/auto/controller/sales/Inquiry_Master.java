@@ -223,6 +223,15 @@ public class Inquiry_Master implements GTransaction {
     }
 
     public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
+        /*
+        -cTranStat	0	For Follow-up
+        -cTranStat	1	On Process
+        -cTranStat	2	Lost Sale
+        -cTranStat	3	VSP
+        -cTranStat	4	Sold
+        -cTranStat	5	Cancelled
+        -cTranStat	6	For Approval
+        */
         String lsHeader = "Inquiry Date»Inquiry ID»Customer Name»Customer Address»Inquiry Status»Branch";
         String lsColName = "dTransact»sInqryIDx»sCompnyNm»sAddressx»sTranStat»sBranchNm";
         String lsSQL =    " SELECT "                                                                       
@@ -264,9 +273,9 @@ public class Inquiry_Master implements GTransaction {
                         + " LEFT JOIN ggc_isysdbf.client_master l ON l.sClientID = a.sEmployID "            
                         + " LEFT JOIN client_master m ON m.sClientID = a.sAgentIDx "                        
                         + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd "                        
-                        + " WHERE a.cTranStat <> '6' " ;  
+                        + " WHERE a.cTranStat <> '5' " ;  
         
-        System.out.println(lsSQL);
+        System.out.println("INQUIRY : searchTransaction " + lsSQL);
         JSONObject loJSON = SearchDialog.jsonSearch(
                     poGRider,
                     lsSQL,
@@ -490,7 +499,7 @@ public class Inquiry_Master implements GTransaction {
         
         lsSQL = lsSQL + " GROUP BY a.sClientID ";
         JSONObject loJSON;
-        System.out.println(lsSQL);
+        System.out.println("INQUIRY : searchClient "+ lsSQL);
         loJSON = ShowDialogFX.Search(poGRider, 
                                         lsSQL, 
                                         fsValue, 
