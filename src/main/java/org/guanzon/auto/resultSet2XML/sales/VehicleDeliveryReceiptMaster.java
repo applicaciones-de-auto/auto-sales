@@ -65,9 +65,9 @@ public class VehicleDeliveryReceiptMaster {
                         + "  , CASE "          
                         + " 	WHEN a.cTranStat = "+ SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)+" THEN 'CANCELLED' "     
                         + " 	WHEN a.cTranStat = "+ SQLUtil.toSQL(TransactionStatus.STATE_CLOSED)+" THEN 'APPROVED' "        
-                        + " 	WHEN a.cTranStat = "+ SQLUtil.toSQL(TransactionStatus.STATE_OPEN)+" THEN 'ACTIVE' "          
+                        + " 	WHEN a.cTranStat = "+ SQLUtil.toSQL(TransactionStatus.STATE_OPEN)+" THEN 'FOR APPROVAL' "          
                         + " 	WHEN a.cTranStat = "+ SQLUtil.toSQL(TransactionStatus.STATE_POSTED)+" THEN 'POSTED' "                             
-                        + " 	ELSE 'ACTIVE'  "                                                          
+                        + " 	ELSE 'VOID'  "                                                          
                         + "    END AS sTranStat "                                                                                
                         /*BUYING COSTUMER*/                                                                               
                         + "  , b.sCompnyNm AS sBuyCltNm "                                                                 

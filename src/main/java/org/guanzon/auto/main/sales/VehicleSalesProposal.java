@@ -265,11 +265,11 @@ public class VehicleSalesProposal implements GTransaction{
         loVSPLabor.openDetail(poController.getMasterModel().getTransNo());
         loVSPParts.openDetail(poController.getMasterModel().getTransNo());
         
-        if(loVSP.getMasterModel().getNetTTotl().compareTo(poController.getMasterModel().getNetTTotl()) < 0){
+        if(!loVSP.getMasterModel().getNetTTotl().equals(poController.getMasterModel().getNetTTotl())){
             return true;
         }
         
-        if(loVSPFinance.getVSPFinanceModel().getFinAmt().compareTo(poVSPFinance.getVSPFinanceModel().getFinAmt()) < 0){
+        if(!loVSPFinance.getVSPFinanceModel().getFinAmt().equals(poVSPFinance.getVSPFinanceModel().getFinAmt())){
             return true;
         }
         
@@ -304,7 +304,7 @@ public class VehicleSalesProposal implements GTransaction{
                 if(loVSPParts.getDetailModel(lnCtr).getNtPrtAmt().compareTo(poVSPParts.getDetailModel(lnCtr).getNtPrtAmt()) < 0){
                     return true;
                 }
-                if(!loVSPParts.getDetailModel(lnCtr).getPartDesc().equals(poVSPParts.getDetailModel(lnCtr).getPartDesc())){
+                if(!loVSPParts.getDetailModel(lnCtr).getDescript().equals(poVSPParts.getDetailModel(lnCtr).getDescript())){
                     return true;
                 }
                 if(!loVSPParts.getDetailModel(lnCtr).getChrgeTyp().equals(poVSPParts.getDetailModel(lnCtr).getChrgeTyp())){
@@ -1317,27 +1317,26 @@ public class VehicleSalesProposal implements GTransaction{
         return loJSON;
     } 
     
-    public ArrayList getVSPList(){return poController.getDetailList();}
-    public VehicleSalesProposal_Master getVSPModel(){return poController;} 
-    
-    /**
-     * Load for approval transaction
-     * @return 
-     */
-    public JSONObject loadVSPForApproval(){
-        return poController.loadForApproval();
-    }
+//    public ArrayList getVSPList(){return poController.getDetailList();}
+//    public VehicleSalesProposal_Master getVSPModel(){return poController;} 
+//    
+//    /**
+//     * Load for approval transaction
+//     * @return 
+//     */
+//    public JSONObject loadVSPForApproval(){
+//        return poController.loadForApproval();
+//    }
     
     /**
      * VSP Approve
-     * @param fnRow selected row of Inquiry to be approved
      * @return 
      */
-    public JSONObject approveVSP(int fnRow){
+    public JSONObject approveVSP(){
         JSONObject loJSON = new JSONObject();
         if (!pbWtParent) poGRider.beginTrans();
         
-        loJSON = poController.approveTransaction(fnRow);
+        loJSON = poController.approveTransaction();
         if("error".equalsIgnoreCase((String) loJSON.get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
             return checkData(loJSON);

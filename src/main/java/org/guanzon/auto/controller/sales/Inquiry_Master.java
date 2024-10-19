@@ -227,7 +227,7 @@ public class Inquiry_Master implements GTransaction {
         -cTranStat	0	For Follow-up
         -cTranStat	1	On Process
         -cTranStat	2	Lost Sale
-        -cTranStat	3	VSP
+        -cTranStat	3	WITH VSP
         -cTranStat	4	Sold
         -cTranStat	5	Cancelled
         -cTranStat	6	For Approval
@@ -249,7 +249,8 @@ public class Inquiry_Master implements GTransaction {
                         + " 	WHEN a.cTranStat = '1' THEN 'ON PROCESS' "                                   
                         + " 	WHEN a.cTranStat = '2' THEN 'LOST SALE'  "                                   
                         + " 	WHEN a.cTranStat = '3' THEN 'WITH VSP'   "                                   
-                        + " 	WHEN a.cTranStat = '4' THEN 'SOLD'       "                                     
+                        + " 	WHEN a.cTranStat = '4' THEN 'SOLD'       "                                  
+                        + " 	WHEN a.cTranStat = '6' THEN 'FOR APPROVAL' "                                     
                         + " 	ELSE 'CANCELLED'  "                                                          
                         + "    END AS sTranStat "                                                          
                         + "  , b.sCompnyNm      "                                                          
