@@ -121,6 +121,7 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
 
             poModel.setTransNo(MiscUtil.getNextCode(poModel.getTable(), "sTransNox", true, poGRider.getConnection(), poGRider.getBranchCode()+"VDR"));
             poModel.setReferNo(MiscUtil.getNextCode(poModel.getTable(), "sReferNox", true, poGRider.getConnection(), poGRider.getBranchCode()));
+            poModel.setPrinted("0");
             poModel.newRecord();
             
             if (poModel == null){

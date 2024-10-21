@@ -120,6 +120,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
 
             poModel.setTransNo(MiscUtil.getNextCode(poModel.getTable(), "sTransNox", true, poGRider.getConnection(), poGRider.getBranchCode()+"VSP"));
             poModel.setVSPNO(MiscUtil.getNextCode(poModel.getTable(), "sVSPNOxxx", true, poGRider.getConnection(), poGRider.getBranchCode()));
+            poModel.setPrinted("0");
             poModel.newRecord();
             
             if (poModel == null){

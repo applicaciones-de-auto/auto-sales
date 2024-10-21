@@ -29,7 +29,7 @@ public class Inquiry implements GTransaction{
     int pnEditMode;
     String psTransStat;
     String psMessagex;
-    public JSONObject poJSON;
+//    public JSONObject poJSON;
     
     Inquiry_Master poController;
     Inquiry_VehiclePriority poVehiclePriority;
@@ -78,137 +78,137 @@ public class Inquiry implements GTransaction{
     
     @Override
     public JSONObject newTransaction() {
-        poJSON = new JSONObject();
+        JSONObject loJSON = new JSONObject();
         try{
-            poJSON = poController.newTransaction();
+            loJSON = poController.newTransaction();
             
-            if("success".equals(poJSON.get("result"))){
+            if("success".equals(loJSON.get("result"))){
                 pnEditMode = poController.getEditMode();
             } else {
                 pnEditMode = EditMode.UNKNOWN;
             }
                
         }catch(NullPointerException e){
-            poJSON.put("result", "error");
-            poJSON.put("message", e.getMessage());
+            loJSON.put("result", "error");
+            loJSON.put("message", e.getMessage());
             pnEditMode = EditMode.UNKNOWN;
         }
-        return poJSON;
+        return loJSON;
     }
     
     @Override
     public JSONObject openTransaction(String fsValue) {
-        poJSON = new JSONObject();
+        JSONObject loJSON = new JSONObject();
         
-        poJSON = poController.openTransaction(fsValue);
-        if("success".equals(poJSON.get("result"))){
+        loJSON = poController.openTransaction(fsValue);
+        if("success".equals(loJSON.get("result"))){
             pnEditMode = poController.getEditMode();
         } else {
             pnEditMode = EditMode.UNKNOWN;
         }
         
-        poJSON = poVehiclePriority.openDetail(fsValue);
-        if(!"success".equals(poJSON.get("result"))){
+        loJSON = poVehiclePriority.openDetail(fsValue);
+        if(!"success".equals(loJSON.get("result"))){
             pnEditMode = EditMode.UNKNOWN;
-            return poJSON;
+            return loJSON;
         }
         
-        poJSON = poPromo.openDetail(fsValue);
-        if(!"success".equals(poJSON.get("result"))){
-            if(true == (boolean) poJSON.get("continue")){
-                poJSON.put("result", "success");
-                poJSON.put("message", "Record loaded succesfully.");
+        loJSON = poPromo.openDetail(fsValue);
+        if(!"success".equals(loJSON.get("result"))){
+            if(true == (boolean) loJSON.get("continue")){
+                loJSON.put("result", "success");
+                loJSON.put("message", "Record loaded succesfully.");
             } else {
                 pnEditMode = EditMode.UNKNOWN;
-                return poJSON;
+                return loJSON;
             } 
         }
         
-        poJSON = poRequirements.openDetail(fsValue);
-        if(!"success".equals(poJSON.get("result"))){
-            if(true == (boolean) poJSON.get("continue")){
-                poJSON.put("result", "success");
-                poJSON.put("message", "Record loaded succesfully.");
+        loJSON = poRequirements.openDetail(fsValue);
+        if(!"success".equals(loJSON.get("result"))){
+            if(true == (boolean) loJSON.get("continue")){
+                loJSON.put("result", "success");
+                loJSON.put("message", "Record loaded succesfully.");
             } else {
                 pnEditMode = EditMode.UNKNOWN;
-                return poJSON;
+                return loJSON;
             }
         }
         
-        poJSON = poReservation.openDetail(fsValue,true, false);
-        if(!"success".equals(poJSON.get("result"))){
-            if(true == (boolean) poJSON.get("continue")){
-                poJSON.put("result", "success");
-                poJSON.put("message", "Record loaded succesfully.");
+        loJSON = poReservation.openDetail(fsValue,true, false);
+        if(!"success".equals(loJSON.get("result"))){
+            if(true == (boolean) loJSON.get("continue")){
+                loJSON.put("result", "success");
+                loJSON.put("message", "Record loaded succesfully.");
             } else {
                 pnEditMode = EditMode.UNKNOWN;
-                return poJSON;
+                return loJSON;
             }
         }
         
-        return poJSON;
+        return loJSON;
     }
 
     @Override
     public JSONObject updateTransaction() {
-        poJSON = new JSONObject();  
-        poJSON = poController.updateTransaction();
-        if("error".equals(poJSON.get("result"))){
-            return poJSON;
+        JSONObject loJSON = new JSONObject();  
+        loJSON = poController.updateTransaction();
+        if("error".equals(loJSON.get("result"))){
+            return loJSON;
         }
         pnEditMode = poController.getEditMode();
-        return poJSON;
+        return loJSON;
     }
 
     @Override
     public JSONObject saveTransaction() {
         
-        poJSON = new JSONObject();  
+        JSONObject loJSON = new JSONObject();  
         
-        poJSON = validateEntry();
-        if("error".equalsIgnoreCase((String)poJSON.get("result"))){
-            return poJSON;
+        loJSON = validateEntry();
+        if("error".equalsIgnoreCase((String)loJSON.get("result"))){
+            return loJSON;
         }
         
         if (!pbWtParent) poGRider.beginTrans();
         
-        poJSON =  poController.saveTransaction();
-        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
+        loJSON =  poController.saveTransaction();
+        if("error".equalsIgnoreCase((String)checkData(loJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
-            return checkData(poJSON);
+            return checkData(loJSON);
         }
         
         poVehiclePriority.setTargetBranchCd(poController.getMasterModel().getBranchCd());
-        poJSON =  poVehiclePriority.saveDetail((String) poController.getMasterModel().getTransNo());
-        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
+        loJSON =  poVehiclePriority.saveDetail((String) poController.getMasterModel().getTransNo());
+        if("error".equalsIgnoreCase((String)checkData(loJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
-            return checkData(poJSON);
+            return checkData(loJSON);
         }
         
         poPromo.setTargetBranchCd(poController.getMasterModel().getBranchCd());
-        poJSON =  poPromo.saveDetail((String) poController.getMasterModel().getTransNo());
-        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
+        loJSON =  poPromo.saveDetail((String) poController.getMasterModel().getTransNo());
+        if("error".equalsIgnoreCase((String)checkData(loJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
-            return checkData(poJSON);
+            return checkData(loJSON);
         }
         
         poRequirements.setTargetBranchCd(poController.getMasterModel().getBranchCd());
-        poJSON =  poRequirements.saveDetail((String) poController.getMasterModel().getTransNo());
-        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
+        loJSON =  poRequirements.saveDetail((String) poController.getMasterModel().getTransNo());
+        if("error".equalsIgnoreCase((String)checkData(loJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
-            return checkData(poJSON);
+            return checkData(loJSON);
         }
         
         poReservation.setTargetBranchCd(poController.getMasterModel().getBranchCd());
-        poJSON =  poReservation.saveDetail((String) poController.getMasterModel().getTransNo());
-        if("error".equalsIgnoreCase((String)checkData(poJSON).get("result"))){
+        loJSON =  poReservation.saveDetail((String) poController.getMasterModel().getTransNo());
+        if("error".equalsIgnoreCase((String)checkData(loJSON).get("result"))){
             if (!pbWtParent) poGRider.rollbackTrans();
-            return checkData(poJSON);
+            return checkData(loJSON);
         }
         
         if (!pbWtParent) poGRider.commitTrans();
         
-        return poJSON;
+        return loJSON;
     }
     
     private JSONObject checkData(JSONObject joValue){
@@ -224,12 +224,12 @@ public class Inquiry implements GTransaction{
     }
     
     public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
-        poJSON = new JSONObject();  
-        poJSON = poController.searchTransaction(fsValue, fbByCode);
-        if(!"error".equals(poJSON.get("result"))){
-            poJSON = openTransaction((String) poJSON.get("sTransNox"));
+        JSONObject loJSON = new JSONObject();  
+        loJSON = poController.searchTransaction(fsValue, fbByCode);
+        if(!"error".equals(loJSON.get("result"))){
+            loJSON = openTransaction((String) loJSON.get("sTransNox"));
         }
-        return poJSON;
+        return loJSON;
     }
     
     public JSONObject lostSale(String fsValue) {
@@ -491,8 +491,8 @@ public class Inquiry implements GTransaction{
     public JSONObject loadReservationList() {
         JSONObject loJSON = new JSONObject();
         loJSON = poReservation.openDetail(poController.getMasterModel().getTransNo(),true,false);
-        if(!"success".equals(poJSON.get("result"))){
-            if(true == (boolean) poJSON.get("continue")){
+        if(!"success".equals(loJSON.get("result"))){
+            if(true == (boolean) loJSON.get("continue")){
                 loJSON.put("result", "success");
                 loJSON.put("message", "Record loaded succesfully.");
             }
@@ -632,15 +632,15 @@ public class Inquiry implements GTransaction{
                 }
             } 
             
-            lnSize = poRequirements.getDetailList().size() -1;
-            if (lnSize < 0){
-                loJSON.put("result", "error");
-                loJSON.put("message", "Client must submit atleast 1 required requirement to proceed to on process.\nOtherwise inquiry must be approve for VIP clients.");
-                return loJSON;
-            }
+//            lnSize = poRequirements.getDetailList().size() -1;
+//            if (lnSize < 0){
+//                loJSON.put("result", "error");
+//                loJSON.put("message", "Client must submit atleast 1 required requirement to proceed to on process.\nOtherwise inquiry must be approve for VIP clients.");
+//                return loJSON;
+//            }
 
             boolean lbRqrdChk = false;
-            for (int lnCtr = 0; lnCtr <= lnSize; lnCtr++){
+            for (int lnCtr = 0; lnCtr <= poRequirements.getRequirementsList().size()-1; lnCtr++){
                 if(poRequirements.getRequirementsList().get(lnCtr).getRequired().equals("1")){
                     if(poRequirements.getRequirementsList().get(lnCtr).getReceived() != null){
                         if(!poRequirements.getRequirementsList().get(lnCtr).getReceived().trim().isEmpty()){

@@ -64,9 +64,13 @@ public class Inquiry_Reservation {
             paDetail.add(new Model_Inquiry_Reservation(poGRider));
             paDetail.get(0).newRecord();
             
-            paDetail.get(0).setValue("sClientID", fsClientID);
-            paDetail.get(0).setValue("sSourceCD", fsSourceCD);
-            paDetail.get(0).setValue("sSourceNo", fsSourceNo);
+            paDetail.get(0).setSourceNo(fsSourceNo);
+            paDetail.get(0).setSourceCD(fsSourceCD);
+            paDetail.get(0).setClientID(fsClientID);
+            paDetail.get(0).setPrinted(0);
+//            paDetail.get(0).setValue("sClientID", fsClientID);
+//            paDetail.get(0).setValue("sSourceCD", fsSourceCD);
+//            paDetail.get(0).setValue("sSourceNo", fsSourceNo);
             poJSON.put("result", "success");
             poJSON.put("message", "Reservation add record.");
         } else {
@@ -76,6 +80,7 @@ public class Inquiry_Reservation {
             paDetail.get(paDetail.size()-1).setClientID(fsClientID);
             paDetail.get(paDetail.size()-1).setSourceCD(fsSourceCD);
             paDetail.get(paDetail.size()-1).setSourceNo(fsSourceNo);
+            paDetail.get(paDetail.size()-1).setPrinted(0);
             poJSON.put("result", "success");
             poJSON.put("message", "Reservation add record.");
         }
@@ -385,18 +390,57 @@ public class Inquiry_Reservation {
                 }
             }
             
-            if(paDetail.get(fnRow).getTranStat().equals(TransactionStatus.STATE_CLOSED)){
-                loJSON.put("result", "error");
-                loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already approved.\n\nCancellation aborted.");
-                return loJSON;
-            }
+//            if(paDetail.get(fnRow).getTranStat().equals(TransactionStatus.STATE_CLOSED)){
+//                loJSON.put("result", "error");
+//                loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already approved.\n\nCancellation aborted.");
+//                return loJSON;
+//            }
             
             if(paDetail.get(fnRow).getTranStat().equals(TransactionStatus.STATE_CANCELLED)){
                 loJSON.put("result", "error");
                 loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already cancelled.");
                 return loJSON;
             } 
-           
+            
+            try {
+
+                String lsID = "";
+                String lsDesc  = "";
+                String lsSQL = "";
+                ResultSet loRS;
+                lsSQL = " SELECT "                                                    
+                        + "   a.sTransNox "                                             
+                        + " , a.sReferNox "                                             
+                        + " , DATE(a.dTransact) AS dTransact "                          
+                        + " FROM si_master a "                                          
+                        + " LEFT JOIN si_master_source b ON b.sTransNox = a.sTransNox " ;                                     
+
+                lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED) 
+                                                        + " AND b.sReferNox = " + SQLUtil.toSQL(paDetail.get(fnRow).getTransNo()) 
+                                                        );
+                System.out.println("EXISTING RECEIPT CHECK: " + lsSQL);
+                loRS = poGRider.executeQuery(lsSQL);
+
+                if (MiscUtil.RecordCount(loRS) > 0){
+                        while(loRS.next()){
+                            lsID = loRS.getString("sReferNox");
+                            lsDesc = loRS.getString("dTransact");
+                        }
+
+                        MiscUtil.close(loRS);
+                        poJSON.put("result", "error");
+                        poJSON.put("message", "Found existing receipt."
+                                                + "\nReceipt No: " + lsID + "" 
+                                                + "\nReceipt Date: " + lsDesc
+                                                + "\n\nCancellation aborted.");
+                        return poJSON;
+                }
+                
+
+            } catch (SQLException ex) {
+                Logger.getLogger(Inquiry_Reservation.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
             CancelForm cancelform = new CancelForm();
             if (!cancelform.loadCancelWindow(poGRider, paDetail.get(fnRow).getReferNo(), paDetail.get(fnRow).getTransNo(), "RESERVATION")) {
                 poJSON.put("result", "error");
@@ -404,7 +448,7 @@ public class Inquiry_Reservation {
                 return poJSON;
             }
             
-            paDetail.get(fnRow).setTranStat("0");
+            paDetail.get(fnRow).setTranStat(TransactionStatus.STATE_CANCELLED);
             paDetail.get(fnRow).setTargetBranchCd(psTargetBranchCd);
             loJSON = paDetail.get(fnRow).saveRecord(); //paDetail.get(fnRow).getTransNo());
             

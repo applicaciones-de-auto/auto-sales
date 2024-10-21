@@ -265,11 +265,11 @@ public class VehicleSalesProposal implements GTransaction{
         loVSPLabor.openDetail(poController.getMasterModel().getTransNo());
         loVSPParts.openDetail(poController.getMasterModel().getTransNo());
         
-        if(!loVSP.getMasterModel().getNetTTotl().equals(poController.getMasterModel().getNetTTotl())){
+        if(loVSP.getMasterModel().getNetTTotl().compareTo(poController.getMasterModel().getNetTTotl()) != 0){
             return true;
         }
         
-        if(!loVSPFinance.getVSPFinanceModel().getFinAmt().equals(poVSPFinance.getVSPFinanceModel().getFinAmt())){
+        if(loVSPFinance.getVSPFinanceModel().getFinAmt().compareTo(poVSPFinance.getVSPFinanceModel().getFinAmt()) != 0){
             return true;
         }
         
@@ -284,7 +284,7 @@ public class VehicleSalesProposal implements GTransaction{
         //Check old data in VSP Labor
         for(int lnCtr = 0;lnCtr <= loVSPLabor.getDetailList().size()-1;lnCtr++){
             if(lnCtr <= poVSPLabor.getDetailList().size()-1){ //recheck size to prevent error
-                if(loVSPLabor.getDetailModel(lnCtr).getNtLabAmt().compareTo(poVSPLabor.getDetailModel(lnCtr).getNtLabAmt()) < 0){
+                if(loVSPLabor.getDetailModel(lnCtr).getNtLabAmt().compareTo(poVSPLabor.getDetailModel(lnCtr).getNtLabAmt()) != 0){
                     return true;
                 }
                 if(!loVSPLabor.getDetailModel(lnCtr).getLaborCde().equals(poVSPLabor.getDetailModel(lnCtr).getLaborCde())){
@@ -301,7 +301,7 @@ public class VehicleSalesProposal implements GTransaction{
         //Check old data in VSP Parts
         for(int lnCtr = 0;lnCtr <= loVSPParts.getDetailList().size()-1;lnCtr++){
             if(lnCtr <= poVSPParts.getDetailList().size()-1){ //recheck size to prevent error
-                if(loVSPParts.getDetailModel(lnCtr).getNtPrtAmt().compareTo(poVSPParts.getDetailModel(lnCtr).getNtPrtAmt()) < 0){
+                if(loVSPParts.getDetailModel(lnCtr).getNtPrtAmt().compareTo(poVSPParts.getDetailModel(lnCtr).getNtPrtAmt()) != 0){
                     return true;
                 }
                 if(!loVSPParts.getDetailModel(lnCtr).getDescript().equals(poVSPParts.getDetailModel(lnCtr).getDescript())){
