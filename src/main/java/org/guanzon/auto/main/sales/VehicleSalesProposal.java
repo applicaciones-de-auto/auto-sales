@@ -231,13 +231,13 @@ public class VehicleSalesProposal implements GTransaction{
         if (!pbWtParent) poGRider.commitTrans();
         
         //Save Cashier Receivables
-        if(poController.getMasterModel().getTranStat().equals(TransactionStatus.STATE_CLOSED)){
-            CashierReceivables loCAR = new CashierReceivables(poGRider, pbWtParent, psBranchCd);
-            JSONObject loJSONCAR = loCAR.generateCAR("VSP", poController.getMasterModel().getTransNo());
-            if("error".equals((String) loJSONCAR.get("result"))){
-                return loJSONCAR;
-            }
+//        if(poController.getMasterModel().getTranStat().equals(TransactionStatus.STATE_CLOSED)){
+        CashierReceivables loCAR = new CashierReceivables(poGRider, pbWtParent, psBranchCd);
+        JSONObject loJSONCAR = loCAR.generateCAR("VSP", poController.getMasterModel().getTransNo());
+        if("error".equals((String) loJSONCAR.get("result"))){
+            return loJSONCAR;
         }
+//        }
         
         return poJSON;
     }

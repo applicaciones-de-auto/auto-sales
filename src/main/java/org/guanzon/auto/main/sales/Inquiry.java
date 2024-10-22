@@ -623,6 +623,20 @@ public class Inquiry implements GTransaction{
             return loJSON;
         }
         
+        boolean lbRqrdChk = false;
+        for (int lnCtr = 0; lnCtr <= poRequirements.getRequirementsList().size()-1; lnCtr++){
+            if(poRequirements.getRequirementsList().get(lnCtr).getRequired().equals("1")){
+                if(poRequirements.getRequirementsList().get(lnCtr).getReceived() != null){
+                    if(!poRequirements.getRequirementsList().get(lnCtr).getReceived().trim().isEmpty()){
+                        if(poRequirements.getRequirementsList().get(lnCtr).getSubmittd().equals("1")){
+                            lbRqrdChk = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
         //validate atleast 1 required requirements must sent
         if(!poController.getMasterModel().getTranStat().equals("0") && !poController.getMasterModel().getTranStat().equals("6")){
             //Do not validate requirements when VIP Client
@@ -639,20 +653,6 @@ public class Inquiry implements GTransaction{
 //                return loJSON;
 //            }
 
-            boolean lbRqrdChk = false;
-            for (int lnCtr = 0; lnCtr <= poRequirements.getRequirementsList().size()-1; lnCtr++){
-                if(poRequirements.getRequirementsList().get(lnCtr).getRequired().equals("1")){
-                    if(poRequirements.getRequirementsList().get(lnCtr).getReceived() != null){
-                        if(!poRequirements.getRequirementsList().get(lnCtr).getReceived().trim().isEmpty()){
-                            if(poRequirements.getRequirementsList().get(lnCtr).getSubmittd().equals("1")){
-                                lbRqrdChk = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
             if(!lbRqrdChk){
                 loJSON.put("result", "error");
                 loJSON.put("continue", false);
@@ -660,6 +660,14 @@ public class Inquiry implements GTransaction{
                 return loJSON;
             }
             
+        }
+        
+        if(poController.getMasterModel().getTranStat().equals("6")){
+            //If user edited and linked ID / added reservation, update the status into ON PROCESS
+            if(lbRqrdChk){
+                poController.getMasterModel().setTranStat("1");
+                return loJSON;
+            }
         }
         
         return loJSON;
