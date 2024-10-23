@@ -175,7 +175,8 @@ public class VehicleSalesProposal implements GTransaction{
         }
         
         //Update approved VSP to for approval when major changes has been made
-        if(poController.getMasterModel().getTranStat().equals(TransactionStatus.STATE_CLOSED)){
+        if(poController.getMasterModel().getTranStat().equals(TransactionStatus.STATE_CLOSED) 
+                && !poController.getMasterModel().getTranStat().equals(TransactionStatus.STATE_POSTED)){
             if(checkChanges()){
                 poController.getMasterModel().setTranStat(TransactionStatus.STATE_OPEN);
             }
