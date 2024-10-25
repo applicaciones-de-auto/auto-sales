@@ -24,6 +24,7 @@ import org.guanzon.auto.controller.sales.VehicleSalesProposal_Finance;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Labor;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Master;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Parts;
+import org.guanzon.auto.main.cashiering.CashierReceivables;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
 import org.guanzon.auto.validator.sales.ValidatorInterface;
 import org.json.simple.JSONObject;
@@ -173,6 +174,14 @@ public class VehicleSalesProposal implements GTransaction{
             return poJSON;
         }
         
+        //Update approved VSP to for approval when major changes has been made
+        if(poController.getMasterModel().getTranStat().equals(TransactionStatus.STATE_CLOSED) 
+                && !poController.getMasterModel().getTranStat().equals(TransactionStatus.STATE_POSTED)){
+            if(checkChanges()){
+                poController.getMasterModel().setTranStat(TransactionStatus.STATE_OPEN);
+            }
+        }
+        
         if (!pbWtParent) poGRider.beginTrans();
         
         poJSON =  poController.saveTransaction();
@@ -222,6 +231,15 @@ public class VehicleSalesProposal implements GTransaction{
         
         if (!pbWtParent) poGRider.commitTrans();
         
+        //Save Cashier Receivables
+//        if(poController.getMasterModel().getTranStat().equals(TransactionStatus.STATE_CLOSED)){
+        CashierReceivables loCAR = new CashierReceivables(poGRider, pbWtParent, psBranchCd);
+        JSONObject loJSONCAR = loCAR.generateCAR("VSP", poController.getMasterModel().getTransNo());
+        if("error".equals((String) loJSONCAR.get("result"))){
+            return loJSONCAR;
+        }
+//        }
+        
         return poJSON;
     }
     
@@ -236,6 +254,73 @@ public class VehicleSalesProposal implements GTransaction{
         }
         return joValue;
     }
+    
+    public boolean checkChanges(){
+        VehicleSalesProposal_Master loVSP = new VehicleSalesProposal_Master(poGRider, pbWtParent, psBranchCd);
+        VehicleSalesProposal_Finance loVSPFinance = new VehicleSalesProposal_Finance(poGRider);
+        VehicleSalesProposal_Labor loVSPLabor = new VehicleSalesProposal_Labor(poGRider);
+        VehicleSalesProposal_Parts loVSPParts = new VehicleSalesProposal_Parts(poGRider);
+        
+        loVSP.openTransaction(poController.getMasterModel().getTransNo());
+        loVSPFinance.openDetail(poController.getMasterModel().getTransNo());
+        loVSPLabor.openDetail(poController.getMasterModel().getTransNo());
+        loVSPParts.openDetail(poController.getMasterModel().getTransNo());
+        
+        if(loVSP.getMasterModel().getNetTTotl().compareTo(poController.getMasterModel().getNetTTotl()) != 0){
+            return true;
+        }
+        
+        if(loVSPFinance.getDetailList().size() > 0){
+            if(loVSPFinance.getVSPFinanceModel().getFinAmt().compareTo(poVSPFinance.getVSPFinanceModel().getFinAmt()) != 0){
+                return true;
+            }
+        }
+        
+        if(loVSPLabor.getDetailList().size() != poVSPLabor.getDetailList().size()){
+            return true;
+        }
+        
+        if(loVSPParts.getDetailList().size() != poVSPParts.getDetailList().size()){
+            return true;
+        }
+        
+        //Check old data in VSP Labor
+        for(int lnCtr = 0;lnCtr <= loVSPLabor.getDetailList().size()-1;lnCtr++){
+            if(lnCtr <= poVSPLabor.getDetailList().size()-1){ //recheck size to prevent error
+                if(loVSPLabor.getDetailModel(lnCtr).getNtLabAmt().compareTo(poVSPLabor.getDetailModel(lnCtr).getNtLabAmt()) != 0){
+                    return true;
+                }
+                if(!loVSPLabor.getDetailModel(lnCtr).getLaborCde().equals(poVSPLabor.getDetailModel(lnCtr).getLaborCde())){
+                    return true;
+                }
+                if(!loVSPLabor.getDetailModel(lnCtr).getChrgeTyp().equals(poVSPLabor.getDetailModel(lnCtr).getChrgeTyp())){
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
+        
+        //Check old data in VSP Parts
+        for(int lnCtr = 0;lnCtr <= loVSPParts.getDetailList().size()-1;lnCtr++){
+            if(lnCtr <= poVSPParts.getDetailList().size()-1){ //recheck size to prevent error
+                if(loVSPParts.getDetailModel(lnCtr).getNtPrtAmt().compareTo(poVSPParts.getDetailModel(lnCtr).getNtPrtAmt()) != 0){
+                    return true;
+                }
+                if(!loVSPParts.getDetailModel(lnCtr).getDescript().equals(poVSPParts.getDetailModel(lnCtr).getDescript())){
+                    return true;
+                }
+                if(!loVSPParts.getDetailModel(lnCtr).getChrgeTyp().equals(poVSPParts.getDetailModel(lnCtr).getChrgeTyp())){
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
     
     /**
      * SEARCH Vehicle Sales Proposal
@@ -444,6 +529,18 @@ public class VehicleSalesProposal implements GTransaction{
         JSONObject loJSONRsv = new JSONObject();
         loJSON = poController.searchInquiry(fsValue, fbByCode);
         if(!"error".equals((String) loJSON.get("result"))){
+            if(((String) loJSON.get("cPayModex")) == null){
+                loJSON.put("result", "error");
+                loJSON.put("message", "Payment mode is not yet set in inquiry.\nPlease select payment mode in inquiry.\n\nLinking aborted.");
+                return loJSON;
+            } else {
+                if(((String) loJSON.get("cPayModex")).isEmpty()){
+                    loJSON.put("result", "error");
+                    loJSON.put("message", "Payment mode is not yet set in inquiry.\nPlease select payment mode in inquiry.\n\nLinking aborted.");
+                    return loJSON;
+                }
+            }
+            
             //Buying Customer Default         
             poController.getMasterModel().setInqTran((String) loJSON.get("sTransNox"));          
             poController.getMasterModel().setInqryID((String) loJSON.get("sInqryIDx"));                                                        
@@ -1223,4 +1320,46 @@ public class VehicleSalesProposal implements GTransaction{
         return loJSON;
     } 
     
+//    public ArrayList getVSPList(){return poController.getDetailList();}
+//    public VehicleSalesProposal_Master getVSPModel(){return poController;} 
+//    
+//    /**
+//     * Load for approval transaction
+//     * @return 
+//     */
+//    public JSONObject loadVSPForApproval(){
+//        return poController.loadForApproval();
+//    }
+    
+    /**
+     * VSP Approve
+     * @return 
+     */
+    public JSONObject approveVSP(){
+        JSONObject loJSON = new JSONObject();
+        
+        if(poController.getMasterModel().getSerialID() != null){
+            if(poController.getMasterModel().getSerialID().isEmpty()){
+                loJSON.put("result", "error");
+                loJSON.put("message", "You cannot approve VSP without vehicle information yet.\n\nApprove aborted.");
+                return loJSON;
+            }
+        } else {
+            loJSON.put("result", "error");
+            loJSON.put("message", "You cannot approve VSP without vehicle information yet.\n\nApprove aborted.");
+            return loJSON;
+        }
+        
+        if (!pbWtParent) poGRider.beginTrans();
+        
+        loJSON = poController.approveTransaction();
+        if("error".equalsIgnoreCase((String) loJSON.get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return checkData(loJSON);
+        }
+        
+        if (!pbWtParent) poGRider.commitTrans();
+        
+        return loJSON;
+    }
 }

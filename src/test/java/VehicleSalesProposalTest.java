@@ -66,7 +66,24 @@ public class VehicleSalesProposalTest {
      * WHEN YOU WANT TO CHECK KINDLY UNCOMMENT THE TESTING CASES (@Test).
      * ARSIELA 
      */
+    
+//        @Test 
+//    public void test00loadForApproval(){
+//        System.out.println("--------------------------------------------------------------------");
+//        System.out.println("------------------------------LOAD FOR APPROVAL--------------------------------------");
+//        System.out.println("--------------------------------------------------------------------");
+//        
+//        json = model.loadVSPForApproval();
+//        if(!"error".equals((String) json.get("result"))){
+//            for(int lnCtr=0;lnCtr <= model.getVSPList().size()-1;lnCtr++){
+//                System.out.println("sTransNox  :  " + model.getVSPModel().getDetailModel(lnCtr).getTransNo());
+//            }
+//        } 
+//        
+//        assertTrue(true);
 //    
+//    }
+    
 //    @Test
 //    public void test01NewRecord() throws SQLException{
 //        System.out.println("--------------------------------------------------------------------");

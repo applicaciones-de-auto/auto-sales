@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,9 +24,11 @@ import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
+import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.general.LockTransaction;
 import org.guanzon.auto.general.SearchDialog;
+import org.guanzon.auto.general.TransactionStatusHistory;
 import org.guanzon.auto.model.sales.Model_Inquiry_Master;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
 import org.guanzon.auto.validator.sales.ValidatorInterface;
@@ -51,6 +54,8 @@ public class Inquiry_Master implements GTransaction {
     CachedRowSet poFollowUp;
     
     Model_Inquiry_Master poModel;
+    ArrayList<Model_Inquiry_Master> paDetail;
+    
     LockTransaction poLockTrans;
     
     public Inquiry_Master(GRider foGRider, boolean fbWthParent, String fsBranchCd) {
@@ -218,6 +223,15 @@ public class Inquiry_Master implements GTransaction {
     }
 
     public JSONObject searchTransaction(String fsValue, boolean fbByCode) {
+        /*
+        -cTranStat	0	For Follow-up
+        -cTranStat	1	On Process
+        -cTranStat	2	Lost Sale
+        -cTranStat	3	WITH VSP
+        -cTranStat	4	Sold
+        -cTranStat	5	Cancelled
+        -cTranStat	6	For Approval
+        */
         String lsHeader = "Inquiry Date»Inquiry ID»Customer Name»Customer Address»Inquiry Status»Branch";
         String lsColName = "dTransact»sInqryIDx»sCompnyNm»sAddressx»sTranStat»sBranchNm";
         String lsSQL =    " SELECT "                                                                       
@@ -235,7 +249,8 @@ public class Inquiry_Master implements GTransaction {
                         + " 	WHEN a.cTranStat = '1' THEN 'ON PROCESS' "                                   
                         + " 	WHEN a.cTranStat = '2' THEN 'LOST SALE'  "                                   
                         + " 	WHEN a.cTranStat = '3' THEN 'WITH VSP'   "                                   
-                        + " 	WHEN a.cTranStat = '4' THEN 'SOLD'       "                                     
+                        + " 	WHEN a.cTranStat = '4' THEN 'SOLD'       "                                  
+                        + " 	WHEN a.cTranStat = '6' THEN 'FOR APPROVAL' "                                     
                         + " 	ELSE 'CANCELLED'  "                                                          
                         + "    END AS sTranStat "                                                          
                         + "  , b.sCompnyNm      "                                                          
@@ -259,9 +274,9 @@ public class Inquiry_Master implements GTransaction {
                         + " LEFT JOIN ggc_isysdbf.client_master l ON l.sClientID = a.sEmployID "            
                         + " LEFT JOIN client_master m ON m.sClientID = a.sAgentIDx "                        
                         + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd "                        
-                        + " WHERE a.cTranStat <> '6' " ;  
+                        + " WHERE a.cTranStat <> '5' " ;  
         
-        System.out.println(lsSQL);
+        System.out.println("INQUIRY : searchTransaction " + lsSQL);
         JSONObject loJSON = SearchDialog.jsonSearch(
                     poGRider,
                     lsSQL,
@@ -485,7 +500,7 @@ public class Inquiry_Master implements GTransaction {
         
         lsSQL = lsSQL + " GROUP BY a.sClientID ";
         JSONObject loJSON;
-        System.out.println(lsSQL);
+        System.out.println("INQUIRY : searchClient "+ lsSQL);
         loJSON = ShowDialogFX.Search(poGRider, 
                                         lsSQL, 
                                         fsValue, 
@@ -586,7 +601,8 @@ public class Inquiry_Master implements GTransaction {
                         + " 	WHEN a.cTranStat = '1' THEN 'ON PROCESS' "                                   
                         + " 	WHEN a.cTranStat = '2' THEN 'LOST SALE'  "                                   
                         + " 	WHEN a.cTranStat = '3' THEN 'WITH VSP'   "                                   
-                        + " 	WHEN a.cTranStat = '4' THEN 'SOLD'       "                                     
+                        + " 	WHEN a.cTranStat = '4' THEN 'SOLD'       "                                  
+                        + " 	WHEN a.cTranStat = '6' THEN 'FOR APPROVAL' "                                     
                         + " 	ELSE 'CANCELLED'  "                                                          
                         + "    END AS sTranStat "                                                          
                         + "  , b.sCompnyNm      "                                                          
@@ -616,7 +632,7 @@ public class Inquiry_Master implements GTransaction {
                 if(fbisClient){
                     lsWhere = MiscUtil.addCondition(lsSQL, " a.sClientID = " + SQLUtil.toSQL(poModel.getClientID())
                                                             + " AND a.sTransNox <> " + SQLUtil.toSQL(poModel.getTransNo()) 
-                                                            + " AND (a.cTranStat = '0' OR a.cTranStat = '1' OR a.cTranStat = '3')"  
+                                                            + " AND (a.cTranStat = '0' OR a.cTranStat = '1' OR a.cTranStat = '3' OR a.cTranStat = '6')"  
                                                             );
 
                     System.out.println("EXISTING CUSTOMER CHECK: " + lsSQL);
@@ -648,7 +664,7 @@ public class Inquiry_Master implements GTransaction {
                         lsWhere = MiscUtil.addCondition(lsSQL, " a.sClientID = " + SQLUtil.toSQL(poModel.getClientID())
                                                                 + " AND a.sEmployID = " + SQLUtil.toSQL(lsEmpID) 
                                                                 + " AND a.sTransNox <> " + SQLUtil.toSQL(poModel.getTransNo()) 
-                                                                + " AND (a.cTranStat = '0' OR a.cTranStat = '1' OR a.cTranStat = '3')"  
+                                                                + " AND (a.cTranStat = '0' OR a.cTranStat = '1' OR a.cTranStat = '3' OR a.cTranStat = '6')"  
                                                                 );
 
                         System.out.println("EXISTING CUSTOMER WITH THE SAME SE CHECK: " + lsSQL);
@@ -681,7 +697,7 @@ public class Inquiry_Master implements GTransaction {
                         lsWhere = MiscUtil.addCondition(lsSQL, " a.sClientID = " + SQLUtil.toSQL(poModel.getClientID()) 
                                                             + " AND a.sEmployID <> " + SQLUtil.toSQL(lsEmpID) 
                                                             + " AND a.sTransNox <> " + SQLUtil.toSQL(poModel.getTransNo()) 
-                                                            + " AND (a.cTranStat = '1' OR a.cTranStat = '3')" 
+                                                            + " AND (a.cTranStat = '1' OR a.cTranStat = '3' OR a.cTranStat = '6')" 
                                                             );
 
                         System.out.println("EXISTING INQUIRY ON PROCESS AND WITH VSP WITH SAME CUSTOMER CHECK: " + lsWhere);
@@ -1463,4 +1479,128 @@ public class Inquiry_Master implements GTransaction {
         return getFollowUpDetail(fnRow, MiscUtil.getColumnIndex(poFollowUp, fsIndex));
     }
     
+    public ArrayList<Model_Inquiry_Master> getDetailList(){
+        if(paDetail == null){
+           paDetail = new ArrayList<>();
+        }
+        return paDetail;
+    }
+    public void setDetailList(ArrayList<Model_Inquiry_Master> foObj){this.paDetail = foObj;}
+    
+    public void setDetail(int fnRow, int fnIndex, Object foValue){ paDetail.get(fnRow).setValue(fnIndex, foValue);}
+    public void setDetail(int fnRow, String fsIndex, Object foValue){ paDetail.get(fnRow).setValue(fsIndex, foValue);}
+    public Object getDetail(int fnRow, int fnIndex){return paDetail.get(fnRow).getValue(fnIndex);}
+    public Object getDetail(int fnRow, String fsIndex){return paDetail.get(fnRow).getValue(fsIndex);}
+    
+    public Model_Inquiry_Master getDetailModel(int fnRow) {
+        return paDetail.get(fnRow);
+    }
+    
+    public JSONObject loadForApproval(){
+        /*
+        -cTranStat	0	For Follow-up
+        -cTranStat	1	On Process
+        -cTranStat	2	Lost Sale
+        -cTranStat	3	VSP
+        -cTranStat	4	Sold
+        -cTranStat	5	Cancelled
+        -cTranStat	6	For Approval
+        */
+        paDetail = new ArrayList<>();
+        poJSON = new JSONObject();
+        Model_Inquiry_Master loEntity = new Model_Inquiry_Master(poGRider);
+        String lsSQL =  " SELECT "                                                                       
+                        + "    a.sTransNox "                                                               
+                        + "  , a.sInqryIDx "                                                                
+                        + "  , a.sBranchCd "                                                               
+                        + "  , DATE(a.dTransact) AS dTransact"                                                               
+                        + "  , a.sEmployID "                                                               
+                        + "  , a.sClientID "                                                                
+                        + "  , a.sContctID "                                                               
+                        + "  , a.sAgentIDx "                                                               
+                        + "  , a.dTargetDt "                                                               
+                        + "  , a.cTranStat "                                                              
+                        + "  , b.sCompnyNm      "                                                          
+                        + "  , b.cClientTp      "                                                          
+                        + "  , IFNULL(CONCAT( IFNULL(CONCAT(d.sHouseNox,' ') , ''), "                      
+                        + " 	IFNULL(CONCAT(d.sAddressx,' ') , ''),  "                                     
+                        + " 	IFNULL(CONCAT(e.sBrgyName,' '), ''),   "                                     
+                        + " 	IFNULL(CONCAT(f.sTownName, ', '),''),  "                                     
+                        + " 	IFNULL(CONCAT(g.sProvName),'') )	, '') AS sAddressx "                       
+                        + "  , l.sCompnyNm AS sSalesExe "                                                  
+                        + "  , m.sCompnyNm AS sSalesAgn "                                                  
+                        + "  , p.sBranchNm  "                                                              
+                        + " FROM customer_inquiry a "                                                      
+                        + " LEFT JOIN client_master b ON a.sClientID = b.sClientID "                       
+                        + " LEFT JOIN client_address c ON c.sClientID = a.sClientID AND c.cPrimaryx = 1  " 
+                        + " LEFT JOIN addresses d ON d.sAddrssID = c.sAddrssID "                           
+                        + " LEFT JOIN barangay e ON e.sBrgyIDxx = d.sBrgyIDxx  "                           
+                        + " LEFT JOIN towncity f ON f.sTownIDxx = d.sTownIDxx  "                           
+                        + " LEFT JOIN province g ON g.sProvIDxx = f.sProvIDxx   "                           
+                        + " LEFT JOIN client_master k ON k.sClientID = a.sContctID  "                       
+                        + " LEFT JOIN ggc_isysdbf.client_master l ON l.sClientID = a.sEmployID "            
+                        + " LEFT JOIN client_master m ON m.sClientID = a.sAgentIDx "                        
+                        + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd "                        
+                        + " WHERE a.cTranStat = '6' " //FOR APPROVAL
+                        + " ORDER BY a.sTransNox ASC ";
+                
+        ResultSet loRS = poGRider.executeQuery(lsSQL);
+        
+        System.out.println(lsSQL);
+       try {
+            int lnctr = 0;
+            if (MiscUtil.RecordCount(loRS) > 0) {
+                while(loRS.next()){
+                        paDetail.add(new Model_Inquiry_Master(poGRider));
+                        paDetail.get(paDetail.size() - 1).openRecord( loRS.getString("sTransNox"));
+                        
+                        pnEditMode = EditMode.UPDATE;
+                        lnctr++;
+                        poJSON.put("result", "success");
+                        poJSON.put("message", "Record loaded successfully.");
+                    } 
+                
+            }else{
+//                paDetail = new ArrayList<>();
+//                addDetail(fsValue);
+                poJSON.put("result", "error");
+                poJSON.put("continue", true);
+                poJSON.put("message", "No record selected.");
+            }
+            MiscUtil.close(loRS);
+        } catch (SQLException e) {
+            poJSON.put("result", "error");
+            poJSON.put("message", e.getMessage());
+        }
+        return poJSON;
+    }
+    
+    public JSONObject approveTransaction(int fnRow){
+        JSONObject loJSON = new JSONObject();
+        paDetail.get(fnRow).setTranStat(TransactionStatus.STATE_CLOSED); //Set to ON PROCESS for VIP Clients
+        loJSON = paDetail.get(fnRow).saveRecord();
+        if(!"error".equals((String) loJSON.get("result"))){
+            TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+            //Update to cancel all previous approvements
+            loJSON = loEntity.cancelTransaction(paDetail.get(fnRow).getTransNo());
+            if(!"error".equals((String) loJSON.get("result"))){
+                loJSON = loEntity.newTransaction();
+                if(!"error".equals((String) loJSON.get("result"))){
+                    loEntity.getMasterModel().setApproved(poGRider.getUserID());
+                    loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
+                    loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getTransNo());
+                    loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
+                    loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
+
+                    loJSON = loEntity.saveTransaction();
+                    if("error".equals((String) loJSON.get("result"))){
+                        return loJSON;
+                    }
+
+                }
+            }
+        
+        }
+        return loJSON;
+    }
 }

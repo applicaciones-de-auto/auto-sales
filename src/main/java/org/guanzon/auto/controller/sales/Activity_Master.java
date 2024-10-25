@@ -18,11 +18,15 @@ import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
+import org.guanzon.appdriver.constant.RecordStatus;
+import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.appdriver.iface.GRecord;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.general.CancelForm;
 import org.guanzon.auto.general.SearchDialog;
+import org.guanzon.auto.general.TransactionStatusHistory;
 import org.guanzon.auto.model.sales.Model_Activity_Master;
+import org.guanzon.auto.model.sales.Model_Inquiry_Reservation;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
 import org.guanzon.auto.validator.sales.ValidatorInterface;
 import org.json.simple.JSONObject;
@@ -43,7 +47,7 @@ public class Activity_Master implements GRecord {
     public JSONObject poJSON;
     
     Model_Activity_Master poModel;
-    ArrayList<Model_Activity_Master> paMaster;
+    ArrayList<Model_Activity_Master> paDetail;
     
     public Activity_Master(GRider foGRider, boolean fbWthParent, String fsBranchCd) {
         poGRider = foGRider;
@@ -252,7 +256,7 @@ public class Activity_Master implements GRecord {
             lsSQL = MiscUtil.addCondition(lsSQL, " a.sActTitle LIKE " + SQLUtil.toSQL(fsValue + "%"));
         }
         
-        System.out.println(lsSQL);
+        System.out.println("ACTIVITY : searchRecord " + lsSQL);
         JSONObject loJSON = SearchDialog.jsonSearch(
                     poGRider,
                     lsSQL,
@@ -444,13 +448,13 @@ public class Activity_Master implements GRecord {
                 poModel.setActSrce((String) poJSON.get("sActTypDs"));
             } else {
                 poModel.setActTypID("");
-                poModel.setEventTyp("");
+//                poModel.setEventTyp("");
                 poModel.setActTypDs("");
                 poModel.setActSrce("");
             }
         } else {
             poModel.setActTypID("");
-            poModel.setEventTyp("");
+//            poModel.setEventTyp("");
             poModel.setActTypDs("");
             poModel.setActSrce("");
             poJSON = new JSONObject();
@@ -491,26 +495,6 @@ public class Activity_Master implements GRecord {
             poJSON.put("message", "No transaction loaded to update.");
         }
         return poJSON;
-    }
-    
-    public JSONObject loadTransactionForApproval() {
-        poJSON = new JSONObject();
-        if (poGRider == null) {
-            poJSON.put("result", "error");
-            poJSON.put("message", "Application driver is not set.");
-            return poJSON;
-        }
-
-        String lsSQL = MiscUtil.addCondition(poModel.getSQL(), " a.cTranStat <> '1' AND (a.sApproved IS NULL OR a.sApproved = '') ORDER BY dDateFrom DESC ");
-        System.out.println(lsSQL);
-//        
-//        loRS = poGRider.executeQuery(lsSQL);
-//        poModel = factory.createCachedRowSet();
-//        poModel.populate(loRS);
-//        MiscUtil.close(loRS);
-
-        return poJSON;
-    
     }
     
     public JSONObject validateExistingRecord(){
@@ -567,5 +551,91 @@ public class Activity_Master implements GRecord {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         String date = sdf.format(fdValue);
         return date;
+    }
+    
+    public ArrayList<Model_Activity_Master> getDetailList(){
+        if(paDetail == null){
+           paDetail = new ArrayList<>();
+        }
+        return paDetail;
+    }
+    public void setDetailList(ArrayList<Model_Activity_Master> foObj){this.paDetail = foObj;}
+    
+    public void setDetail(int fnRow, int fnIndex, Object foValue){ paDetail.get(fnRow).setValue(fnIndex, foValue);}
+    public void setDetail(int fnRow, String fsIndex, Object foValue){ paDetail.get(fnRow).setValue(fsIndex, foValue);}
+    public Object getDetail(int fnRow, int fnIndex){return paDetail.get(fnRow).getValue(fnIndex);}
+    public Object getDetail(int fnRow, String fsIndex){return paDetail.get(fnRow).getValue(fsIndex);}
+   
+    public Model_Activity_Master getDetailModel(int fnRow) {
+        return paDetail.get(fnRow);
+    }
+    
+    public JSONObject loadForApproval(){
+        paDetail = new ArrayList<>();
+        poJSON = new JSONObject();
+        Model_Activity_Master loEntity = new Model_Activity_Master(poGRider);
+        String lsSQL = MiscUtil.addCondition(loEntity.getSQL(), " a.cTranStat = " + SQLUtil.toSQL(RecordStatus.ACTIVE)
+                                                                + " ORDER BY a.sActNoxxx ASC "
+                                    ); 
+        ResultSet loRS = poGRider.executeQuery(lsSQL);
+        
+        System.out.println("ACTIVITY : loadForApproval " + lsSQL);
+       try {
+            int lnctr = 0;
+            if (MiscUtil.RecordCount(loRS) > 0) {
+                while(loRS.next()){
+                        paDetail.add(new Model_Activity_Master(poGRider));
+                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sActvtyID"));
+                        
+                        pnEditMode = EditMode.UPDATE;
+                        lnctr++;
+                        poJSON.put("result", "success");
+                        poJSON.put("message", "Record loaded successfully.");
+                    } 
+                
+            }else{
+//                paDetail = new ArrayList<>();
+//                addDetail(fsValue);
+                poJSON.put("result", "error");
+                poJSON.put("continue", true);
+                poJSON.put("message", "No record selected.");
+            }
+            MiscUtil.close(loRS);
+        } catch (SQLException e) {
+            poJSON.put("result", "error");
+            poJSON.put("message", e.getMessage());
+        }
+        return poJSON;
+    }
+    
+    public JSONObject approveTransaction(int fnRow){
+        JSONObject loJSON = new JSONObject();
+        //Active: 1; Deactive: 0; Cancelled: 2; Approved: 3;
+//        System.out.println(index + " : " + fsValue);
+//        if(index >= 0){
+            paDetail.get(fnRow).setTranStat("3");
+            loJSON = paDetail.get(fnRow).saveRecord();
+            if(!"error".equals((String) loJSON.get("result"))){
+                TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+                //Update to cancel all previous approvements
+                loJSON = loEntity.cancelTransaction(paDetail.get(fnRow).getActvtyID());
+                if(!"error".equals((String) loJSON.get("result"))){
+                    loJSON = loEntity.newTransaction();
+                    if(!"error".equals((String) loJSON.get("result"))){
+                        loEntity.getMasterModel().setApproved(poGRider.getUserID());
+                        loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
+                        loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getActvtyID());
+                        loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
+                        loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
+
+                        loJSON = loEntity.saveTransaction();
+                        if("error".equals((String) loJSON.get("result"))){
+                            return loJSON;
+                        }
+                    }
+                }
+            }
+//        }
+        return loJSON;
     }
 }

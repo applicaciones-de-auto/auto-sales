@@ -8,6 +8,7 @@ package org.guanzon.auto.main.sales;
 import java.util.ArrayList;
 import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.constant.EditMode;
+import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.appdriver.iface.GRecord;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.controller.sales.Activity_Master;
@@ -141,6 +142,13 @@ public class Activity implements GRecord{
         if("error".equalsIgnoreCase((String)poJSON.get("result"))){
             return poJSON;
         }
+        //Active: 1; Deactive: 0; Cancelled: 2; Approved: 3;
+        //Update approved VSP to for approval when major changes has been made
+        if(poController.getModel().getTranStat().equals(TransactionStatus.STATE_CLOSED)){
+            if(checkChanges()){
+                poController.getModel().setTranStat(TransactionStatus.STATE_OPEN);
+            }
+        }
         
         if (!pbWtParent) poGRider.beginTrans();
         
@@ -171,6 +179,36 @@ public class Activity implements GRecord{
         if (!pbWtParent) poGRider.commitTrans();
         
         return poJSON;
+    }
+    
+    public boolean checkChanges(){
+        Activity_Master loActivity = new Activity_Master(poGRider,pbWtParent,psBranchCd);
+        Activity_Location loActLocation = new Activity_Location(poGRider);
+        Activity_Member loActMember = new Activity_Member(poGRider);
+        Activity_Vehicle loActVehicle = new Activity_Vehicle(poGRider);
+        
+        loActivity.openRecord(poController.getModel().getActvtyID());
+        loActLocation.openDetail(poController.getModel().getActvtyID());
+        loActMember.openDetail(poController.getModel().getActvtyID());
+        loActVehicle.openDetail(poController.getModel().getActvtyID());
+        
+        if(loActivity.getModel().getPropBdgt().compareTo(poController.getModel().getPropBdgt()) < 0){
+            return true;
+        }
+        
+        if(loActLocation.getDetailList().size() != poActLocation.getDetailList().size()){
+            return true;
+        }
+        
+        if(loActMember.getDetailList().size() != poActMember.getDetailList().size()){
+            return true;
+        }
+        
+        if(loActVehicle.getDetailList().size() != poActVehicle.getDetailList().size()){
+            return true;
+        }
+        
+        return false;
     }
 
     public JSONObject cancelRecord(String fsValue) {
@@ -432,6 +470,36 @@ public class Activity implements GRecord{
     public Object getVehicleCSNo(int fnRow, int fnIndex){return poActVehicle.getVehicleCSNo(fnRow, fnIndex);}
     public Object getVehicleCSNo(int fnRow, String fsIndex){return poActVehicle.getVehicleCSNo(fnRow, fsIndex);}
 
+    public ArrayList getActivityList(){return poController.getDetailList();}
+    public Activity_Master getActivityModel(){return poController;} 
     
+    /**
+     * Load for approval transaction
+     * @return 
+     */
+    public JSONObject loadActivityForApproval(){
+        return poController.loadForApproval();
+    }
+    
+    /**
+     * Transaction Approve
+     * @param fnRow selected row of transaction to be approved
+     * @return 
+     */
+    public JSONObject approveActivity(int fnRow){
+        JSONObject loJSON = new JSONObject();
+        
+        if (!pbWtParent) poGRider.beginTrans();
+        
+        loJSON = poController.approveTransaction(fnRow);
+        if("error".equalsIgnoreCase((String) loJSON.get("result"))){
+            if (!pbWtParent) poGRider.rollbackTrans();
+            return checkData(loJSON);
+        }
+        
+        if (!pbWtParent) poGRider.commitTrans();
+        
+        return loJSON;
+    }
     
 }

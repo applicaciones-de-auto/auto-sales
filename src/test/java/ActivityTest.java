@@ -65,6 +65,23 @@ public class ActivityTest {
         
     }
     
+//    @Test 
+//    public void test00loadForApproval(){
+//        System.out.println("--------------------------------------------------------------------");
+//        System.out.println("------------------------------LOAD FOR APPROVAL--------------------------------------");
+//        System.out.println("--------------------------------------------------------------------");
+//        
+//        json = model.loadActivityForApproval();
+//        if(!"error".equals((String) json.get("result"))){
+//            for(int lnCtr=0;lnCtr <= model.getActivityList().size()-1;lnCtr++){
+//                System.out.println("sActvtyID  :  " + model.getActivityModel().getDetailModel(lnCtr).getActvtyID());
+//            }
+//        } 
+//        
+//        assertTrue(true);
+//    
+//    }
+    
 //    @Test
 //    public void test01NewRecord() {
 //        System.out.println("--------------------------------------------------------------------");

@@ -17,6 +17,7 @@ import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
 import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.auto.general.CancelForm;
+import org.guanzon.auto.general.TransactionStatusHistory;
 import org.guanzon.auto.model.sales.Model_Inquiry_Reservation;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
 import org.guanzon.auto.validator.sales.ValidatorInterface;
@@ -63,9 +64,13 @@ public class Inquiry_Reservation {
             paDetail.add(new Model_Inquiry_Reservation(poGRider));
             paDetail.get(0).newRecord();
             
-            paDetail.get(0).setValue("sClientID", fsClientID);
-            paDetail.get(0).setValue("sSourceCD", fsSourceCD);
-            paDetail.get(0).setValue("sSourceNo", fsSourceNo);
+            paDetail.get(0).setSourceNo(fsSourceNo);
+            paDetail.get(0).setSourceCD(fsSourceCD);
+            paDetail.get(0).setClientID(fsClientID);
+            paDetail.get(0).setPrinted(0);
+//            paDetail.get(0).setValue("sClientID", fsClientID);
+//            paDetail.get(0).setValue("sSourceCD", fsSourceCD);
+//            paDetail.get(0).setValue("sSourceNo", fsSourceNo);
             poJSON.put("result", "success");
             poJSON.put("message", "Reservation add record.");
         } else {
@@ -75,6 +80,7 @@ public class Inquiry_Reservation {
             paDetail.get(paDetail.size()-1).setClientID(fsClientID);
             paDetail.get(paDetail.size()-1).setSourceCD(fsSourceCD);
             paDetail.get(paDetail.size()-1).setSourceNo(fsSourceNo);
+            paDetail.get(paDetail.size()-1).setPrinted(0);
             poJSON.put("result", "success");
             poJSON.put("message", "Reservation add record.");
         }
@@ -113,7 +119,7 @@ public class Inquiry_Reservation {
                 lsSQL = MiscUtil.addCondition(lsSQL, " a.sTransIDx = " + SQLUtil.toSQL(fsValue));
             }
         } else {
-            lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = '2' "
+            lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_CLOSED) //Load only approved reservation
                                                   +  " AND  d.cTranStat = '2' " //ONLY LOAD OTHER INQUIRY RESERVATION TAGGED AS LOST SALE
                                                   +  " AND  c.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)   
                                                   +  " AND (c.sReferNox <> NULL OR TRIM(c.sReferNox) <> '')"
@@ -124,7 +130,7 @@ public class Inquiry_Reservation {
         
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
-        System.out.println(lsSQL);
+        System.out.println("RESERVATION : openDetail " + lsSQL);
        try {
             int lnctr = 0;
             if (MiscUtil.RecordCount(loRS) > 0) {
@@ -279,7 +285,7 @@ public class Inquiry_Reservation {
         //sum reservation amount should not be greater than the setted maximum amount on vehicle advances
         double ldblRsvSum = 0.00;
         for (int lnCtr = 0; lnCtr <= paDetail.size() -1; lnCtr++){
-            if(!paDetail.get(lnCtr).getTranStat().equals("0")){
+            if(!paDetail.get(lnCtr).getTranStat().equals(TransactionStatus.STATE_CANCELLED)){
                 ldblRsvSum = ldblRsvSum + paDetail.get(lnCtr).getAmount();
             }
         }
@@ -384,18 +390,57 @@ public class Inquiry_Reservation {
                 }
             }
             
-            if(paDetail.get(fnRow).getTranStat().equals("2")){
-                loJSON.put("result", "error");
-                loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already approved.\n\nCancellation aborted.");
-                return loJSON;
-            }
+//            if(paDetail.get(fnRow).getTranStat().equals(TransactionStatus.STATE_CLOSED)){
+//                loJSON.put("result", "error");
+//                loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already approved.\n\nCancellation aborted.");
+//                return loJSON;
+//            }
             
-            if(paDetail.get(fnRow).getTranStat().equals("0")){
+            if(paDetail.get(fnRow).getTranStat().equals(TransactionStatus.STATE_CANCELLED)){
                 loJSON.put("result", "error");
                 loJSON.put("message", "Reservation No. "+paDetail.get(fnRow).getReferNo()+" is already cancelled.");
                 return loJSON;
             } 
-           
+            
+            try {
+
+                String lsID = "";
+                String lsDesc  = "";
+                String lsSQL = "";
+                ResultSet loRS;
+                lsSQL = " SELECT "                                                    
+                        + "   a.sTransNox "                                             
+                        + " , a.sReferNox "                                             
+                        + " , DATE(a.dTransact) AS dTransact "                          
+                        + " FROM si_master a "                                          
+                        + " LEFT JOIN si_master_source b ON b.sTransNox = a.sTransNox " ;                                     
+
+                lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED) 
+                                                        + " AND b.sReferNox = " + SQLUtil.toSQL(paDetail.get(fnRow).getTransNo()) 
+                                                        );
+                System.out.println("EXISTING RECEIPT CHECK: " + lsSQL);
+                loRS = poGRider.executeQuery(lsSQL);
+
+                if (MiscUtil.RecordCount(loRS) > 0){
+                        while(loRS.next()){
+                            lsID = loRS.getString("sReferNox");
+                            lsDesc = loRS.getString("dTransact");
+                        }
+
+                        MiscUtil.close(loRS);
+                        poJSON.put("result", "error");
+                        poJSON.put("message", "Found existing receipt."
+                                                + "\nReceipt No: " + lsID + "" 
+                                                + "\nReceipt Date: " + lsDesc
+                                                + "\n\nCancellation aborted.");
+                        return poJSON;
+                }
+                
+
+            } catch (SQLException ex) {
+                Logger.getLogger(Inquiry_Reservation.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
             CancelForm cancelform = new CancelForm();
             if (!cancelform.loadCancelWindow(poGRider, paDetail.get(fnRow).getReferNo(), paDetail.get(fnRow).getTransNo(), "RESERVATION")) {
                 poJSON.put("result", "error");
@@ -403,7 +448,7 @@ public class Inquiry_Reservation {
                 return poJSON;
             }
             
-            paDetail.get(fnRow).setTranStat("0");
+            paDetail.get(fnRow).setTranStat(TransactionStatus.STATE_CANCELLED);
             paDetail.get(fnRow).setTargetBranchCd(psTargetBranchCd);
             loJSON = paDetail.get(fnRow).saveRecord(); //paDetail.get(fnRow).getTransNo());
             
@@ -416,5 +461,80 @@ public class Inquiry_Reservation {
     public void resetDetail(){
         paDetail = new ArrayList<>();
         paRemDetail = new ArrayList<>();
+    }
+    
+    public JSONObject loadForApproval(){
+         /* INQUIRY STATUS
+        -cTranStat	0	For Follow-up
+        -cTranStat	1	On Process
+        -cTranStat	2	Lost Sale
+        -cTranStat	3	VSP
+        -cTranStat	4	Sold
+        -cTranStat	5	Cancelled
+        -cTranStat	6	For Approval
+        */
+         
+        paDetail = new ArrayList<>();
+        poJSON = new JSONObject();
+        Model_Inquiry_Reservation loEntity = new Model_Inquiry_Reservation(poGRider);
+        String lsSQL = MiscUtil.addCondition(loEntity.getSQL(), " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_OPEN)
+                                                                  + " AND a.sSourceNo IN (SELECT a.sTransNox FROM customer_inquiry a WHERE (a.cTranStat = '1' OR a.cTranStat = '3')) "
+                                                                + " ORDER BY a.sTransNox ASC "); 
+        ResultSet loRS = poGRider.executeQuery(lsSQL);
+        
+        System.out.println("RESERVATION : loadForApproval " + lsSQL);
+       try {
+            int lnctr = 0;
+            if (MiscUtil.RecordCount(loRS) > 0) {
+                while(loRS.next()){
+                        paDetail.add(new Model_Inquiry_Reservation(poGRider));
+                        paDetail.get(paDetail.size() - 1).openRecord(loRS.getString("sTransNox"));
+                        
+                        pnEditMode = EditMode.UPDATE;
+                        lnctr++;
+                        poJSON.put("result", "success");
+                        poJSON.put("message", "Record loaded successfully.");
+                    } 
+                
+            }else{
+//                paDetail = new ArrayList<>();
+//                addDetail(fsValue);
+                poJSON.put("result", "error");
+                poJSON.put("continue", true);
+                poJSON.put("message", "No record selected.");
+            }
+            MiscUtil.close(loRS);
+        } catch (SQLException e) {
+            poJSON.put("result", "error");
+            poJSON.put("message", e.getMessage());
+        }
+        return poJSON;
+    }
+    
+    public JSONObject approveTransaction(int fnRow){
+        JSONObject loJSON = new JSONObject();
+        paDetail.get(fnRow).setTranStat(TransactionStatus.STATE_CLOSED);
+        loJSON = paDetail.get(fnRow).saveRecord();
+        if(!"error".equals((String) loJSON.get("result"))){
+            TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+            //Update to cancel all previous approvements
+            loJSON = loEntity.cancelTransaction(paDetail.get(fnRow).getTransNo());
+            if(!"error".equals((String) loJSON.get("result"))){
+                loJSON = loEntity.newTransaction();
+                if(!"error".equals((String) loJSON.get("result"))){
+                    loEntity.getMasterModel().setApproved(poGRider.getUserID());
+                    loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
+                    loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getTransNo());
+                    loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
+                    loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
+
+                    loJSON = loEntity.saveTransaction();
+                    if("error".equals((String) loJSON.get("result"))){
+                        return loJSON;
+                    }
+                }
+            }
+        }
+        return loJSON;
     }
 }

@@ -89,7 +89,7 @@ public class Activity_Location {
         lsSQL = MiscUtil.addCondition(lsSQL, " sTransNox = " + SQLUtil.toSQL(fsValue));
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
-        System.out.println(lsSQL);
+        System.out.println("OPEN DETAIL : activity_location : " + lsSQL);
        try {
             int lnctr = 0;
             if (MiscUtil.RecordCount(loRS) > 0) {
@@ -286,7 +286,7 @@ public class Activity_Location {
         } else {
             lsSQL = MiscUtil.addCondition(lsSQL, "sProvName LIKE " + SQLUtil.toSQL(fsValue + "%"));
         }
-        System.out.println(lsSQL);
+        System.out.println("SEARCH PROVINCE : Province " + lsSQL);
         loJSON = ShowDialogFX.Search(poGRider, 
                             lsSQL, 
                             fsValue,
@@ -380,7 +380,7 @@ public class Activity_Location {
         } else {
             lsSQL = MiscUtil.addCondition(lsSQL, "a.sProvIDxx = "  + SQLUtil.toSQL(paDetail.get(fnRow).getProvID()) + " AND a.sTownName LIKE " + SQLUtil.toSQL(fsValue + "%"));
         }
-        System.out.println(lsSQL);
+        System.out.println("SEARCH TOWN : TownCity " + lsSQL);
         loJSON = ShowDialogFX.Search(poGRider, 
                             lsSQL, 
                             fsValue,
@@ -487,7 +487,7 @@ public class Activity_Location {
         } else {
             lsSQL = MiscUtil.addCondition(lsSQL, "a.sBrgyName LIKE " + SQLUtil.toSQL(fsValue + "%"));
         }
-        System.out.println(lsSQL);
+        System.out.println("SEARCH BARANGAY : Barangay " + lsSQL);
         loJSON = ShowDialogFX.Search(poGRider, 
                             lsSQL, 
                             fsValue,

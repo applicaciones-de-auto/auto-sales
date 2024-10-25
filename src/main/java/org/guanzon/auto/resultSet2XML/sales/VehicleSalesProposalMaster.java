@@ -39,7 +39,7 @@ public class VehicleSalesProposalMaster {
         System.setProperty("sys.default.path.metadata", "D:/GGC_Maven_Systems/config/metadata/Model_VehicleSalesProposal_Master.xml");
         
         
-        String lsSQL =   " SELECT DISTINCT "                                                                      
+        String lsSQL =    " SELECT DISTINCT "                                                                      
                         + "   a.sTransNox "                                                               
                         + " , a.dTransact "                                                               
                         + " , a.sVSPNOxxx "                                                               
@@ -102,20 +102,20 @@ public class VehicleSalesProposalMaster {
                         + " , a.dDcStatDt "                                                               
                         + " , a.cPrintedx "                                                               
                         + " , a.sLockedBy "                                                               
-                        + " , a.dLockedDt "                                                               
-                        + " , a.cTranStat "                                                               
-                        + " , a.sCancelld "                                                               
-                        + " , a.dCancelld "                                                               
-                        + " , a.sApproved "                                                               
-                        + " , a.dApproved "                                                               
+                        + " , a.dLockedDt "                                                                
+                        + " , a.dCancelld "                                                            
+                        + " , a.sCancelld "                                                                
+                        + " , a.cTranStat "                                                                
+        //                + " , a.sApproved "                                                               
+        //                + " , a.dApproved "                                                               
                         + " , a.sEntryByx "                                                               
                         + " , a.dEntryDte "                                                               
                         + " , a.sModified "                                                               
                         + " , a.dModified "                                                        
                         + "  , CASE "          
-                        + " 	WHEN a.cTranStat = "+SQLUtil.toSQL(TransactionStatus.STATE_CLOSED)+" THEN 'APPROVE' "                     
+                        + " 	WHEN a.cTranStat = "+SQLUtil.toSQL(TransactionStatus.STATE_CLOSED)+" THEN 'APPROVED' "                     
                         + " 	WHEN a.cTranStat = "+SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)+" THEN 'CANCELLED' "                  
-                        + " 	WHEN a.cTranStat = "+SQLUtil.toSQL(TransactionStatus.STATE_OPEN)+" THEN 'ACTIVE' "                    
+                        + " 	WHEN a.cTranStat = "+SQLUtil.toSQL(TransactionStatus.STATE_OPEN)+" THEN 'FOR APPROVAL' "                    
                         + " 	WHEN a.cTranStat = "+SQLUtil.toSQL(TransactionStatus.STATE_POSTED)+" THEN 'POSTED' "                                      
                         + " 	ELSE 'ACTIVE'  "                                                          
                         + "    END AS sTranStat "   
@@ -193,7 +193,9 @@ public class VehicleSalesProposalMaster {
                         + " , zh.sInsTypID AS sBOTTypex "
                         + "  , r.cVhclSize "
                         + "  , rb.sUnitType "
-                        + "  , rb.sBodyType "
+                        + "  , rb.sBodyType "                                                                                
+                        + " , GROUP_CONCAT( DISTINCT DATE(zi.dApproved)) AS dApprovex "                                                                           
+                        + " , GROUP_CONCAT( DISTINCT zj.sCompnyNm) AS sApprover "  
                         + " FROM vsp_master a "                                                           
                          /*BUYING CUSTOMER*/                                                              
                         + " LEFT JOIN client_master b ON b.sClientID = a.sClientID "                      
@@ -243,6 +245,8 @@ public class VehicleSalesProposalMaster {
                         + " LEFT JOIN insurance_policy_proposal zf ON zf.sVSPNoxxx = a.sTransNox AND zf.sInsTypID = 'y' AND zf.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
                         + " LEFT JOIN insurance_policy_proposal zg ON zg.sVSPNoxxx = a.sTransNox AND zg.sInsTypID = 'c' AND zg.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
                         + " LEFT JOIN insurance_policy_proposal zh ON zh.sVSPNoxxx = a.sTransNox AND zh.sInsTypID = 'b' AND zh.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
+                        + " LEFT JOIN transaction_status_history zi ON zi.sSourceNo = a.sTransNox AND zi.cTranStat <> "+ SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
+                        + " LEFT JOIN ggc_isysdbf.client_master zj ON zj.sClientID = zi.sApproved "
                         + " WHERE 0=1";
         
         
