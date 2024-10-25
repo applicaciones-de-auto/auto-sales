@@ -270,8 +270,10 @@ public class VehicleSalesProposal implements GTransaction{
             return true;
         }
         
-        if(loVSPFinance.getVSPFinanceModel().getFinAmt().compareTo(poVSPFinance.getVSPFinanceModel().getFinAmt()) != 0){
-            return true;
+        if(loVSPFinance.getDetailList().size() > 0){
+            if(loVSPFinance.getVSPFinanceModel().getFinAmt().compareTo(poVSPFinance.getVSPFinanceModel().getFinAmt()) != 0){
+                return true;
+            }
         }
         
         if(loVSPLabor.getDetailList().size() != poVSPLabor.getDetailList().size()){
@@ -1335,6 +1337,19 @@ public class VehicleSalesProposal implements GTransaction{
      */
     public JSONObject approveVSP(){
         JSONObject loJSON = new JSONObject();
+        
+        if(poController.getMasterModel().getSerialID() != null){
+            if(poController.getMasterModel().getSerialID().isEmpty()){
+                loJSON.put("result", "error");
+                loJSON.put("message", "You cannot approve VSP without vehicle information yet.\n\nApprove aborted.");
+                return loJSON;
+            }
+        } else {
+            loJSON.put("result", "error");
+            loJSON.put("message", "You cannot approve VSP without vehicle information yet.\n\nApprove aborted.");
+            return loJSON;
+        }
+        
         if (!pbWtParent) poGRider.beginTrans();
         
         loJSON = poController.approveTransaction();

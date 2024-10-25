@@ -601,7 +601,8 @@ public class Inquiry_Master implements GTransaction {
                         + " 	WHEN a.cTranStat = '1' THEN 'ON PROCESS' "                                   
                         + " 	WHEN a.cTranStat = '2' THEN 'LOST SALE'  "                                   
                         + " 	WHEN a.cTranStat = '3' THEN 'WITH VSP'   "                                   
-                        + " 	WHEN a.cTranStat = '4' THEN 'SOLD'       "                                     
+                        + " 	WHEN a.cTranStat = '4' THEN 'SOLD'       "                                  
+                        + " 	WHEN a.cTranStat = '6' THEN 'FOR APPROVAL' "                                     
                         + " 	ELSE 'CANCELLED'  "                                                          
                         + "    END AS sTranStat "                                                          
                         + "  , b.sCompnyNm      "                                                          
@@ -631,7 +632,7 @@ public class Inquiry_Master implements GTransaction {
                 if(fbisClient){
                     lsWhere = MiscUtil.addCondition(lsSQL, " a.sClientID = " + SQLUtil.toSQL(poModel.getClientID())
                                                             + " AND a.sTransNox <> " + SQLUtil.toSQL(poModel.getTransNo()) 
-                                                            + " AND (a.cTranStat = '0' OR a.cTranStat = '1' OR a.cTranStat = '3')"  
+                                                            + " AND (a.cTranStat = '0' OR a.cTranStat = '1' OR a.cTranStat = '3' OR a.cTranStat = '6')"  
                                                             );
 
                     System.out.println("EXISTING CUSTOMER CHECK: " + lsSQL);
@@ -663,7 +664,7 @@ public class Inquiry_Master implements GTransaction {
                         lsWhere = MiscUtil.addCondition(lsSQL, " a.sClientID = " + SQLUtil.toSQL(poModel.getClientID())
                                                                 + " AND a.sEmployID = " + SQLUtil.toSQL(lsEmpID) 
                                                                 + " AND a.sTransNox <> " + SQLUtil.toSQL(poModel.getTransNo()) 
-                                                                + " AND (a.cTranStat = '0' OR a.cTranStat = '1' OR a.cTranStat = '3')"  
+                                                                + " AND (a.cTranStat = '0' OR a.cTranStat = '1' OR a.cTranStat = '3' OR a.cTranStat = '6')"  
                                                                 );
 
                         System.out.println("EXISTING CUSTOMER WITH THE SAME SE CHECK: " + lsSQL);
@@ -696,7 +697,7 @@ public class Inquiry_Master implements GTransaction {
                         lsWhere = MiscUtil.addCondition(lsSQL, " a.sClientID = " + SQLUtil.toSQL(poModel.getClientID()) 
                                                             + " AND a.sEmployID <> " + SQLUtil.toSQL(lsEmpID) 
                                                             + " AND a.sTransNox <> " + SQLUtil.toSQL(poModel.getTransNo()) 
-                                                            + " AND (a.cTranStat = '1' OR a.cTranStat = '3')" 
+                                                            + " AND (a.cTranStat = '1' OR a.cTranStat = '3' OR a.cTranStat = '6')" 
                                                             );
 
                         System.out.println("EXISTING INQUIRY ON PROCESS AND WITH VSP WITH SAME CUSTOMER CHECK: " + lsWhere);
