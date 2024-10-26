@@ -194,8 +194,10 @@ public class VehicleSalesProposalMaster {
                         + "  , r.cVhclSize "
                         + "  , rb.sUnitType "
                         + "  , rb.sBodyType "                                                                                
-                        + " , GROUP_CONCAT( DISTINCT DATE(zi.dApproved)) AS dApprovex "                                                                           
-                        + " , GROUP_CONCAT( DISTINCT zj.sCompnyNm) AS sApprover "  
+//                        + " , GROUP_CONCAT( DISTINCT DATE(zi.dApproved)) AS dApprovex "                                                                           
+//                        + " , GROUP_CONCAT( DISTINCT zj.sCompnyNm) AS sApprover "                                                                      
+                        + " , DATE(zi.dApproved) AS dApprovex "                                                                           
+                        + " , zj.sCompnyNm AS sApprover "  
                         + " FROM vsp_master a "                                                           
                          /*BUYING CUSTOMER*/                                                              
                         + " LEFT JOIN client_master b ON b.sClientID = a.sClientID "                      
