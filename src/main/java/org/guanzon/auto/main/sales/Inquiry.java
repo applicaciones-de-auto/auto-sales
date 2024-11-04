@@ -15,6 +15,7 @@ import org.guanzon.auto.controller.sales.Inquiry_Promo;
 import org.guanzon.auto.controller.sales.Inquiry_Requirements;
 import org.guanzon.auto.controller.sales.Inquiry_Reservation;
 import org.guanzon.auto.controller.sales.Inquiry_VehiclePriority;
+import org.guanzon.auto.main.cashiering.CashierReceivables;
 import org.json.simple.JSONObject;
 
 /**
@@ -524,6 +525,14 @@ public class Inquiry implements GTransaction{
         }
         
         if (!pbWtParent) poGRider.commitTrans();
+        
+         //Save Cashier Receivables
+//        if(poController.getMasterModel().getTranStat().equals(TransactionStatus.STATE_CLOSED)){
+        CashierReceivables loCAR = new CashierReceivables(poGRider, pbWtParent, psBranchCd);
+        JSONObject loJSONCAR = loCAR.generateCAR("VSA", poReservation.getDetailModel(fnRow).getTransNo());
+        if("error".equals((String) loJSONCAR.get("result"))){
+            return loJSONCAR;
+        }
         
         return loJSON;
     }

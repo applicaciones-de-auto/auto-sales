@@ -17,8 +17,10 @@ import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
+import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.general.CancelForm;
+import org.guanzon.auto.general.TransactionStatusHistory;
 import org.guanzon.auto.model.sales.Model_Bank_Application;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
 import org.guanzon.auto.validator.sales.ValidatorInterface;
@@ -194,6 +196,14 @@ public class Bank_Application implements GTransaction {
             return poJSON;
         }
         
+        if(poModel.getTranStat().equals(TransactionStatus.STATE_CLOSED)){
+            poJSON = approveTransaction();
+            if("error".equalsIgnoreCase((String)poJSON.get("result"))){
+                if (!pbWtParent) poGRider.rollbackTrans();
+                return poJSON;
+            }
+        }
+        
         return poJSON;
     }
     
@@ -265,6 +275,30 @@ public class Bank_Application implements GTransaction {
             poJSON.put("message", "No transaction loaded to update.");
         }
         return poJSON;
+    }
+    
+    public JSONObject approveTransaction(){
+        JSONObject loJSON = new JSONObject();
+        TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+        //Update to cancel all previous approvements
+        loJSON = loEntity.cancelTransaction(poModel.getTransNo(), TransactionStatus.STATE_CLOSED);
+        if(!"error".equals((String) loJSON.get("result"))){
+            loJSON = loEntity.newTransaction();
+            if(!"error".equals((String) loJSON.get("result"))){
+                loEntity.getMasterModel().setApproved(poGRider.getUserID());
+                loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
+                loEntity.getMasterModel().setSourceNo(poModel.getTransNo());
+                loEntity.getMasterModel().setTableNme(poModel.getTable());
+                loEntity.getMasterModel().setRefrStat(poModel.getTranStat());
+
+                loJSON = loEntity.saveTransaction();
+                if("error".equals((String) loJSON.get("result"))){
+                    return loJSON;
+                }
+            }
+        }
+        
+        return loJSON;
     }
 
     /*Convert Date to String*/

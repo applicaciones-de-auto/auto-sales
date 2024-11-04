@@ -1582,7 +1582,7 @@ public class Inquiry_Master implements GTransaction {
         if(!"error".equals((String) loJSON.get("result"))){
             TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
             //Update to cancel all previous approvements
-            loJSON = loEntity.cancelTransaction(paDetail.get(fnRow).getTransNo());
+            loJSON = loEntity.cancelTransaction(paDetail.get(fnRow).getTransNo(), TransactionStatus.STATE_CLOSED);
             if(!"error".equals((String) loJSON.get("result"))){
                 loJSON = loEntity.newTransaction();
                 if(!"error".equals((String) loJSON.get("result"))){

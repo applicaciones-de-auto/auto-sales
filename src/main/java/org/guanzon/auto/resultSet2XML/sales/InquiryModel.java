@@ -113,7 +113,7 @@ public class InquiryModel {
                         + " LEFT JOIN vehicle_serial q ON q.sSerialID = a.sSerialID           "    
                         + " LEFT JOIN vehicle_serial_registration r ON r.sSerialID = a.sSerialID "              
                         + " LEFT JOIN vehicle_master s ON s.sVhclIDxx = q.sVhclIDxx " 
-                        + " LEFT JOIN transaction_status_history t ON t.sSourceNo = a.sTransNox AND t.cTranStat <> "+ SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
+                        + " LEFT JOIN transaction_status_history t ON t.sSourceNo = a.sTransNox AND t.cRefrStat = "+ SQLUtil.toSQL(TransactionStatus.STATE_CLOSED) + " AND t.cTranStat <> "+ SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
                         + " LEFT JOIN ggc_isysdbf.client_master u ON u.sClientID = t.sApproved "    
                         + " WHERE 0=1";
         

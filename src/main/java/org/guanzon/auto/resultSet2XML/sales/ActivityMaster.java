@@ -76,7 +76,7 @@ public class ActivityMaster {
                         + " LEFT JOIN GGC_ISysDBF.Client_Master d ON d.sClientID = a.sEmployID "       
                         + " LEFT JOIN branch e ON e.sBranchCd = a.sLocation "                           
                         + " LEFT JOIN event_type f ON f.sActTypID = a.sActTypID "
-                        + " LEFT JOIN transaction_status_history g ON g.sSourceNo = a.sActvtyID AND g.cTranStat <> "+ SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
+                        + " LEFT JOIN transaction_status_history g ON g.sSourceNo = a.sActvtyID  AND g.cRefrStat = "+ SQLUtil.toSQL(TransactionStatus.STATE_CLOSED) + " AND g.cTranStat <> "+ SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
                         + " LEFT JOIN ggc_isysdbf.client_master h ON h.sClientID = g.sApproved "
                         + " WHERE 0=1 ";
         
