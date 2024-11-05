@@ -14,6 +14,7 @@ import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
+import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.auto.model.sales.Model_Inquiry_Promo;
 import org.guanzon.auto.model.sales.Model_Inquiry_Promo;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
@@ -255,7 +256,7 @@ public class Inquiry_Promo {
                         + " FROM activity_master a"                                                       
                         + " LEFT JOIN event_type b ON b.sActTypID = a.sActTypID "   ;  
                 
-        lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = '3' AND b.sEventTyp = 'pro' " 
+        lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat =  " + SQLUtil.toSQL(TransactionStatus.STATE_CLOSED) + " AND b.sEventTyp = 'pro' " //'3'
                                                 + " AND a.dDateFrom <=" + SQLUtil.toSQL(fdInqDate)
                                                 + " AND a.dDateThru >=" + SQLUtil.toSQL(fdInqDate));  
 

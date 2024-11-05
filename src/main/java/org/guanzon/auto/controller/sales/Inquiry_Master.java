@@ -843,7 +843,7 @@ public class Inquiry_Master implements GTransaction {
                         + " FROM activity_master a"                                                       
                         + " LEFT JOIN event_type b ON b.sActTypID = a.sActTypID "   ;  
                 
-        lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = '3' AND a.sActTitle LIKE " + SQLUtil.toSQL(fsValue + "%")
+        lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_CLOSED) +" AND a.sActTitle LIKE " + SQLUtil.toSQL(fsValue + "%") //'3'
                                                 + " AND b.sEventTyp =" + SQLUtil.toSQL(lsEventType)
                                                 + " AND a.dDateFrom <=" + SQLUtil.toSQL(xsDateShort(poModel.getTransactDte()))
                                                 + " AND a.dDateThru >=" + SQLUtil.toSQL(xsDateShort(poModel.getTransactDte())));  
