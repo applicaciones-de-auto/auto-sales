@@ -214,7 +214,8 @@ public class Activity_Master implements GRecord {
                 }
 
                 CancelForm cancelform = new CancelForm();
-                if (!cancelform.loadCancelWindow(poGRider, poModel.getActvtyID(), poModel.getActvtyID(), "ACTIVITY")) {
+//                if (!cancelform.loadCancelWindow(poGRider, poModel.getActvtyID(), poModel.getActvtyID(), "ACTIVITY")) {
+                if (!cancelform.loadCancelWindow(poGRider, poModel.getActvtyID(), poModel.getTable())) {
                     poJSON.put("result", "error");
                     poJSON.put("message", "Cancellation failed.");
                     return poJSON;
@@ -618,23 +619,29 @@ public class Activity_Master implements GRecord {
             loJSON = paDetail.get(fnRow).saveRecord();
             if(!"error".equals((String) loJSON.get("result"))){
                 TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-                //Update to cancel all previous approvements
-                loJSON = loEntity.cancelTransaction(paDetail.get(fnRow).getActvtyID(), TransactionStatus.STATE_CLOSED);
-                if(!"error".equals((String) loJSON.get("result"))){
-                    loJSON = loEntity.newTransaction();
-                    if(!"error".equals((String) loJSON.get("result"))){
-                        loEntity.getMasterModel().setApproved(poGRider.getUserID());
-                        loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
-                        loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getActvtyID());
-                        loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
-                        loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
-
-                        loJSON = loEntity.saveTransaction();
-                        if("error".equals((String) loJSON.get("result"))){
-                            return loJSON;
-                        }
-                    }
+                loJSON = loEntity.updateStatusHistory(poModel.getActvtyID(), poModel.getTable(), "", TransactionStatus.STATE_CLOSED);
+                if("error".equals((String) loJSON.get("result"))){
+                    return loJSON;
                 }
+                
+//                TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+//                //Update to cancel all previous approvements
+//                loJSON = loEntity.cancelTransaction(paDetail.get(fnRow).getActvtyID(), TransactionStatus.STATE_CLOSED);
+//                if(!"error".equals((String) loJSON.get("result"))){
+//                    loJSON = loEntity.newTransaction();
+//                    if(!"error".equals((String) loJSON.get("result"))){
+//                        loEntity.getMasterModel().setApproved(poGRider.getUserID());
+//                        loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
+//                        loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getActvtyID());
+//                        loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
+//                        loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
+//
+//                        loJSON = loEntity.saveTransaction();
+//                        if("error".equals((String) loJSON.get("result"))){
+//                            return loJSON;
+//                        }
+//                    }
+//                }
             }
 //        }
         return loJSON;

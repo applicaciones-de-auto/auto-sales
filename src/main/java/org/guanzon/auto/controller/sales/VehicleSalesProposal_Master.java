@@ -1084,23 +1084,28 @@ public class VehicleSalesProposal_Master implements GTransaction{
         loJSON = saveTransaction();
         if(!"error".equals((String) loJSON.get("result"))){
             TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-            //Update to cancel all previous approvements
-            loJSON = loEntity.cancelTransaction(poModel.getTransNo(), TransactionStatus.STATE_CLOSED);
-            if(!"error".equals((String) loJSON.get("result"))){
-                loJSON = loEntity.newTransaction();
-                if(!"error".equals((String) loJSON.get("result"))){
-                    loEntity.getMasterModel().setApproved(poGRider.getUserID());
-                    loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
-                    loEntity.getMasterModel().setSourceNo(poModel.getTransNo());
-                    loEntity.getMasterModel().setTableNme(poModel.getTable());
-                    loEntity.getMasterModel().setRefrStat(poModel.getTranStat());
-
-                    loJSON = loEntity.saveTransaction();
-                    if("error".equals((String) loJSON.get("result"))){
-                        return loJSON;
-                    }
-                }
+            loJSON = loEntity.updateStatusHistory(poModel.getTransNo(), poModel.getTable(), "", TransactionStatus.STATE_CLOSED);
+            if("error".equals((String) loJSON.get("result"))){
+                return loJSON;
             }
+//            TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+//            //Update to cancel all previous approvements
+//            loJSON = loEntity.cancelTransaction(poModel.getTransNo(), TransactionStatus.STATE_CLOSED);
+//            if(!"error".equals((String) loJSON.get("result"))){
+//                loJSON = loEntity.newTransaction();
+//                if(!"error".equals((String) loJSON.get("result"))){
+//                    loEntity.getMasterModel().setApproved(poGRider.getUserID());
+//                    loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
+//                    loEntity.getMasterModel().setSourceNo(poModel.getTransNo());
+//                    loEntity.getMasterModel().setTableNme(poModel.getTable());
+//                    loEntity.getMasterModel().setRefrStat(poModel.getTranStat());
+//
+//                    loJSON = loEntity.saveTransaction();
+//                    if("error".equals((String) loJSON.get("result"))){
+//                        return loJSON;
+//                    }
+//                }
+//            }
         
         }
         return loJSON;
