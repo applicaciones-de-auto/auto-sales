@@ -619,7 +619,7 @@ public class Activity_Master implements GRecord {
             loJSON = paDetail.get(fnRow).saveRecord();
             if(!"error".equals((String) loJSON.get("result"))){
                 TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-                loJSON = loEntity.updateStatusHistory(poModel.getActvtyID(), poModel.getTable(), "", TransactionStatus.STATE_CLOSED);
+                loJSON = loEntity.updateStatusHistory(paDetail.get(fnRow).getActvtyID(), poModel.getTable(), "", TransactionStatus.STATE_CLOSED);
                 if("error".equals((String) loJSON.get("result"))){
                     return loJSON;
                 }

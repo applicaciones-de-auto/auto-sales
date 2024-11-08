@@ -512,8 +512,8 @@ public class VehicleSalesProposal implements GTransaction{
         }
         
         loJSON = poOTHReservation.openDetail(poController.getMasterModel().getInqTran(),true, true);
-        if(!"success".equals(poJSON.get("result"))){
-            if(true == (boolean) poJSON.get("continue")){
+        if(!"success".equals(loJSON.get("result"))){
+            if(true == (boolean) loJSON.get("continue")){
                 loJSON.put("result", "success");
                 loJSON.put("message", "Record loaded succesfully.");
             }
