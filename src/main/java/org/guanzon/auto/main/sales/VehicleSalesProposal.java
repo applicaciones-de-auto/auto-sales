@@ -572,7 +572,7 @@ public class VehicleSalesProposal implements GTransaction{
                 String lsTransID = "";
                 for(int lnCtr = 0; lnCtr <= poOTHReservation.getDetailList().size() - 1; lnCtr++){
                     //check for approval
-                    if(poOTHReservation.getDetailModel(lnCtr).getTranStat().equals("2")){
+                    if(poOTHReservation.getDetailModel(lnCtr).getTranStat().equals(TransactionStatus.STATE_CLOSED)){ //"2"
                         if(poOTHReservation.getDetailModel(lnCtr).getTransID() != null){
                             lsTransID = poOTHReservation.getDetailModel(lnCtr).getTransID();
                         }
@@ -1259,18 +1259,27 @@ public class VehicleSalesProposal implements GTransaction{
             String lsWhere = "";
             ResultSet loRS;
             BigDecimal ldblPayment = new BigDecimal("0.00"); 
-            String lsSQL =   " SELECT "                                             
-                    + "   a.sTransNox "                                     
-                    + " , a.sReferNox "                                     
-                    + " , a.sSourceCD "                                     
-                    + " , a.sSourceNo "                                     
-                    + " , a.sTranType "                      
-                    + " , a.nTranAmtx "                                    
-                    + " , b.sReferNox AS sSINoxxxx "                        
-                    + " , b.dTransact "                      
-                    + " , b.cTranStat "                                
-                    + " FROM si_master_source a "                           
-                    + " LEFT JOIN si_master b ON b.sTransNox = a.sTransNox ";
+//            String lsSQL =   " SELECT "                                             
+//                    + "   a.sTransNox "                                     
+//                    + " , a.sReferNox "                                     
+//                    + " , a.sSourceCD "                                     
+//                    + " , a.sSourceNo "                                     
+//                    + " , a.sTranType "                      
+//                    + " , a.nTranAmtx "                                    
+//                    + " , b.sReferNox AS sSINoxxxx "                        
+//                    + " , b.dTransact "                      
+//                    + " , b.cTranStat "                                
+//                    + " FROM si_master_source a "                           
+//                    + " LEFT JOIN si_master b ON b.sTransNox = a.sTransNox ";
+            
+            String lsSQL = " SELECT "                                                    
+                        + "   a.sTransNox "                                             
+                        + " , a.sReferNox AS sSINoxxxx"                                                
+                        + " , DATE(a.dTransact) AS dTransact "                
+                        + " , SUM(b.nTranAmtx) AS nTranAmtx"                           
+                        + " FROM si_master a "                                          
+                        + " LEFT JOIN si_master_source b ON b.sReferNox = a.sTransNox " 
+                        + " LEFT JOIN cashier_receivables c ON c.sTransNox = b.sSourceNo " ;    
 
             /* 1. Get all Invoice Receipts (SI) linked thru INQUIRY RESERVATION sTransNox */
 //            for(int lnCtr = 0; lnCtr <= getVSPReservationList().size()-1; lnCtr++){
@@ -1290,8 +1299,12 @@ public class VehicleSalesProposal implements GTransaction{
 //            }
             
             /* 2. Get all Invoice Receipts (SI) and PR linked thru VSP sTransNox */
-            lsWhere = MiscUtil.addCondition(lsSQL, " b.cTranStat <> '0' "
-                                                + " AND a.sReferNox = " + SQLUtil.toSQL(poController.getMasterModel().getTransNo())
+//            lsWhere = MiscUtil.addCondition(lsSQL, " b.cTranStat <> '0' "
+//                                                + " AND a.sReferNox = " + SQLUtil.toSQL(poController.getMasterModel().getTransNo())
+//                                                );
+            lsWhere = MiscUtil.addCondition(lsSQL, " a.cTranStat <> "  + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
+                                                + " AND c.sReferNox = " + SQLUtil.toSQL(poController.getMasterModel().getTransNo())
+                                                + " AND c.cPayerCde = 'c' "
                                                 );
             System.out.println("EXISTING VSP PAYMENT CHECK: " + lsSQL);
             loRS = poGRider.executeQuery(lsWhere);

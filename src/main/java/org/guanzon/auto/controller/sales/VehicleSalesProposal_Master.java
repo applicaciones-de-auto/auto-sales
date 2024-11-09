@@ -423,14 +423,14 @@ public class VehicleSalesProposal_Master implements GTransaction{
                         + " LEFT JOIN client_master m ON m.sClientID = a.sAgentIDx "                        
                         + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd "                          
                         + " LEFT JOIN online_platforms q ON q.sTransNox = a.sTransNox "
-                        + " LEFT JOIN customer_inquiry_reservation r ON r.sSourceNo = a.sTransNox AND r.cTranStat = '2' "   ; 
+                        + " LEFT JOIN customer_inquiry_reservation r ON r.sSourceNo = a.sTransNox AND r.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_CLOSED)   ; //'2'  
         
         if(fbByCode){
-            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '1' "
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat =  " + SQLUtil.toSQL(TransactionStatus.STATE_CLOSED) //1 On Process 
                                                 + " AND a.sTransNox = " + SQLUtil.toSQL(fsValue)
                                                 + " GROUP BY a.sTransNox ");
         } else {
-            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '1' "
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat =  " + SQLUtil.toSQL(TransactionStatus.STATE_CLOSED) //1 On Process
                                                 + " AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%")
                                                 + " GROUP BY a.sTransNox ");
         }

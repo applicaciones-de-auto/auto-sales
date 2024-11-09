@@ -108,9 +108,10 @@ public class Inquiry_Reservation {
                         + " , a.cTranStat "                                            
                         + " , b.sReferNox "                                            
                         + " , d.cTranStat "                                              
-                        + " FROM customer_inquiry_reservation a "                        
-                        + " LEFT JOIN si_master_source b ON b.sReferNox = a.sTransNox "  
-                        + " LEFT JOIN si_master c ON c.sTransNox = b.sTransNox "         
+                        + " FROM customer_inquiry_reservation a "                               
+                        + " LEFT JOIN cashier_receivables bb ON bb.sReferNox = a.sTransNox "                 
+                        + " LEFT JOIN si_master_source b ON b.sSourceNo = bb.sTransNox "  
+                        + " LEFT JOIN si_master c ON c.sTransNox = b.sReferNox "         
                         + " LEFT JOIN customer_inquiry d ON d.sTransNox = a.sSourceNo "  ;
         if(!fbOthRsv){
             if(fbIsInq){
@@ -126,7 +127,6 @@ public class Inquiry_Reservation {
                                                   //+ " AND (a.sTransIDx = NULL OR TRIM(a.sTransIDx) = '')"
                                                   +  " AND a.sSourceNo <> " + SQLUtil.toSQL(fsValue));
         }
-        
         
         ResultSet loRS = poGRider.executeQuery(lsSQL);
         
@@ -413,10 +413,11 @@ public class Inquiry_Reservation {
                         + " , a.sReferNox "                                             
                         + " , DATE(a.dTransact) AS dTransact "                          
                         + " FROM si_master a "                                          
-                        + " LEFT JOIN si_master_source b ON b.sTransNox = a.sTransNox " ;                                     
+                        + " LEFT JOIN si_master_source b ON b.sReferNox = a.sTransNox " 
+                        + " LEFT JOIN cashier_receivables c ON c.sTransNox = b.sSourceNo " ;                                     
 
                 lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED) 
-                                                        + " AND b.sReferNox = " + SQLUtil.toSQL(paDetail.get(fnRow).getTransNo()) 
+                                                        + " AND c.sReferNox = " + SQLUtil.toSQL(paDetail.get(fnRow).getTransNo()) 
                                                         );
                 System.out.println("EXISTING RECEIPT CHECK: " + lsSQL);
                 loRS = poGRider.executeQuery(lsSQL);

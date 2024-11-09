@@ -39,7 +39,7 @@ public class InquiryReservation {
         System.setProperty("sys.default.path.metadata", "D:/GGC_Maven_Systems/config/metadata/Model_Inquiry_Reservation.xml");
         
         
-        String lsSQL =     " SELECT "                                                                      
+        String lsSQL =    " SELECT "                                                                      
                         + "    a.sTransNox "                                                              
                         + "  , a.dTransact "                                                              
                         + "  , a.sReferNox "                                                              
@@ -78,10 +78,11 @@ public class InquiryReservation {
                         + " LEFT JOIN barangay e ON e.sBrgyIDxx = d.sBrgyIDxx  "                          
                         + " LEFT JOIN towncity f ON f.sTownIDxx = d.sTownIDxx  "                          
                         + " LEFT JOIN province g ON g.sProvIDxx = f.sProvIDxx  "
-                        + " LEFT JOIN si_master_source h ON h.sReferNox = a.sTransNox " 
-                        + " LEFT JOIN si_master i ON i.sTransNox = h.sTransNox  " 
-                        + " LEFT JOIN transaction_status_history j ON j.sSourceNo = a.sTransNox  AND j.cRefrStat = "+ SQLUtil.toSQL(TransactionStatus.STATE_CLOSED) + " AND j.cTranStat <> "+ SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
-                        + " LEFT JOIN ggc_isysdbf.client_master k ON k.sClientID = j.sApproved "
+                        + " LEFT JOIN cashier_receivables hh ON hh.sReferNox = a.sTransNox " 
+                        + " LEFT JOIN si_master_source h ON h.sSourceNo = hh.sTransNox " 
+                        + " LEFT JOIN si_master i ON i.sTransNox = h.sReferNox AND i.cTranStat <> " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)  
+                        + " LEFT JOIN transaction_status_history j ON j.sSourceNo = a.sTransNox AND j.cRefrStat = "+ SQLUtil.toSQL(TransactionStatus.STATE_CLOSED) + " AND j.cTranStat <> "+ SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED)
+                        + " LEFT JOIN ggc_isysdbf.client_master k ON k.sClientID = j.sApproved "    
                         + " WHERE 0=1";
         
         
