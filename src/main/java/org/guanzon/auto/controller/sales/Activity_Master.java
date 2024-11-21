@@ -187,6 +187,20 @@ public class Activity_Master implements GRecord {
         
         return poJSON;
     }
+    
+    public JSONObject savePrinted(){
+        JSONObject loJSON = new JSONObject();
+//        poModel.setPrinted("1"); //Set to Printed
+//        loJSON = saveRecord();
+//        if(!"error".equals((String) loJSON.get("result"))){
+            TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+            loJSON = loEntity.updateStatusHistory(poModel.getActvtyID(), poModel.getTable(), "ACTIVITY PRINT", "5"); //5 = STATE_PRINTED
+            if("error".equals((String) loJSON.get("result"))){
+                return loJSON;
+            }
+//        }
+        return loJSON;
+    }
 
     @Override
     public JSONObject deleteRecord(String string) {

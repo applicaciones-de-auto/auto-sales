@@ -243,6 +243,10 @@ public class VehicleSalesProposal implements GTransaction{
         return poJSON;
     }
     
+    public JSONObject savePrint() {
+        return poController.savePrinted();
+    }
+    
     private JSONObject checkData(JSONObject joValue){
         if(pnEditMode == EditMode.ADDNEW ||pnEditMode == EditMode.READY || pnEditMode == EditMode.UPDATE){
             if(joValue.containsKey("continue")){

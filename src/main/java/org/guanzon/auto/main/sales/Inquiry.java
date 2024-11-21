@@ -212,6 +212,10 @@ public class Inquiry implements GTransaction{
         return loJSON;
     }
     
+    public JSONObject savePrint(int fnRow) {
+        return poReservation.savePrinted(fnRow);
+    }
+    
     private JSONObject checkData(JSONObject joValue){
         if(pnEditMode == EditMode.ADDNEW ||pnEditMode == EditMode.READY || pnEditMode == EditMode.UPDATE){
             if(joValue.containsKey("continue")){

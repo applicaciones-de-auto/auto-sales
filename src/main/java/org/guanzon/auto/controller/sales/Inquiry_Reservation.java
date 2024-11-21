@@ -254,6 +254,20 @@ public class Inquiry_Reservation {
         return obj;
     }
     
+    public JSONObject savePrinted(int fnRow){
+        JSONObject loJSON = new JSONObject();
+        paDetail.get(fnRow).setPrinted(1); //Set to Printed
+        loJSON = paDetail.get(fnRow).saveRecord();
+        if(!"error".equals((String) loJSON.get("result"))){
+            TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+            loJSON = loEntity.updateStatusHistory(paDetail.get(fnRow).getTransNo(), paDetail.get(fnRow).getTable(), "VSA PRINT", "5"); //5 = STATE_PRINTED
+            if("error".equals((String) loJSON.get("result"))){
+                return loJSON;
+            }
+        }
+        return loJSON;
+    }
+    
     public void setTargetBranchCd(String fsBranchCd){
         psTargetBranchCd = fsBranchCd; 
     }

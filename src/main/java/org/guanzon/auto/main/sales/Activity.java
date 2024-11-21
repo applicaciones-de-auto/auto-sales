@@ -181,6 +181,10 @@ public class Activity implements GRecord{
         return poJSON;
     }
     
+    public JSONObject savePrint() {
+        return poController.savePrinted();
+    }
+    
     public boolean checkChanges(){
         Activity_Master loActivity = new Activity_Master(poGRider,pbWtParent,psBranchCd);
         Activity_Location loActLocation = new Activity_Location(poGRider);
