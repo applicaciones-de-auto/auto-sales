@@ -254,15 +254,27 @@ public class Inquiry_Reservation {
         return obj;
     }
     
-    public JSONObject savePrinted(int fnRow){
+    public JSONObject savePrinted(int fnRow, boolean fsIsValidate){
         JSONObject loJSON = new JSONObject();
+        int lnOrigPrint = paDetail.get(fnRow).getPrinted();
         paDetail.get(fnRow).setPrinted(1); //Set to Printed
-        loJSON = paDetail.get(fnRow).saveRecord();
-        if(!"error".equals((String) loJSON.get("result"))){
-            TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-            loJSON = loEntity.updateStatusHistory(paDetail.get(fnRow).getTransNo(), paDetail.get(fnRow).getTable(), "VSA PRINT", "5"); //5 = STATE_PRINTED
-            if("error".equals((String) loJSON.get("result"))){
-                return loJSON;
+        if(fsIsValidate){
+            ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.Inquiry_Reservation, paDetail.get(fnRow));
+            validator.setGRider(poGRider);
+            if (!validator.isEntryOkay()){
+                paDetail.get(fnRow).setPrinted(lnOrigPrint); //Revert to Previous Value
+                poJSON.put("result", "error");
+                poJSON.put("message", validator.getMessage());
+                return poJSON;
+            }
+        } else {
+            loJSON = paDetail.get(fnRow).saveRecord();
+            if(!"error".equals((String) loJSON.get("result"))){
+                TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+                loJSON = loEntity.updateStatusHistory(paDetail.get(fnRow).getTransNo(), paDetail.get(fnRow).getTable(), "VSA PRINT", "5"); //5 = STATE_PRINTED
+                if("error".equals((String) loJSON.get("result"))){
+                    return loJSON;
+                }
             }
         }
         return loJSON;

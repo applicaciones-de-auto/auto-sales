@@ -1079,15 +1079,27 @@ public class VehicleSalesProposal_Master implements GTransaction{
 //    }
     
     
-    public JSONObject savePrinted(){
+    public JSONObject savePrinted(boolean fsIsValidate){
         JSONObject loJSON = new JSONObject();
+        String lsOrigPrint = poModel.getPrinted();
         poModel.setPrinted("1"); //Set to Printed
-        loJSON = saveTransaction();
-        if(!"error".equals((String) loJSON.get("result"))){
-            TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-            loJSON = loEntity.updateStatusHistory(poModel.getTransNo(), poModel.getTable(), "VSP PRINT", "5"); //5 = STATE_PRINTED
-            if("error".equals((String) loJSON.get("result"))){
-                return loJSON;
+        if(fsIsValidate){
+            ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.VehicleSalesProposal_Master, poModel);
+            validator.setGRider(poGRider);
+            if (!validator.isEntryOkay()){
+                poModel.setPrinted(lsOrigPrint); //Revert to Previous Value
+                poJSON.put("result", "error");
+                poJSON.put("message", validator.getMessage());
+                return poJSON;
+            }
+        } else {
+            loJSON = saveTransaction();
+            if(!"error".equals((String) loJSON.get("result"))){
+                TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+                loJSON = loEntity.updateStatusHistory(poModel.getTransNo(), poModel.getTable(), "VSP PRINT", "5"); //5 = STATE_PRINTED
+                if("error".equals((String) loJSON.get("result"))){
+                    return loJSON;
+                }
             }
         }
         return loJSON;

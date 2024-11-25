@@ -212,8 +212,8 @@ public class Inquiry implements GTransaction{
         return loJSON;
     }
     
-    public JSONObject savePrint(int fnRow) {
-        return poReservation.savePrinted(fnRow);
+    public JSONObject saveReservationPrint(int fnRow, boolean fsIsValidate) {
+        return poReservation.savePrinted(fnRow, fsIsValidate);
     }
     
     private JSONObject checkData(JSONObject joValue){
