@@ -1581,7 +1581,7 @@ public class Inquiry_Master implements GTransaction {
         loJSON = paDetail.get(fnRow).saveRecord();
         if(!"error".equals((String) loJSON.get("result"))){
             TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-            loJSON = loEntity.updateStatusHistory(paDetail.get(fnRow).getTransNo(), poModel.getTable(), "", TransactionStatus.STATE_CLOSED);
+            loJSON = loEntity.updateStatusHistory(paDetail.get(fnRow).getTransNo(), poModel.getTable(), "INQUIRY", TransactionStatus.STATE_CLOSED, "APPROVED");
             if("error".equals((String) loJSON.get("result"))){
                 return loJSON;
             }

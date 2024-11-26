@@ -15,6 +15,7 @@ import org.guanzon.auto.controller.sales.Activity_Master;
 import org.guanzon.auto.controller.sales.Activity_Member;
 import org.guanzon.auto.controller.sales.Activity_Location;
 import org.guanzon.auto.controller.sales.Activity_Vehicle;
+import org.guanzon.auto.general.TransactionStatusHistory;
 import org.json.simple.JSONObject;
 
 /**
@@ -147,6 +148,12 @@ public class Activity implements GRecord{
         if(poController.getModel().getTranStat().equals(TransactionStatus.STATE_CLOSED)){
             if(checkChanges()){
                 poController.getModel().setTranStat(TransactionStatus.STATE_OPEN);
+                //Cancel Previously Approved Transaction
+                TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+                poJSON = loEntity.cancelTransaction(poController.getModel().getActvtyID(), TransactionStatus.STATE_CLOSED);
+                if("error".equalsIgnoreCase((String) poJSON.get("result"))){
+                    return checkData(poJSON);
+                }
             }
         }
         

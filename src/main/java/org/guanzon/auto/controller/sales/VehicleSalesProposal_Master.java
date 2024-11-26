@@ -1096,7 +1096,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
             loJSON = saveTransaction();
             if(!"error".equals((String) loJSON.get("result"))){
                 TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-                loJSON = loEntity.updateStatusHistory(poModel.getTransNo(), poModel.getTable(), "VSP PRINT", "5"); //5 = STATE_PRINTED
+                loJSON = loEntity.updateStatusHistory(poModel.getTransNo(), poModel.getTable(), "VSP", "5", "PRINT"); //5 = STATE_PRINTED
                 if("error".equals((String) loJSON.get("result"))){
                     return loJSON;
                 }
@@ -1111,7 +1111,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
         loJSON = saveTransaction();
         if(!"error".equals((String) loJSON.get("result"))){
             TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-            loJSON = loEntity.updateStatusHistory(poModel.getTransNo(), poModel.getTable(), "", TransactionStatus.STATE_CLOSED);
+            loJSON = loEntity.updateStatusHistory(poModel.getTransNo(), poModel.getTable(), "VSP", TransactionStatus.STATE_CLOSED, "APPROVED");
             if("error".equals((String) loJSON.get("result"))){
                 return loJSON;
             }

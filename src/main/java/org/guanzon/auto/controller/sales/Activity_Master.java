@@ -194,7 +194,7 @@ public class Activity_Master implements GRecord {
 //        loJSON = saveRecord();
 //        if(!"error".equals((String) loJSON.get("result"))){
             TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-            loJSON = loEntity.updateStatusHistory(poModel.getActvtyID(), poModel.getTable(), "ACTIVITY PRINT", "5"); //5 = STATE_PRINTED
+            loJSON = loEntity.updateStatusHistory(poModel.getActvtyID(), poModel.getTable(), "ACTIVITY PRINT", "5", "PRINT"); //5 = STATE_PRINTED
             if("error".equals((String) loJSON.get("result"))){
                 return loJSON;
             }
@@ -633,7 +633,7 @@ public class Activity_Master implements GRecord {
             loJSON = paDetail.get(fnRow).saveRecord();
             if(!"error".equals((String) loJSON.get("result"))){
                 TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-                loJSON = loEntity.updateStatusHistory(paDetail.get(fnRow).getActvtyID(), poModel.getTable(), "", TransactionStatus.STATE_CLOSED);
+                loJSON = loEntity.updateStatusHistory(paDetail.get(fnRow).getActvtyID(), poModel.getTable(), "ACTIVITY", TransactionStatus.STATE_CLOSED, "APPROVED");
                 if("error".equals((String) loJSON.get("result"))){
                     return loJSON;
                 }

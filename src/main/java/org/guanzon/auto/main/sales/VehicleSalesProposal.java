@@ -24,6 +24,7 @@ import org.guanzon.auto.controller.sales.VehicleSalesProposal_Finance;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Labor;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Master;
 import org.guanzon.auto.controller.sales.VehicleSalesProposal_Parts;
+import org.guanzon.auto.general.TransactionStatusHistory;
 import org.guanzon.auto.main.cashiering.CashierReceivables;
 import org.guanzon.auto.validator.sales.ValidatorFactory;
 import org.guanzon.auto.validator.sales.ValidatorInterface;
@@ -179,6 +180,12 @@ public class VehicleSalesProposal implements GTransaction{
                 && !poController.getMasterModel().getTranStat().equals(TransactionStatus.STATE_POSTED)){
             if(checkChanges()){
                 poController.getMasterModel().setTranStat(TransactionStatus.STATE_OPEN);
+                //Cancel Previously Approved Transaction
+                TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+                poJSON = loEntity.cancelTransaction(poController.getMasterModel().getTransNo(), TransactionStatus.STATE_CLOSED);
+                if("error".equalsIgnoreCase((String) poJSON.get("result"))){
+                    return checkData(poJSON);
+                }
             }
         }
         

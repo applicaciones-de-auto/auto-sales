@@ -281,7 +281,7 @@ public class Bank_Application implements GTransaction {
     public JSONObject approveTransaction(){
         JSONObject loJSON = new JSONObject();
         TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-        loJSON = loEntity.updateStatusHistory(poModel.getTransNo(), poModel.getTable(), "", TransactionStatus.STATE_CLOSED);
+        loJSON = loEntity.updateStatusHistory(poModel.getTransNo(), poModel.getTable(), "BANK APPLICATION", TransactionStatus.STATE_CLOSED, "APPROVED");
         if("error".equals((String) loJSON.get("result"))){
             return loJSON;
         }
