@@ -66,6 +66,7 @@ public class InquiryReservation {
                         + "  IFNULL(CONCAT(e.sBrgyName,' '), ''),  "                                      
                         + "  IFNULL(CONCAT(f.sTownName, ', '),''), "                                      
                         + "  IFNULL(CONCAT(g.sProvName),'') )	, '') AS sAddressx  "
+                        + "  , i.sTransNox  AS sSITranNo " 
                         + "  , i.sReferNox  AS sSINoxxxx " 
                         + "  , DATE(i.dTransact) AS dSIDatexx "     
                         + "  , h.nTranAmtx "                                                                                  
