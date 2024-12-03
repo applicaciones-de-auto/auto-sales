@@ -23,6 +23,7 @@ import org.guanzon.appdriver.base.GRider;
 import org.guanzon.appdriver.base.MiscUtil;
 import org.guanzon.appdriver.base.SQLUtil;
 import org.guanzon.appdriver.constant.EditMode;
+import org.guanzon.appdriver.constant.RecordStatus;
 import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.general.CancelForm;
@@ -422,14 +423,14 @@ public class VehicleSalesProposal_Master implements GTransaction{
                         + " LEFT JOIN client_master m ON m.sClientID = a.sAgentIDx "                        
                         + " LEFT JOIN branch p ON p.sBranchCd = a.sBranchCd "                          
                         + " LEFT JOIN online_platforms q ON q.sTransNox = a.sTransNox "
-                        + " LEFT JOIN customer_inquiry_reservation r ON r.sSourceNo = a.sTransNox AND r.cTranStat = '2' "   ; 
+                        + " LEFT JOIN customer_inquiry_reservation r ON r.sSourceNo = a.sTransNox AND r.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_CLOSED)   ; //'2'  
         
         if(fbByCode){
-            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '1' "
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat =  " + SQLUtil.toSQL(TransactionStatus.STATE_CLOSED) //1 On Process 
                                                 + " AND a.sTransNox = " + SQLUtil.toSQL(fsValue)
                                                 + " GROUP BY a.sTransNox ");
         } else {
-            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '1' "
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat =  " + SQLUtil.toSQL(TransactionStatus.STATE_CLOSED) //1 On Process
                                                 + " AND b.sCompnyNm LIKE " + SQLUtil.toSQL(fsValue + "%")
                                                 + " GROUP BY a.sTransNox ");
         }
@@ -827,7 +828,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
                         + " LEFT JOIN banks_branches b ON b.sBrBankID = a.sBrBankID "
                         + " LEFT JOIN banks c ON c.sBankIDxx = b.sBankIDxx          "; 
         
-        lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = '2' "
+        lsSQL = MiscUtil.addCondition(lsSQL,  " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_CLOSED) //'2' //approved
                                                 + " AND a.sSourceNo = " + SQLUtil.toSQL(poModel.getInqTran())
                                                 + " AND a.cPayModex = " + SQLUtil.toSQL(poModel.getPayMode())
                                                 + " AND CONCAT(c.sBankName, ' ',  b.sBrBankNm) LIKE " + SQLUtil.toSQL(fsValue + "%"));
@@ -869,7 +870,7 @@ public class VehicleSalesProposal_Master implements GTransaction{
                         + " FROM insurance_company_branches a "                         
                         + " LEFT JOIN insurance_company b ON b.sInsurIDx = a.sInsurIDx "; 
         
-        lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = '1' "
+        lsSQL = MiscUtil.addCondition(lsSQL,  " a.cRecdStat = " + SQLUtil.toSQL(RecordStatus.ACTIVE)
                                                 + " AND CONCAT(b.sInsurNme, ' ',  a.sBrInsNme) LIKE " + SQLUtil.toSQL(fsValue + "%"));
         System.out.println("SEARCH INSURANCE: " + lsSQL);
         loJSON = ShowDialogFX.Search(poGRider,
@@ -1077,29 +1078,61 @@ public class VehicleSalesProposal_Master implements GTransaction{
 //        return poJSON;
 //    }
     
+    
+    public JSONObject savePrinted(boolean fsIsValidate){
+        JSONObject loJSON = new JSONObject();
+        String lsOrigPrint = poModel.getPrinted();
+        poModel.setPrinted("1"); //Set to Printed
+        if(fsIsValidate){
+            ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.VehicleSalesProposal_Master, poModel);
+            validator.setGRider(poGRider);
+            if (!validator.isEntryOkay()){
+                poModel.setPrinted(lsOrigPrint); //Revert to Previous Value
+                poJSON.put("result", "error");
+                poJSON.put("message", validator.getMessage());
+                return poJSON;
+            }
+        } else {
+            loJSON = saveTransaction();
+            if(!"error".equals((String) loJSON.get("result"))){
+                TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+                loJSON = loEntity.updateStatusHistory(poModel.getTransNo(), poModel.getTable(), "VSP", "5", "PRINT"); //5 = STATE_PRINTED
+                if("error".equals((String) loJSON.get("result"))){
+                    return loJSON;
+                }
+            }
+        }
+        return loJSON;
+    }
+    
     public JSONObject approveTransaction(){
         JSONObject loJSON = new JSONObject();
         poModel.setTranStat(TransactionStatus.STATE_CLOSED); //Set to Approved
         loJSON = saveTransaction();
         if(!"error".equals((String) loJSON.get("result"))){
             TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-            //Update to cancel all previous approvements
-            loJSON = loEntity.cancelTransaction(poModel.getTransNo());
-            if(!"error".equals((String) loJSON.get("result"))){
-                loJSON = loEntity.newTransaction();
-                if(!"error".equals((String) loJSON.get("result"))){
-                    loEntity.getMasterModel().setApproved(poGRider.getUserID());
-                    loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
-                    loEntity.getMasterModel().setSourceNo(poModel.getTransNo());
-                    loEntity.getMasterModel().setTableNme(poModel.getTable());
-                    loEntity.getMasterModel().setRefrStat(poModel.getTranStat());
-
-                    loJSON = loEntity.saveTransaction();
-                    if("error".equals((String) loJSON.get("result"))){
-                        return loJSON;
-                    }
-                }
+            loJSON = loEntity.updateStatusHistory(poModel.getTransNo(), poModel.getTable(), "VSP", TransactionStatus.STATE_CLOSED, "APPROVED");
+            if("error".equals((String) loJSON.get("result"))){
+                return loJSON;
             }
+//            TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+//            //Update to cancel all previous approvements
+//            loJSON = loEntity.cancelTransaction(poModel.getTransNo(), TransactionStatus.STATE_CLOSED);
+//            if(!"error".equals((String) loJSON.get("result"))){
+//                loJSON = loEntity.newTransaction();
+//                if(!"error".equals((String) loJSON.get("result"))){
+//                    loEntity.getMasterModel().setApproved(poGRider.getUserID());
+//                    loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
+//                    loEntity.getMasterModel().setSourceNo(poModel.getTransNo());
+//                    loEntity.getMasterModel().setTableNme(poModel.getTable());
+//                    loEntity.getMasterModel().setRefrStat(poModel.getTranStat());
+//
+//                    loJSON = loEntity.saveTransaction();
+//                    if("error".equals((String) loJSON.get("result"))){
+//                        return loJSON;
+//                    }
+//                }
+//            }
         
         }
         return loJSON;

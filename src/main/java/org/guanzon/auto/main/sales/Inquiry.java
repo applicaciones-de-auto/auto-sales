@@ -15,6 +15,7 @@ import org.guanzon.auto.controller.sales.Inquiry_Promo;
 import org.guanzon.auto.controller.sales.Inquiry_Requirements;
 import org.guanzon.auto.controller.sales.Inquiry_Reservation;
 import org.guanzon.auto.controller.sales.Inquiry_VehiclePriority;
+import org.guanzon.auto.main.cashiering.CashierReceivables;
 import org.json.simple.JSONObject;
 
 /**
@@ -135,7 +136,7 @@ public class Inquiry implements GTransaction{
             }
         }
         
-        loJSON = poReservation.openDetail(fsValue,true, false);
+        loJSON = poReservation.openDetail(fsValue,true, false, false);
         if(!"success".equals(loJSON.get("result"))){
             if(true == (boolean) loJSON.get("continue")){
                 loJSON.put("result", "success");
@@ -209,6 +210,10 @@ public class Inquiry implements GTransaction{
         if (!pbWtParent) poGRider.commitTrans();
         
         return loJSON;
+    }
+    
+    public JSONObject saveReservationPrint(int fnRow, boolean fsIsValidate) {
+        return poReservation.savePrinted(fnRow, fsIsValidate);
     }
     
     private JSONObject checkData(JSONObject joValue){
@@ -490,7 +495,7 @@ public class Inquiry implements GTransaction{
     
     public JSONObject loadReservationList() {
         JSONObject loJSON = new JSONObject();
-        loJSON = poReservation.openDetail(poController.getMasterModel().getTransNo(),true,false);
+        loJSON = poReservation.openDetail(poController.getMasterModel().getTransNo(),true,false, false);
         if(!"success".equals(loJSON.get("result"))){
             if(true == (boolean) loJSON.get("continue")){
                 loJSON.put("result", "success");
@@ -524,6 +529,14 @@ public class Inquiry implements GTransaction{
         }
         
         if (!pbWtParent) poGRider.commitTrans();
+        
+         //Save Cashier Receivables
+//        if(poController.getMasterModel().getTranStat().equals(TransactionStatus.STATE_CLOSED)){
+        CashierReceivables loCAR = new CashierReceivables(poGRider, pbWtParent, psBranchCd);
+        JSONObject loJSONCAR = loCAR.generateCAR("VSA", poReservation.getDetailModel(fnRow).getTransNo());
+        if("error".equals((String) loJSONCAR.get("result"))){
+            return loJSONCAR;
+        }
         
         return loJSON;
     }

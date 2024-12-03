@@ -22,6 +22,7 @@ import org.guanzon.appdriver.constant.TransactionStatus;
 import org.guanzon.appdriver.iface.GTransaction;
 import org.guanzon.auto.general.CancelForm;
 import org.guanzon.auto.general.SearchDialog;
+import org.guanzon.auto.general.TransactionStatusHistory;
 import org.guanzon.auto.model.clients.Model_Vehicle_Serial_Master;
 import org.guanzon.auto.model.sales.Model_Inquiry_Master;
 import org.guanzon.auto.model.sales.Model_VehicleDeliveryReceipt_Master;
@@ -203,6 +204,32 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
         return poJSON;
     }
     
+    public JSONObject savePrinted(boolean fsIsValidate){
+        JSONObject loJSON = new JSONObject();
+        String lsOrigPrint = poModel.getPrinted();
+        poModel.setPrinted("1"); //Set to Printed
+        if(fsIsValidate){
+            ValidatorInterface validator = ValidatorFactory.make( ValidatorFactory.TYPE.VehicleDeliveryReceipt_Master, poModel);
+            validator.setGRider(poGRider);
+            if (!validator.isEntryOkay()){
+                poModel.setPrinted(lsOrigPrint); //Revert to Previous Value
+                poJSON.put("result", "error");
+                poJSON.put("message", validator.getMessage());
+                return poJSON;
+            }
+        } else {
+            loJSON = saveTransaction();
+            if(!"error".equals((String) loJSON.get("result"))){
+                TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+                loJSON = loEntity.updateStatusHistory(poModel.getTransNo(), poModel.getTable(), "VDR", "5", "PRINT"); //5 = STATE_PRINTED
+                if("error".equals((String) loJSON.get("result"))){
+                    return loJSON;
+                }
+            }
+        }
+        return loJSON;
+    }
+    
     private JSONObject updateTables(){
         JSONObject loJSON = new JSONObject();
         String lsInqStat = "";
@@ -321,7 +348,8 @@ public class VehicleDeliveryReceipt_Master implements GTransaction {
                 } 
 
                 CancelForm cancelform = new CancelForm();
-                if (!cancelform.loadCancelWindow(poGRider, poModel.getReferNo(), poModel.getTransNo(), "VDR")) {
+//                if (!cancelform.loadCancelWindow(poGRider, poModel.getReferNo(), poModel.getTransNo(), "VDR")) {
+                if (!cancelform.loadCancelWindow(poGRider, poModel.getTransNo(), poModel.getTable())) {
                     poJSON.put("result", "error");
                     poJSON.put("message", "Cancellation failed.");
                     return poJSON;

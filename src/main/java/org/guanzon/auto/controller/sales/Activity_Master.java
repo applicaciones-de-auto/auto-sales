@@ -187,6 +187,20 @@ public class Activity_Master implements GRecord {
         
         return poJSON;
     }
+    
+    public JSONObject savePrinted(){
+        JSONObject loJSON = new JSONObject();
+//        poModel.setPrinted("1"); //Set to Printed
+//        loJSON = saveRecord();
+//        if(!"error".equals((String) loJSON.get("result"))){
+            TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+            loJSON = loEntity.updateStatusHistory(poModel.getActvtyID(), poModel.getTable(), "ACTIVITY PRINT", "5", "PRINT"); //5 = STATE_PRINTED
+            if("error".equals((String) loJSON.get("result"))){
+                return loJSON;
+            }
+//        }
+        return loJSON;
+    }
 
     @Override
     public JSONObject deleteRecord(String string) {
@@ -199,7 +213,7 @@ public class Activity_Master implements GRecord {
 
         if (poModel.getEditMode() == EditMode.UPDATE) {
             try {
-                poJSON = poModel.setActive(false);
+                poJSON = poModel.setTranStat(TransactionStatus.STATE_CANCELLED); //setActive(false);
                 
                 if ("error".equals((String) poJSON.get("result"))) {
                     return poJSON;
@@ -214,7 +228,8 @@ public class Activity_Master implements GRecord {
                 }
 
                 CancelForm cancelform = new CancelForm();
-                if (!cancelform.loadCancelWindow(poGRider, poModel.getActvtyID(), poModel.getActvtyID(), "ACTIVITY")) {
+//                if (!cancelform.loadCancelWindow(poGRider, poModel.getActvtyID(), poModel.getActvtyID(), "ACTIVITY")) {
+                if (!cancelform.loadCancelWindow(poGRider, poModel.getActvtyID(), poModel.getTable())) {
                     poJSON.put("result", "error");
                     poJSON.put("message", "Cancellation failed.");
                     return poJSON;
@@ -304,7 +319,7 @@ public class Activity_Master implements GRecord {
                         + "FROM ggc_isysdbf.department ";
         
         lsSQL = MiscUtil.addCondition(lsSQL, " sDeptName LIKE " + SQLUtil.toSQL(fsValue + "%")
-                                               + " AND cRecdStat = '1'");
+                                               + " AND cRecdStat = " + SQLUtil.toSQL(RecordStatus.ACTIVE)); //'1'
 
         System.out.println("SEARCH DEPARTMENT: " + lsSQL);
         poJSON = ShowDialogFX.Search(poGRider,
@@ -344,7 +359,7 @@ public class Activity_Master implements GRecord {
                 + " LEFT JOIN GGC_ISysDBF.Client_Master c on c.sClientID = a.sEmployID "
                 + " LEFT JOIN GGC_ISysDBF.Branch_Others d ON d.sBranchCD = a.sBranchCd "
                 + " LEFT JOIN GGC_ISysDBF.Branch e ON e.sBranchCd = a.sBranchCd "
-                + " WHERE a.cRecdStat = '1' AND ISNULL(a.dFiredxxx) " 
+                + " WHERE a.cRecdStat = "+  SQLUtil.toSQL(RecordStatus.ACTIVE) + " AND ISNULL(a.dFiredxxx) " 
                 + " AND d.cDivision = (SELECT cDivision FROM GGC_ISysDBF.Branch_Others WHERE sBranchCd = " +  SQLUtil.toSQL(psBranchCd) + ")";
     }
     
@@ -389,7 +404,7 @@ public class Activity_Master implements GRecord {
                 + " , IFNULL(b.cDivision, '') cDivision "
                 + " FROM branch a "
                 + " LEFT JOIN branch_others b ON a.sBranchCd = b.sBranchCd  "
-                + " WHERE a.cRecdStat = '1'  "
+                + " WHERE a.cRecdStat = " +  SQLUtil.toSQL(RecordStatus.ACTIVE)
                 + " AND b.cDivision = (SELECT cDivision FROM branch_others WHERE sBranchCd = " + SQLUtil.toSQL(psBranchCd) + ")"
                 + " AND sBranchNm LIKE " + SQLUtil.toSQL(fsValue + "%");
 
@@ -466,36 +481,36 @@ public class Activity_Master implements GRecord {
         return poJSON;
     }
     
-    public JSONObject ApproveRecord(String fsValue) {
-        poJSON = new JSONObject();
-
-        if (poModel.getEditMode() == EditMode.UPDATE) {
-            poJSON = poModel.setActive(true);
-
-            if ("error".equals((String) poJSON.get("result"))) {
-                return poJSON;
-            }
-            
-//            poJSON = validateEntry();
+//    public JSONObject ApproveRecord(String fsValue) {
+//        poJSON = new JSONObject();
+//
+//        if (poModel.getEditMode() == EditMode.UPDATE) {
+//            poJSON = poModel.setActive(true);
+//
 //            if ("error".equals((String) poJSON.get("result"))) {
 //                return poJSON;
 //            }
-
-            poJSON = poModel.saveRecord();
-            if ("success".equals((String) poJSON.get("result"))) {
-                poJSON.put("result", "success");
-                poJSON.put("message", "Cancellation success.");
-            } else {
-                poJSON.put("result", "error");
-                poJSON.put("message", "Cancellation failed.");
-            }
-        } else {
-            poJSON = new JSONObject();
-            poJSON.put("result", "error");
-            poJSON.put("message", "No transaction loaded to update.");
-        }
-        return poJSON;
-    }
+//            
+////            poJSON = validateEntry();
+////            if ("error".equals((String) poJSON.get("result"))) {
+////                return poJSON;
+////            }
+//
+//            poJSON = poModel.saveRecord();
+//            if ("success".equals((String) poJSON.get("result"))) {
+//                poJSON.put("result", "success");
+//                poJSON.put("message", "Cancellation success.");
+//            } else {
+//                poJSON.put("result", "error");
+//                poJSON.put("message", "Cancellation failed.");
+//            }
+//        } else {
+//            poJSON = new JSONObject();
+//            poJSON.put("result", "error");
+//            poJSON.put("message", "No transaction loaded to update.");
+//        }
+//        return poJSON;
+//    }
     
     public JSONObject validateExistingRecord(){
         JSONObject loJSON = new JSONObject();
@@ -517,7 +532,7 @@ public class Activity_Master implements GRecord {
                                                     " AND a.dDateFrom = " + SQLUtil.toSQL(xsDateShort((Date) poModel.getValue("dDateFrom")))+
                                                     " AND a.dDateThru = " + SQLUtil.toSQL(xsDateShort((Date) poModel.getValue("dDateThru")))+
                                                     " AND a.sLocation = " + SQLUtil.toSQL(poModel.getLocation())+
-                                                    " AND a.cTranStat = '1' " +
+                                                    " AND a.cTranStat <>  " + SQLUtil.toSQL(TransactionStatus.STATE_CANCELLED) + //'1'
                                                     " AND a.sActvtyID <> " + SQLUtil.toSQL(poModel.getActvtyID()) ;
             System.out.println("EXISTING ACTIVITY CHECK: " + lsSQL);
             ResultSet loRS = poGRider.executeQuery(lsSQL);
@@ -574,7 +589,7 @@ public class Activity_Master implements GRecord {
         paDetail = new ArrayList<>();
         poJSON = new JSONObject();
         Model_Activity_Master loEntity = new Model_Activity_Master(poGRider);
-        String lsSQL = MiscUtil.addCondition(loEntity.getSQL(), " a.cTranStat = " + SQLUtil.toSQL(RecordStatus.ACTIVE)
+        String lsSQL = MiscUtil.addCondition(loEntity.getSQL(), " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_OPEN) //For Approval
                                                                 + " ORDER BY a.sActNoxxx ASC "
                                     ); 
         ResultSet loRS = poGRider.executeQuery(lsSQL);
@@ -610,30 +625,37 @@ public class Activity_Master implements GRecord {
     
     public JSONObject approveTransaction(int fnRow){
         JSONObject loJSON = new JSONObject();
-        //Active: 1; Deactive: 0; Cancelled: 2; Approved: 3;
+        //Active: 1; Deactive: 0; Cancelled: 2; Approved: 3; OLD
+        //For Approval: 0; Approve: 1; Cancelled: 3 NEW
 //        System.out.println(index + " : " + fsValue);
 //        if(index >= 0){
-            paDetail.get(fnRow).setTranStat("3");
+            paDetail.get(fnRow).setTranStat(TransactionStatus.STATE_CLOSED); //Approve
             loJSON = paDetail.get(fnRow).saveRecord();
             if(!"error".equals((String) loJSON.get("result"))){
                 TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-                //Update to cancel all previous approvements
-                loJSON = loEntity.cancelTransaction(paDetail.get(fnRow).getActvtyID());
-                if(!"error".equals((String) loJSON.get("result"))){
-                    loJSON = loEntity.newTransaction();
-                    if(!"error".equals((String) loJSON.get("result"))){
-                        loEntity.getMasterModel().setApproved(poGRider.getUserID());
-                        loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
-                        loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getActvtyID());
-                        loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
-                        loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
-
-                        loJSON = loEntity.saveTransaction();
-                        if("error".equals((String) loJSON.get("result"))){
-                            return loJSON;
-                        }
-                    }
+                loJSON = loEntity.updateStatusHistory(paDetail.get(fnRow).getActvtyID(), poModel.getTable(), "ACTIVITY", TransactionStatus.STATE_CLOSED, "APPROVED");
+                if("error".equals((String) loJSON.get("result"))){
+                    return loJSON;
                 }
+                
+//                TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+//                //Update to cancel all previous approvements
+//                loJSON = loEntity.cancelTransaction(paDetail.get(fnRow).getActvtyID(), TransactionStatus.STATE_CLOSED);
+//                if(!"error".equals((String) loJSON.get("result"))){
+//                    loJSON = loEntity.newTransaction();
+//                    if(!"error".equals((String) loJSON.get("result"))){
+//                        loEntity.getMasterModel().setApproved(poGRider.getUserID());
+//                        loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
+//                        loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getActvtyID());
+//                        loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
+//                        loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
+//
+//                        loJSON = loEntity.saveTransaction();
+//                        if("error".equals((String) loJSON.get("result"))){
+//                            return loJSON;
+//                        }
+//                    }
+//                }
             }
 //        }
         return loJSON;

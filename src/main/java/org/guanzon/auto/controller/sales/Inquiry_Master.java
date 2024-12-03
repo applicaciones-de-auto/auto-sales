@@ -843,7 +843,7 @@ public class Inquiry_Master implements GTransaction {
                         + " FROM activity_master a"                                                       
                         + " LEFT JOIN event_type b ON b.sActTypID = a.sActTypID "   ;  
                 
-        lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = '3' AND a.sActTitle LIKE " + SQLUtil.toSQL(fsValue + "%")
+        lsSQL = MiscUtil.addCondition(lsSQL, " a.cTranStat = " + SQLUtil.toSQL(TransactionStatus.STATE_CLOSED) +" AND a.sActTitle LIKE " + SQLUtil.toSQL(fsValue + "%") //'3'
                                                 + " AND b.sEventTyp =" + SQLUtil.toSQL(lsEventType)
                                                 + " AND a.dDateFrom <=" + SQLUtil.toSQL(xsDateShort(poModel.getTransactDte()))
                                                 + " AND a.dDateThru >=" + SQLUtil.toSQL(xsDateShort(poModel.getTransactDte())));  
@@ -1581,24 +1581,30 @@ public class Inquiry_Master implements GTransaction {
         loJSON = paDetail.get(fnRow).saveRecord();
         if(!"error".equals((String) loJSON.get("result"))){
             TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
-            //Update to cancel all previous approvements
-            loJSON = loEntity.cancelTransaction(paDetail.get(fnRow).getTransNo());
-            if(!"error".equals((String) loJSON.get("result"))){
-                loJSON = loEntity.newTransaction();
-                if(!"error".equals((String) loJSON.get("result"))){
-                    loEntity.getMasterModel().setApproved(poGRider.getUserID());
-                    loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
-                    loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getTransNo());
-                    loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
-                    loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
-
-                    loJSON = loEntity.saveTransaction();
-                    if("error".equals((String) loJSON.get("result"))){
-                        return loJSON;
-                    }
-
-                }
+            loJSON = loEntity.updateStatusHistory(paDetail.get(fnRow).getTransNo(), poModel.getTable(), "INQUIRY", TransactionStatus.STATE_CLOSED, "APPROVED");
+            if("error".equals((String) loJSON.get("result"))){
+                return loJSON;
             }
+            
+//            TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+//            //Update to cancel all previous approvements
+//            loJSON = loEntity.cancelTransaction(paDetail.get(fnRow).getTransNo(), TransactionStatus.STATE_CLOSED);
+//            if(!"error".equals((String) loJSON.get("result"))){
+//                loJSON = loEntity.newTransaction();
+//                if(!"error".equals((String) loJSON.get("result"))){
+//                    loEntity.getMasterModel().setApproved(poGRider.getUserID());
+//                    loEntity.getMasterModel().setApprovedDte(poGRider.getServerDate());
+//                    loEntity.getMasterModel().setSourceNo(paDetail.get(fnRow).getTransNo());
+//                    loEntity.getMasterModel().setTableNme(paDetail.get(fnRow).getTable());
+//                    loEntity.getMasterModel().setRefrStat(paDetail.get(fnRow).getTranStat());
+//
+//                    loJSON = loEntity.saveTransaction();
+//                    if("error".equals((String) loJSON.get("result"))){
+//                        return loJSON;
+//                    }
+//
+//                }
+//            }
         
         }
         return loJSON;
