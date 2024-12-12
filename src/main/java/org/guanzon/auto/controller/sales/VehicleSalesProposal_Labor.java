@@ -301,7 +301,7 @@ public class VehicleSalesProposal_Labor {
         return poJSON;
     }
     
-    public JSONObject searchVSPLabor(String fsValue, String fsTransNo) {
+    public JSONObject searchVSPLabor(String fsValue, String fsTransNo, boolean fbByCode) {
         JSONObject loJSON = new JSONObject();
         String lsHeader = "ID»Description";
         String lsColName = "sLaborCde»sLaborDsc"; 
@@ -309,9 +309,18 @@ public class VehicleSalesProposal_Labor {
         
         Model_VehicleSalesProposal_Labor loEntity = new Model_VehicleSalesProposal_Labor(poGRider);
         String lsSQL =  loEntity.getSQL() ; 
-        lsSQL = MiscUtil.addCondition(lsSQL,  " a.sLaborDsc LIKE  " + SQLUtil.toSQL(fsValue + "%")
-                                                + " AND a.sTransNox = " + SQLUtil.toSQL(fsTransNo))
-                                                + " GROUP BY a.sLaborCde ";
+        
+        if(fbByCode){
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.sLaborCde =  " + SQLUtil.toSQL(fsValue)
+                                                    + " AND a.sTransNox = " + SQLUtil.toSQL(fsTransNo))
+                                                    + " GROUP BY a.sLaborCde ";
+            
+        } else {
+            lsSQL = MiscUtil.addCondition(lsSQL,  " a.sLaborDsc LIKE  " + SQLUtil.toSQL(fsValue + "%")
+                                                    + " AND a.sTransNox = " + SQLUtil.toSQL(fsTransNo))
+                                                    + " GROUP BY a.sLaborCde ";
+        
+        }
         
         System.out.println("SEARCH VSP LABOR: " + lsSQL);
         loJSON = ShowDialogFX.Search(poGRider,
@@ -320,7 +329,7 @@ public class VehicleSalesProposal_Labor {
                     lsHeader,
                     lsColName,
                     lsCriteria,
-                1);
+                fbByCode ? 0 : 1);
 
         if (loJSON != null) {
         } else {
