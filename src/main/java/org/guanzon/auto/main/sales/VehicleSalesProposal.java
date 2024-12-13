@@ -368,10 +368,14 @@ public class VehicleSalesProposal implements GTransaction{
     public JSONObject voidTransaction(String string) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    
     @Override
-    public JSONObject cancelTransaction(String fsValue) {
-        poJSON =  poController.cancelTransaction(fsValue);
+    public JSONObject cancelTransaction(String string) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    public JSONObject cancelTransaction(String fsValue, String fsRemarks) {
+        poJSON =  poController.cancelTransaction(fsValue, fsRemarks);
         if(!"error".equals(poJSON.get("result"))){
             //Check inquiry reservation linked
             for(int lnCtr = 0; lnCtr <= getVSPReservationList().size()-1; lnCtr++){
@@ -574,33 +578,34 @@ public class VehicleSalesProposal implements GTransaction{
                 poController.getMasterModel().setResrvFee(new BigDecimal("0.00"));                                                             
             } else {   
                 //Automatically add reservation to VSP reservation list
-                loJSONRsv = poOTHReservation.openDetail(poController.getMasterModel().getInqTran(),true, false, true);
-                if(!"success".equals(loJSONRsv.get("result"))){
-                    if(true == (boolean) loJSONRsv.get("continue")){
-                        loJSONRsv.put("result", "success");
-                        loJSONRsv.put("message", "Record loaded succesfully.");
-                    }
-                }
-                
-                String lsTransID = "";
-                for(int lnCtr = 0; lnCtr <= poOTHReservation.getDetailList().size() - 1; lnCtr++){
-                    //check for approval
-                    if(poOTHReservation.getDetailModel(lnCtr).getTranStat().equals(TransactionStatus.STATE_CLOSED)){ //"2"
-                        if(poOTHReservation.getDetailModel(lnCtr).getTransID() != null){
-                            lsTransID = poOTHReservation.getDetailModel(lnCtr).getTransID();
-                        }
-                        //check for payment
-                        if(lsTransID.isEmpty()){
-                            if(poOTHReservation.getDetailModel(lnCtr).getSINo() != null){
-                                if(!poOTHReservation.getDetailModel(lnCtr).getSINo().trim().isEmpty()){
-                                    addToVSPReservation(poOTHReservation.getDetailModel(lnCtr).getTransNo(),poOTHReservation.getDetailModel(lnCtr).getTransID(), poOTHReservation.getDetailModel(lnCtr).getSITranNo());
-                                    computeAmount();
-                                }
-                            }
-                        }
-                        
-                    }
-                }
+                loJSONRsv = loadInqRsv();
+//                loJSONRsv = poOTHReservation.openDetail(poController.getMasterModel().getInqTran(),true, false, true);
+//                if(!"success".equals(loJSONRsv.get("result"))){
+//                    if(true == (boolean) loJSONRsv.get("continue")){
+//                        loJSONRsv.put("result", "success");
+//                        loJSONRsv.put("message", "Record loaded succesfully.");
+//                    }
+//                }
+//                
+//                String lsTransID = "";
+//                for(int lnCtr = 0; lnCtr <= poOTHReservation.getDetailList().size() - 1; lnCtr++){
+//                    //check for approval
+//                    if(poOTHReservation.getDetailModel(lnCtr).getTranStat().equals(TransactionStatus.STATE_CLOSED)){ //"2"
+//                        if(poOTHReservation.getDetailModel(lnCtr).getTransID() != null){
+//                            lsTransID = poOTHReservation.getDetailModel(lnCtr).getTransID();
+//                        }
+//                        //check for payment
+//                        if(lsTransID.isEmpty()){
+//                            if(poOTHReservation.getDetailModel(lnCtr).getSINo() != null){
+//                                if(!poOTHReservation.getDetailModel(lnCtr).getSINo().trim().isEmpty()){
+//                                    addToVSPReservation(poOTHReservation.getDetailModel(lnCtr).getTransNo(),poOTHReservation.getDetailModel(lnCtr).getTransID(), poOTHReservation.getDetailModel(lnCtr).getSITranNo());
+//                                    computeAmount();
+//                                }
+//                            }
+//                        }
+//                        
+//                    }
+//                }
             }  
             
             //Automatically add row for vsp finance when payment mode is not cash
@@ -653,6 +658,44 @@ public class VehicleSalesProposal implements GTransaction{
         
         
         return loJSON;
+    }
+    
+    public JSONObject loadInqRsv(){
+        
+//        //Clear reservation details
+//        poOTHReservation.resetDetail();
+//        poVSPReservation.resetDetail();
+        
+        JSONObject loJSONRsv = new JSONObject();
+            //Automatically add reservation to VSP reservation list
+            loJSONRsv = poOTHReservation.openDetail(poController.getMasterModel().getInqTran(),true, false, true);
+            if(!"success".equals(loJSONRsv.get("result"))){
+                if(true == (boolean) loJSONRsv.get("continue")){
+                    loJSONRsv.put("result", "success");
+                    loJSONRsv.put("message", "Record loaded succesfully.");
+                }
+            }
+
+            String lsTransID = "";
+            for(int lnCtr = 0; lnCtr <= poOTHReservation.getDetailList().size() - 1; lnCtr++){
+                //check for approval
+                if(poOTHReservation.getDetailModel(lnCtr).getTranStat().equals(TransactionStatus.STATE_CLOSED)){ //"2"
+                    if(poOTHReservation.getDetailModel(lnCtr).getTransID() != null){
+                        lsTransID = poOTHReservation.getDetailModel(lnCtr).getTransID();
+                    }
+                    //check for payment
+                    if(lsTransID.isEmpty()){
+                        if(poOTHReservation.getDetailModel(lnCtr).getSINo() != null){
+                            if(!poOTHReservation.getDetailModel(lnCtr).getSINo().trim().isEmpty()){
+                                addToVSPReservation(poOTHReservation.getDetailModel(lnCtr).getTransNo(),poOTHReservation.getDetailModel(lnCtr).getTransID(), poOTHReservation.getDetailModel(lnCtr).getSITranNo());
+                                computeAmount();
+                            }
+                        }
+                    }
+
+                }
+            }
+        return loJSONRsv;
     }
     
     public JSONObject searchClient(String fsValue, boolean fbBuyClient){
