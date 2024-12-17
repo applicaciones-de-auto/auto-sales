@@ -279,11 +279,11 @@ public class VehicleSalesProposal_Parts {
     }
     
     
-    public JSONObject searchParts(String fsValue) {
+    public JSONObject searchParts(String fsValue, boolean fbWithUI) {
         poJSON = new JSONObject();
-        String lsHeader = "ID»Description";
-        String lsColName = "sBarCodex»sDescript"; 
-        String lsCriteria = "sBarCodex»sDescript";
+        String lsHeader = !fbWithUI ? "Stock ID" : "ID»Description";
+        String lsColName = !fbWithUI ? "sStockIDx" : "sBarCodex»sDescript"; 
+        String lsCriteria = !fbWithUI ? "sStockIDx" : "sBarCodex»sDescript";
         
         String lsSQL =   " SELECT "                                                
                 + "   sStockIDx "                                           
@@ -293,9 +293,13 @@ public class VehicleSalesProposal_Parts {
                 + " , nSelPrice "                                     
                 + " , cRecdStat "                                      
                 + " FROM inventory " ; 
-        lsSQL = MiscUtil.addCondition(lsSQL,  " cRecdStat = '1' "
-                                                + " AND sBarCodex LIKE " + SQLUtil.toSQL(fsValue + "%"));
         
+        if(!fbWithUI) {
+            lsSQL = MiscUtil.addCondition(lsSQL,  " sStockIDx = " + SQLUtil.toSQL(fsValue));
+        } else {
+            lsSQL = MiscUtil.addCondition(lsSQL,  " cRecdStat = '1' "
+                                                    + " AND sBarCodex LIKE " + SQLUtil.toSQL(fsValue + "%"));
+        }
         
         System.out.println("SEARCH PARTS: " + lsSQL);
         poJSON = ShowDialogFX.Search(poGRider,

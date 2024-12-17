@@ -855,7 +855,7 @@ public class VehicleSalesProposal implements GTransaction{
     
     public JSONObject searchParts(String fsValue, int fnRow, boolean withUI){
         JSONObject loJSON = new JSONObject();
-        loJSON = poVSPParts.searchParts(fsValue);
+        loJSON = poVSPParts.searchParts(fsValue, withUI);
         if(!"error".equals((String) loJSON.get("result"))){
             //check exisiting part
             for(int lnCtr = 0; lnCtr <= getVSPPartsList().size()-1; lnCtr++){
