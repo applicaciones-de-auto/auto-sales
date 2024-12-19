@@ -220,7 +220,11 @@ public class VehicleSalesProposal_Master implements GTransaction{
     }
 
     @Override
-    public JSONObject cancelTransaction(String fsTransNox) {
+    public JSONObject cancelTransaction(String string) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    public JSONObject cancelTransaction(String fsTransNox, String fsRemarks) {
         poJSON = new JSONObject();
 
         if (poModel.getEditMode() == EditMode.READY
@@ -255,6 +259,14 @@ public class VehicleSalesProposal_Master implements GTransaction{
 //                } 
                 
                 poJSON = poModel.saveRecord();
+                if(!"error".equals((String) poJSON.get("result"))){
+                    TransactionStatusHistory loEntity = new TransactionStatusHistory(poGRider);
+                    JSONObject loJSON = loEntity.updateStatusHistory(poModel.getTransNo(), poModel.getTable(), fsRemarks, TransactionStatus.STATE_CANCELLED, "CANCELLED");
+                    if("error".equals((String) loJSON.get("result"))){
+                        return loJSON;
+                    }
+                }
+                
 //            } catch (SQLException ex) {
 //                Logger.getLogger(VehicleSalesProposal_Master.class.getName()).log(Level.SEVERE, null, ex);
 //            }
